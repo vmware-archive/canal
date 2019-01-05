@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package io.pivotal.kanal
+package io.pivotal.kanal.fluent
 
+import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.*
 import org.junit.jupiter.api.Test
 

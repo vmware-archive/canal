@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package io.pivotal.kanal.model
+package io.pivotal.kanal.json
 
 import com.squareup.moshi.*
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.pivotal.kanal.model.*
 
 data class OrcaPipeline (
         val description: String,
@@ -55,6 +56,18 @@ class PipelineAdapter {
                 stages
         )
     }
+
+    @FromJson
+    fun fromJson(orcaPipeline: OrcaPipeline): Pipeline? {
+        val stageGraph = StageGraphAdapter().fromJson(orcaPipeline.stages)
+        return Pipeline(
+                orcaPipeline.description,
+                orcaPipeline.parameterConfig,
+                orcaPipeline.notifications,
+                orcaPipeline.triggers,
+                stageGraph
+        )
+    }
 }
 
 class OrcaStageAdapter {
@@ -62,13 +75,45 @@ class OrcaStageAdapter {
     fun toJson(writer: JsonWriter, value: OrcaStage) {
         val stageAdapter = JsonAdapterFactory().stageAdapter()
         val executionDetailsAdapter = JsonAdapterFactory().stageExecutionAdapter()
-
         writer.beginObject()
         val token = writer.beginFlatten()
         executionDetailsAdapter.toJson(writer, value.execution)
         stageAdapter.toJson(writer, value.stage)
         writer.endFlatten(token)
         writer.endObject()
+    }
+
+    @FromJson
+    fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): OrcaStage {
+        val stageAdapter = JsonAdapterFactory().stageAdapter()
+        val executionDetailsAdapter = JsonAdapterFactory().stageExecutionAdapter()
+        val stage = stageAdapter.fromJsonValue(map)!!
+        val execution = executionDetailsAdapter.fromJsonValue(map)!!
+        return OrcaStage(stage, execution)
+    }
+}
+
+
+class ExpressionConditionAdapter {
+    @FromJson
+    fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): ExpressionCondition {
+        val expression = map["expression"]
+        return when(expression) {
+            is Boolean -> ExpressionCondition(expression)
+            else -> ExpressionCondition(expression.toString())
+        }
+    }
+}
+
+class ExpressionPreconditionAdapter {
+    @FromJson
+    fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): ExpressionPrecondition {
+        val context = map["context"]
+        val expression = (context as Map<String, Any>)["expression"]
+        return when(expression) {
+            is Boolean -> ExpressionPrecondition(expression.toString())
+            else -> ExpressionPrecondition(expression.toString())
+        }
     }
 }
 
@@ -79,6 +124,20 @@ class StageGraphAdapter {
             val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it.toString() }
             OrcaStage(it.attrs, StageExecution(it.refId.toString(), stageRequirements))
         }
+    }
+
+    @FromJson
+    fun fromJson(orcaStages: List<OrcaStage>): StageGraph {
+        var stages: List<PipelineStage> = listOf()
+        var stageRequirements: Map<Int, List<Int>> = mapOf()
+        orcaStages.map {
+            val refId = it.execution.refId.toInt()
+            stages += PipelineStage(refId, it.stage)
+            if (it.execution.requisiteStageRefIds.isNotEmpty()) {
+                stageRequirements += (refId to it.execution.requisiteStageRefIds.map { it.toInt() })
+            }
+        }
+        return StageGraph(stages, stageRequirements)
     }
 }
 
@@ -99,6 +158,8 @@ class JsonAdapterFactory {
                 .add(OrcaStageAdapter())
                 .add(PipelineAdapter())
                 .add(ScoreThresholdsAdapter())
+                .add(ExpressionConditionAdapter())
+                .add(ExpressionPreconditionAdapter())
                 .add(PolymorphicJsonAdapterFactory.of(Trigger::class.java, "type")
                         .withSubtype(JenkinsTrigger::class.java, "jenkins")
                         .withSubtype(GitTrigger::class.java, "git")
@@ -110,7 +171,7 @@ class JsonAdapterFactory {
                         .withSubtype(ExpressionPrecondition::class.java, "expression")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Notification::class.java, "type")
-                        .withSubtype(EmailNotification::class.java, "expression")
+                        .withSubtype(EmailNotification::class.java, "email")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Artifact::class.java, "type")
                         .withSubtype(ReferencedArtifact::class.java, "artifact")

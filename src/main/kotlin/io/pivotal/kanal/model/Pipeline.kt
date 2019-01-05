@@ -40,13 +40,18 @@ interface Named {
 
 data class Parameter(
         override val name: String,
-        val label: String,
         val required: Boolean,
+        val label: String,
         val description: String,
-        @Transient val _options: List<String> = listOf(),
+        val options: List<Value>,
         val default: String?
 ) : Named {
-    var options = this._options.map { Value(it) }
+    constructor(name: String,
+                label: String,
+                required: Boolean,
+                description: String,
+                options: List<String> = listOf(),
+                default: String?) : this(name, required, label, description, options.map { Value(it) }, default)
     var hasOptions = options.isNotEmpty()
 }
 
@@ -123,10 +128,10 @@ data class DestroyServiceStage(
 data class WaitStage(
         override val name: String,
         val comments: String,
-        @Transient val _waitTime: Long = 0
+        val waitTime: String
 ) : Stage {
+    constructor(name: String, comments: String, waitTime: Long) : this(name, comments, waitTime.toString())
     override val type = "wait"
-    var waitTime = _waitTime.toString()
 }
 
 interface Condition : Typed
@@ -134,18 +139,24 @@ interface Condition : Typed
 data class ExpressionCondition(
         val expression: String
 ) : Condition {
+    constructor(expression: Boolean) : this(expression.toString())
     override val type = "expression"
 }
 
 interface Precondition : Typed
 
 data class ExpressionPrecondition(
-        @Transient val _expression: String = ""
+        val context: ExpressionContext
 ) : Precondition {
+    constructor(expression: String) : this(ExpressionContext(expression))
+
     override val type = "expression"
     var failPipeline = true
-    var context = mapOf("expression" to _expression)
 }
+
+data class ExpressionContext(
+        val expression: String
+)
 
 data class ManualJudgmentStage(
         override val name: String,
