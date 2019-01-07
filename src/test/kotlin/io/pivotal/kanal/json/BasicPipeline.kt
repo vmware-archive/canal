@@ -81,8 +81,8 @@ val basicPipelineJson = """
 
 val basicPipelineModel = Pipeline(
         "desc1",
-        listOf(),
-        listOf(),
+        emptyList(),
+        emptyList(),
         listOf(
                 GitTrigger(
                         true,
@@ -103,7 +103,7 @@ val basicPipelineModel = Pipeline(
                         PipelineStage(1,
                                 CheckPreconditionsStage(
                                         "Check Preconditions",
-                                        listOf()
+                                        emptyList()
                                 )
                         ),
                         PipelineStage(2,
@@ -117,8 +117,8 @@ val basicPipelineModel = Pipeline(
                                 ManualJudgmentStage(
                                         "Thumbs Up?",
                                         "Give a thumbs up if you like it.",
-                                        listOf(),
-                                        listOf()
+                                        emptyList(),
+                                        emptyList()
                                 )
                         ),
                         PipelineStage(4,

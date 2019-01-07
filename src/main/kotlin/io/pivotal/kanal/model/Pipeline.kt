@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
+@file:Suppress("unused")
+
 package io.pivotal.kanal.model
 
 data class Pipeline(
         val description: String,
-        val parameters: List<Parameter>,
-        val notifications: List<Notification>,
-        val triggers: List<Trigger>,
+        val parameters: List<Parameter> = emptyList(),
+        val notifications: List<Notification> = emptyList(),
+        val triggers: List<Trigger> = emptyList(),
         val stageGraph: StageGraph
 )
 
@@ -31,7 +33,7 @@ data class PipelineStage(
 
 data class StageGraph (
         val stages: List<PipelineStage>,
-        val stageRequirements: Map<Int, List<Int>>
+        val stageRequirements: Map<Int, List<Int>> = emptyMap()
 )
 
 interface Named {
@@ -43,15 +45,15 @@ data class Parameter(
         val required: Boolean,
         val label: String,
         val description: String,
-        val options: List<Value>,
-        val default: String?
+        val options: List<Value> = emptyList(),
+        val default: String? = null
 ) : Named {
     constructor(name: String,
                 label: String,
                 required: Boolean,
                 description: String,
-                options: List<String> = listOf(),
-                default: String?) : this(name, required, label, description, options.map { Value(it) }, default)
+                options: List<String> = emptyList(),
+                default: String? = null) : this(name, required, label, description, options.map { Value(it) }, default)
     var hasOptions = options.isNotEmpty()
 }
 
@@ -161,8 +163,8 @@ data class ExpressionContext(
 data class ManualJudgmentStage(
         override val name: String,
         val instructions: String,
-        val notifications: List<Notification> = listOf(),
-        val judgmentInputs: List<String> = listOf(),
+        val notifications: List<Notification> = emptyList(),
+        val judgmentInputs: List<String> = emptyList(),
         val failPipeline: Boolean = true
 ) : Stage {
     override val type = "manualJudgment"

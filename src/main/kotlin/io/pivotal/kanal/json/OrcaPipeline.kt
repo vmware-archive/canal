@@ -28,7 +28,7 @@ data class OrcaPipeline (
         val triggers: List<Trigger>,
         val stages: List<OrcaStage>,
         val appConfig: Map<String, Any> = mapOf(),
-        val expectedArtifacts: List<Any> = listOf(),
+        val expectedArtifacts: List<Any> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
         val lastModifiedBy: String = "anonymous",
         val limitConcurrent: Boolean = false
@@ -128,7 +128,7 @@ class StageGraphAdapter {
 
     @FromJson
     fun fromJson(orcaStages: List<OrcaStage>): StageGraph {
-        var stages: List<PipelineStage> = listOf()
+        var stages: List<PipelineStage> = emptyList()
         var stageRequirements: Map<Int, List<Int>> = mapOf()
         orcaStages.map {
             val refId = it.execution.refId.toInt()

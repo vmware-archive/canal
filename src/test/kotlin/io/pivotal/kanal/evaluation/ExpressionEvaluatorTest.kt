@@ -74,11 +74,8 @@ class ExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
 
         val pipeline = Pipeline(
-                "desc1",
-                listOf(),
-                listOf(),
-                listOf(),
-                Stages.first(CheckPreconditionsStage(
+                description = "desc1",
+                stageGraph = Stages.first(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${true}"),
@@ -101,11 +98,8 @@ class ExpressionEvaluatorTest {
         val evaluatedPipeline = evaluator.evaluate(pipeline)
 
         assertThat(evaluatedPipeline).isEqualTo(Pipeline(
-                "desc1",
-                listOf(),
-                listOf(),
-                listOf(),
-                Stages.first(CheckPreconditionsStage(
+                description ="desc1",
+                stageGraph = Stages.first(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                             ExpressionPrecondition("true"),

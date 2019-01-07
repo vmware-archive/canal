@@ -28,7 +28,7 @@ class FluentPipelineJsonGenerationTest {
     fun `fluent stages DSL with fan out and fan in`() {
         val stages = Stages.first(CheckPreconditionsStage(
                 "Check Preconditions",
-                listOf()
+                emptyList()
         )).andThen(WaitStage(
                 "Server Group Timeout",
                 "woah",
