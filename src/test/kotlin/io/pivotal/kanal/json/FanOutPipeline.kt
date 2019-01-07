@@ -334,7 +334,7 @@ val fanOutPipelineModel = Pipeline(
                         "1"
                 )
         ),
-        listOf(),
+        emptyList(),
         listOf(
                 GitTrigger(
                         true,
@@ -486,8 +486,8 @@ val fanOutPipelineModel = Pipeline(
                                 ManualJudgmentStage(
                                         "Thumbs Up?",
                                         "Give a thumbs up if you like it.",
-                                        listOf(),
-                                        listOf()
+                                        emptyList(),
+                                        emptyList()
                                 )
                         ),
                         PipelineStage(13,

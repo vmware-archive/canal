@@ -22,9 +22,9 @@ import io.pivotal.kanal.model.StageGraph
 
 class Stages(
         val stageCount: Int = 0,
-        val firstStages: List<PipelineStage> = listOf(),
-        val lastStages: List<PipelineStage> = listOf(),
-        val stageGraph: StageGraph = StageGraph(listOf(), mapOf())
+        val firstStages: List<PipelineStage> = emptyList(),
+        val lastStages: List<PipelineStage> = emptyList(),
+        val stageGraph: StageGraph = StageGraph(emptyList(), mapOf())
 ) {
     companion object Factory {
         fun first(stage: Stage): Stages {
@@ -52,13 +52,13 @@ class Stages(
 
     fun fanOut(stageGroups: List<Stages>): Stages {
         var nextRefId = stageCount
-        var allTerminalStages: List<PipelineStage> = listOf()
-        var newStages: List<PipelineStage> = listOf()
+        var allTerminalStages: List<PipelineStage> = emptyList()
+        var newStages: List<PipelineStage> = emptyList()
         var newStageRequirements: Map<Int, List<Int>> = mapOf()
         stageGroups.forEach {
             val initialStages = it.firstStages
             val terminalStages = it.lastStages
-            var nextStages: List<PipelineStage> = listOf()
+            var nextStages: List<PipelineStage> = emptyList()
             it.stageGraph.stages.forEach {
                 val pStage = PipelineStage(it.refId + nextRefId, it.attrs)
                 newStages += pStage
