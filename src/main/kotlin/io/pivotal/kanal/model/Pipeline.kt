@@ -160,7 +160,7 @@ data class ExpressionContext(
         val expression: String
 )
 
-data class ManualJudgmentStage(
+data class ManualJudgmentStage @JvmOverloads constructor(
         override val name: String,
         val instructions: String,
         val notifications: List<Notification> = emptyList(),
