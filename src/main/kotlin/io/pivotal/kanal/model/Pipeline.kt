@@ -19,11 +19,13 @@
 package io.pivotal.kanal.model
 
 data class Pipeline(
-        val description: String,
+        val description: String = "",
         val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stageGraph: StageGraph
+        val stageGraph: StageGraph,
+        val source: String? = null,
+        val variables: Map<String, Any> = emptyMap()
 )
 
 data class PipelineStage(
@@ -129,10 +131,10 @@ data class DestroyServiceStage(
 
 data class WaitStage(
         override val name: String,
-        val comments: String,
-        val waitTime: String
+        val waitTime: String,
+        val comments: String = ""
 ) : Stage {
-    constructor(name: String, comments: String, waitTime: Long) : this(name, comments, waitTime.toString())
+    constructor(name: String, waitTime: Long, comments: String = "") : this(name, waitTime.toString(), comments)
     override val type = "wait"
 }
 
@@ -175,7 +177,7 @@ data class WebhookStage(
         val method: String,
         val url: String,
         val user: String,
-        val waitForCompletion: Boolean,
+        val waitForCompletion: Boolean = true,
         val failPipeline: Boolean = true
 ) : Stage {
     override val type = "webhook"

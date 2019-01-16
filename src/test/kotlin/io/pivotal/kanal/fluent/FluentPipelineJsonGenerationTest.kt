@@ -32,8 +32,8 @@ class FluentPipelineJsonGenerationTest {
                 emptyList()
         )).andThen(WaitStage(
                 "Server Group Timeout",
-                "woah",
-                420
+                420,
+                "woah"
         )).fanOut(
                 (1..3).map {
                     Stages.first(DestroyServiceStage(

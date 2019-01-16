@@ -26,7 +26,7 @@ class PipelineJsonGenerationTest {
 
     @Test
     fun `JSON stage should have flattened object structure`() {
-        val dStage = WaitStage("w", "c", 1)
+        val dStage = WaitStage("w", 1, "c")
         val stageWithExecution = OrcaStage(dStage, StageExecution("0", listOf("1", "2", "3")))
 
         val orcaStageAdapter = JsonAdapterFactory().jsonAdapterBuilder(Moshi.Builder()).build().adapter(OrcaStage::class.java)

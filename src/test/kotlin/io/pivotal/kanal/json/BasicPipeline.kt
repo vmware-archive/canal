@@ -1,5 +1,6 @@
 package io.pivotal.kanal.json
 
+import com.sun.tools.internal.ws.wsdl.parser.Util
 import io.pivotal.kanal.model.*
 import org.intellij.lang.annotations.Language
 
@@ -14,6 +15,7 @@ val basicPipelineJson = """
             "limitConcurrent": false,
             "notifications": [],
             "parameterConfig": [],
+            "updateTs" : "0",
             "triggers": [
                 {
                     "branch": "master",
@@ -109,16 +111,14 @@ val basicPipelineModel = Pipeline(
                         PipelineStage(2,
                                 WaitStage(
                                         "Server Group Timeout",
-                                        "woah",
-                                        420
+                                        420,
+                                        "woah"
                                 )
                         ),
                         PipelineStage(3,
                                 ManualJudgmentStage(
                                         "Thumbs Up?",
-                                        "Give a thumbs up if you like it.",
-                                        emptyList(),
-                                        emptyList()
+                                        "Give a thumbs up if you like it."
                                 )
                         ),
                         PipelineStage(4,
@@ -126,8 +126,7 @@ val basicPipelineModel = Pipeline(
                                         "Do that nonstandard thing",
                                         "POST",
                                         "https://github.com/spinnaker/clouddriver",
-                                        "cmccoy@pivotal.io",
-                                        true
+                                        "cmccoy@pivotal.io"
                                 )
                         )
                 ),

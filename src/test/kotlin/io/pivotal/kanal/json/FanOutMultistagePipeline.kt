@@ -158,16 +158,16 @@ object FanOutMultistagePipeline {
         },
         {
             "failPipeline": true,
-                "instructions": "Give a thumbs up if you like it.",
-                "judgmentInputs": [],
+            "instructions": "Give a thumbs up if you like it.",
+            "judgmentInputs": [],
             "name": "Thumbs Up?",
-                "notifications": [],
+            "notifications": [],
             "refId": "9",
-                "requisiteStageRefIds": [
-            "4",
-                    "6",
-                    "8"
-              ],
+            "requisiteStageRefIds": [
+                "4",
+                "6",
+                "8"
+            ],
             "type": "manualJudgment"
         }
     ]

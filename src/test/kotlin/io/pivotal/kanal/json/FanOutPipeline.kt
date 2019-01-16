@@ -13,6 +13,7 @@ val fanOutPipelineJson = """
           "lastModifiedBy": "anonymous",
           "limitConcurrent": false,
           "notifications": [],
+          "updateTs" : "0",
           "parameterConfig": [
             {
               "default": "1",
@@ -372,15 +373,15 @@ val fanOutPipelineModel = Pipeline(
                         PipelineStage(3,
                                 WaitStage(
                                         "Server Group Timeout",
-                                        "woah",
-                                        420
+                                        420,
+                                        "woah"
                                 )
                         ),
                         PipelineStage(4,
                                 WaitStage(
                                         "External service Wait",
-                                        "Wait on other service to reset",
-                                        7
+                                        7,
+                                        "Wait on other service to reset"
                                 )
                         ),
                         PipelineStage(5,
@@ -485,9 +486,7 @@ val fanOutPipelineModel = Pipeline(
                         PipelineStage(12,
                                 ManualJudgmentStage(
                                         "Thumbs Up?",
-                                        "Give a thumbs up if you like it.",
-                                        emptyList(),
-                                        emptyList()
+                                        "Give a thumbs up if you like it."
                                 )
                         ),
                         PipelineStage(13,
@@ -495,8 +494,7 @@ val fanOutPipelineModel = Pipeline(
                                         "Do that nonstandard thing",
                                         "POST",
                                         "https://github.com/spinnaker/clouddriver",
-                                        "cmccoy@pivotal.io",
-                                        true
+                                        "cmccoy@pivotal.io"
                                 )
                         ),
                         PipelineStage(14,

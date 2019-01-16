@@ -21,7 +21,9 @@ import io.pivotal.kanal.model.*
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-class ExpressionEvaluatorTest {
+class PipelineExpressionEvaluatorTest {
+
+    val evaluator = ExpressionEvaluator()
 
     @Test
     fun `evaluate expression with helper functions and properties`() {
@@ -32,22 +34,46 @@ class ExpressionEvaluatorTest {
                         )
                 )
         )
-        val evaluator = ExpressionEvaluator(pipelineExecution)
+        val pipeline = Pipeline(
+                description = "desc1",
+                stageGraph = Stages.first(CheckPreconditionsStage(
+                        "Check Preconditions",
+                        listOf(
+                                ExpressionPrecondition("hello \${#alphanumerical(trigger['parameters']['account'])}")
+                        )
+                )).stageGraph
+        )
 
-        val result = evaluator.evaluate("hello \${#alphanumerical(trigger['parameters']['account'])}")
+        val result = evaluator.evaluate(pipeline, pipelineExecution)
 
-        assertThat(result).isEqualTo("hello account1")
+        assertThat(result).isEqualTo(Pipeline(
+                description = "desc1",
+                stageGraph = Stages.first(CheckPreconditionsStage(
+                        "Check Preconditions",
+                        listOf(
+                                ExpressionPrecondition("hello account1")
+                        )
+                )).stageGraph
+        ))
     }
 
     @Test
-    fun `evaluate expression with error`() {
+    fun `evaluate pipeline expression with error`() {
         val pipelineExecution = PipelineExecution(
-                mapOf()
+                emptyMap()
         )
-        val evaluator = ExpressionEvaluator(pipelineExecution)
+        val pipeline = Pipeline(
+                description = "desc1",
+                stageGraph = Stages.first(CheckPreconditionsStage(
+                        "Check Preconditions",
+                        listOf(
+                                ExpressionPrecondition("\${#alphanumerical('missing paren'}")
+                        )
+                )).stageGraph
+        )
 
         val thrown = catchThrowable {
-            evaluator.evaluate("\${#alphanumerical('missing paren'}")
+            evaluator.evaluate(pipeline, pipelineExecution)
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
@@ -58,7 +84,6 @@ class ExpressionEvaluatorTest {
 
     @Test
     fun `evaluate expression in pipeline`() {
-
         val pipelineExecution = PipelineExecution(
                 mapOf(
                         "parameters" to mapOf(
@@ -71,7 +96,6 @@ class ExpressionEvaluatorTest {
                         )
                 )
         )
-        val evaluator = ExpressionEvaluator(pipelineExecution)
 
         val pipeline = Pipeline(
                 description = "desc1",
@@ -95,7 +119,7 @@ class ExpressionEvaluatorTest {
                 ).stageGraph
         )
 
-        val evaluatedPipeline = evaluator.evaluate(pipeline)
+        val evaluatedPipeline = evaluator.evaluate(pipeline, pipelineExecution)
 
         assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                 description ="desc1",

@@ -20,6 +20,8 @@ import com.squareup.moshi.*
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.pivotal.kanal.model.*
+import java.lang.reflect.Type
+import java.math.BigDecimal
 
 data class OrcaPipeline (
         val description: String,
@@ -31,7 +33,8 @@ data class OrcaPipeline (
         val expectedArtifacts: List<Any> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
         val lastModifiedBy: String = "anonymous",
-        val limitConcurrent: Boolean = false
+        val limitConcurrent: Boolean = false,
+        val updateTs: String = "0"
 )
 
 data class OrcaStage(
@@ -151,6 +154,32 @@ class ScoreThresholdsAdapter {
     }
 }
 
+val jsonNumberAdapter = object : JsonAdapter.Factory {
+    override fun create(type: Type, annotations: Set<Annotation>, moshi: Moshi): JsonAdapter<*>? {
+        if (type !== Any::class.java) return null
+
+        val delegate = moshi.nextAdapter<Any>(this, Any::class.java, annotations)
+        return object : JsonAdapter<Any>() {
+            override fun fromJson(reader: JsonReader): Any? {
+                return if (reader.peek() !== JsonReader.Token.NUMBER) {
+                    delegate.fromJson(reader)
+                } else {
+                    val s = reader.nextString()
+                    if (s.contains(".")) {
+                        BigDecimal(s)
+                    } else {
+                        Integer(s)
+                    }
+                }
+            }
+
+            override fun toJson(writer: JsonWriter, value: Any?) {
+                throw UnsupportedOperationException()
+            }
+        }
+    }
+}
+
 class JsonAdapterFactory {
     fun jsonAdapterBuilder(builder: Moshi.Builder): Moshi.Builder {
         builder
@@ -160,6 +189,7 @@ class JsonAdapterFactory {
                 .add(ScoreThresholdsAdapter())
                 .add(ExpressionConditionAdapter())
                 .add(ExpressionPreconditionAdapter())
+                .add(jsonNumberAdapter)
                 .add(PolymorphicJsonAdapterFactory.of(Trigger::class.java, "type")
                         .withSubtype(JenkinsTrigger::class.java, "jenkins")
                         .withSubtype(GitTrigger::class.java, "git")
@@ -190,12 +220,20 @@ class JsonAdapterFactory {
                         .withSubtype(DeployStage::class.java, "deploy")
                         .withSubtype(CheckPreconditionsStage::class.java, "checkPreconditions")
                 )
+                .add(PolymorphicJsonAdapterFactory.of(Variable::class.java, "type")
+                        .withSubtype(IntegerType::class.java, "int")
+                        .withSubtype(StringType::class.java, "string")
+                )
                 .add(KotlinJsonAdapterFactory())
         return builder
     }
 
     fun pipelineAdapter(): JsonAdapter<Pipeline> {
         return jsonAdapterBuilder(Moshi.Builder()).build().adapter(Pipeline::class.java)
+    }
+
+    fun pipelineTemplateAdapter(): JsonAdapter<PipelineTemplate> {
+        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(PipelineTemplate::class.java)
     }
 
     fun stageGraphAdapter(): JsonAdapter<StageGraph> {
