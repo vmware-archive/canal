@@ -23,8 +23,6 @@ import org.junit.jupiter.api.Test
 
 class PipelineExpressionEvaluatorTest {
 
-    val evaluator = ExpressionEvaluator()
-
     @Test
     fun `evaluate expression with helper functions and properties`() {
         val pipelineExecution = PipelineExecution(
@@ -34,6 +32,7 @@ class PipelineExpressionEvaluatorTest {
                         )
                 )
         )
+        val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
                 stageGraph = Stages.first(CheckPreconditionsStage(
@@ -44,7 +43,7 @@ class PipelineExpressionEvaluatorTest {
                 )).stageGraph
         )
 
-        val result = evaluator.evaluate(pipeline, pipelineExecution)
+        val result = evaluator.evaluate(pipeline)
 
         assertThat(result).isEqualTo(Pipeline(
                 description = "desc1",
@@ -59,9 +58,8 @@ class PipelineExpressionEvaluatorTest {
 
     @Test
     fun `evaluate pipeline expression with error`() {
-        val pipelineExecution = PipelineExecution(
-                emptyMap()
-        )
+        val pipelineExecution = PipelineExecution()
+        val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
                 stageGraph = Stages.first(CheckPreconditionsStage(
@@ -73,7 +71,7 @@ class PipelineExpressionEvaluatorTest {
         )
 
         val thrown = catchThrowable {
-            evaluator.evaluate(pipeline, pipelineExecution)
+            evaluator.evaluate(pipeline)
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
@@ -96,6 +94,7 @@ class PipelineExpressionEvaluatorTest {
                         )
                 )
         )
+        val evaluator = ExpressionEvaluator(pipelineExecution)
 
         val pipeline = Pipeline(
                 description = "desc1",
@@ -119,7 +118,7 @@ class PipelineExpressionEvaluatorTest {
                 ).stageGraph
         )
 
-        val evaluatedPipeline = evaluator.evaluate(pipeline, pipelineExecution)
+        val evaluatedPipeline = evaluator.evaluate(pipeline)
 
         assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                 description ="desc1",

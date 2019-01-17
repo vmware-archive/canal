@@ -10,17 +10,18 @@ import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.Pipeline
 import io.pivotal.kanal.model.PipelineTemplate
 
-class ExpressionEvaluator() {
+class ExpressionEvaluator(val pipelineExecution: PipelineExecution) {
 
     val expressionEvaluator = PipelineExpressionEvaluator(
             ContextFunctionConfiguration(UserConfiguredUrlRestrictions.Builder().build()))
 
-    fun evaluate(pipeline: Pipeline, pipelineExecution: PipelineExecution): Pipeline {
-        return evaluateWithAdapter(pipeline, JsonAdapterFactory().pipelineAdapter(), pipelineExecution)
+    fun evaluate(pipeline: Pipeline): Pipeline {
+        val executionWithPipelineVariables = pipelineExecution.copy(templateVariables = pipeline.variables)
+        return evaluateWithAdapter(pipeline, JsonAdapterFactory().pipelineAdapter(), executionWithPipelineVariables)
     }
 
-    fun evaluate(template: PipelineTemplate, templateContext: TemplateContext): PipelineTemplate {
-        return evaluateWithAdapter(template, JsonAdapterFactory().pipelineTemplateAdapter(), templateContext)
+    fun evaluate(template: PipelineTemplate): PipelineTemplate {
+        return evaluateWithAdapter(template, JsonAdapterFactory().pipelineTemplateAdapter(), pipelineExecution)
     }
 
     private fun <T>evaluateWithAdapter(m: T, adapter: JsonAdapter<T>, context: Any): T {
@@ -38,18 +39,14 @@ class ExpressionEvaluator() {
         if (summary.expressionResult.isNotEmpty()) {
             throw IllegalExpressionException(summary)
         }
-        val e = adapter.fromJsonValue(evaluatedPipelineMap)!!
-        return e;
+        return adapter.fromJsonValue(evaluatedPipelineMap)!!
     }
 
 }
 
 data class PipelineExecution(
-        val trigger: Map<String, Any>
-)
-
-data class TemplateContext(
-        val templateVariables: Map<String, Any>
+        val trigger: Map<String, Any> = emptyMap(),
+        val templateVariables: Map<String, Any> = emptyMap()
 )
 
 class IllegalExpressionException(val summary: ExpressionEvaluationSummary) : Exception("Failed to evaluate expressions!")

@@ -24,8 +24,6 @@ import org.junit.jupiter.api.Test
 
 class PipelineTemplateExpressionEvaluatorTest {
 
-    val evaluator = ExpressionEvaluator()
-
     val template = PipelineTemplate(
             "newSpelTemplate",
             Metadata(
@@ -50,12 +48,11 @@ class PipelineTemplateExpressionEvaluatorTest {
 
     @Test
     fun `evaluate template expression with error`() {
-        val templateContext = TemplateContext(
-                emptyMap()
-        )
+        val pipelineExecution = PipelineExecution()
+        val evaluator = ExpressionEvaluator(pipelineExecution)
 
         val thrown = catchThrowable {
-            evaluator.evaluate(template, templateContext)
+            evaluator.evaluate(template)
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
@@ -66,12 +63,14 @@ class PipelineTemplateExpressionEvaluatorTest {
 
     @Test
     fun `evaluate template expression`() {
-        val templateContext = TemplateContext(
-                mapOf(
+        val pipelineExecution = PipelineExecution(
+                templateVariables = mapOf(
                         "waitTime" to 4
                 )
         )
-        val evaluatedTemplate = evaluator.evaluate(template, templateContext)
+        val evaluator = ExpressionEvaluator(pipelineExecution)
+
+        val evaluatedTemplate = evaluator.evaluate(template)
 
         assertThat(evaluatedTemplate).isEqualTo(PipelineTemplate(
                 "newSpelTemplate",
