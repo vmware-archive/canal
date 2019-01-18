@@ -14,7 +14,7 @@ class FluentPipelineJsonGenerationJavaTest {
 
     @Test
     void fluentStagesDslWithFanOutAndFanIn() {
-        Stages stages = Stages.Factory.of(new CheckPreconditionsStage(
+        Stages stages = Stages.of(new CheckPreconditionsStage(
                 "Check Preconditions",
                 emptyList()
         )).andThen(new WaitStage(
@@ -22,7 +22,7 @@ class FluentPipelineJsonGenerationJavaTest {
                 "woah",
                 "Server Group Timeout"
         )).parallel(
-                range(1, 4).mapToObj( it -> Stages.Factory.of(new DestroyServiceStage(
+                range(1, 4).mapToObj( it -> Stages.of(new DestroyServiceStage(
                         "Destroy Service " + it + " Before",
                         "cloudfoundry",
                         "creds1",

@@ -29,13 +29,13 @@ class Stages(
         val stageGraph: StageGraph = StageGraph(emptyList(), mapOf())
 ) {
     companion object Factory {
-        @JvmOverloads fun of(stage: Stage,
+        @JvmStatic @JvmOverloads fun of(stage: Stage,
                inject: Inject? = null,
                refId: String? = null,
                requisiteStageRefIds: List<String> = emptyList()
         ): Stages {
             val initialRefId = 1
-            val nextRefId = refId ?: initialRefId.toString()
+            val nextRefId = refId ?: stage.type + initialRefId.toString()
             val initialStage = listOf(PipelineStage(nextRefId, stage, inject))
             val stageRequirements = if (requisiteStageRefIds.isEmpty()) {
                 emptyMap()
@@ -56,7 +56,7 @@ class Stages(
             requisiteStageRefIds: List<String> = emptyList()
     ): Stages {
         val nextStageCount = stageCount + 1
-        val nextRefId = refId ?: nextStageCount.toString()
+        val nextRefId = refId ?: stage.type + nextStageCount.toString()
         val nextStage = listOf(PipelineStage(nextRefId, stage, inject))
         val allStages = stageGraph.stages + nextStage
         val allStageRequirements = if (requisiteStageRefIds.isEmpty()) {
@@ -77,7 +77,7 @@ class Stages(
                 requisiteStageRefIds: List<String> = emptyList()
     ): Stages {
         val nextStageCount = stageCount + 1
-        val nextRefId = refId ?: nextStageCount.toString()
+        val nextRefId = refId ?: stage.type + nextStageCount.toString()
         val nextStage = listOf(PipelineStage(nextRefId, stage, inject))
         val allStages = stageGraph.stages + nextStage
         val allRequisiteStageRefIds = requisiteStageRefIds + lastStages.map(PipelineStage::refId)

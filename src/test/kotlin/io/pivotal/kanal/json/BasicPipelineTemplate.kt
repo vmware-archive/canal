@@ -44,7 +44,7 @@ object BasicPipelineTemplate {
                     "waitTime" : "$\\{ templateVariables.waitTime }",
                     "name": "My Wait Stage",
                     "type" : "wait",
-                    "refId" : "1",
+                    "refId" : "wait1",
                     "requisiteStageRefIds": [],
                     "comments": ""
                 }

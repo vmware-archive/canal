@@ -21,7 +21,6 @@ import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.pivotal.kanal.model.*
 import java.lang.reflect.Type
-import java.math.BigDecimal
 
 data class OrcaPipeline (
         val description: String,
