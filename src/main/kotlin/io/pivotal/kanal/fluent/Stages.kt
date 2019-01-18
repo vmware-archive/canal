@@ -24,8 +24,6 @@ import java.lang.IllegalStateException
 
 class Stages(
         val stageCount: Int = 0,
-        val firstStages: List<PipelineStage> = emptyList(),
-        val lastStages: List<PipelineStage> = emptyList(),
         val stageGraph: StageGraph = StageGraph(emptyList(), mapOf())
 ) {
     companion object Factory {
@@ -34,19 +32,26 @@ class Stages(
                refId: String? = null,
                requisiteStageRefIds: List<String> = emptyList()
         ): Stages {
-            val initialRefId = 1
-            val nextRefId = refId ?: stage.type + initialRefId.toString()
-            val initialStage = listOf(PipelineStage(nextRefId, stage, inject))
-            val stageRequirements = if (requisiteStageRefIds.isEmpty()) {
-                emptyMap()
-            } else {
-                mapOf(nextRefId to requisiteStageRefIds)
-            }
-            return Stages(initialRefId,
-                    initialStage,
-                    initialStage,
-                    StageGraph(initialStage, stageRequirements)
+            return Stages().insertStage(
+                    stage,
+                    inject,
+                    refId,
+                    requisiteStageRefIds
             )
+        }
+    }
+
+    val firstStages by lazy {
+        val stagesThatRequireStages = stageGraph.stageRequirements.keys
+        stageGraph.stages.filter {
+            !(stagesThatRequireStages.contains(it.refId))
+        }
+    }
+
+    val lastStages by lazy {
+        val stagesThatAreRequiredByStages = stageGraph.stageRequirements.values.flatten().distinct()
+        stageGraph.stages.filter {
+            !(stagesThatAreRequiredByStages.contains(it.refId))
         }
     }
 
@@ -54,6 +59,32 @@ class Stages(
             inject: Inject? = null,
             refId: String? = null,
             requisiteStageRefIds: List<String> = emptyList()
+    ): Stages {
+        return insertStage(
+                stage,
+                inject,
+                refId,
+                requisiteStageRefIds
+        )
+    }
+
+    @JvmOverloads fun andThen(stage: Stage,
+                inject: Inject? = null,
+                refId: String? = null,
+                requisiteStageRefIds: List<String> = emptyList()
+    ): Stages {
+        return insertStage(
+                stage,
+                inject,
+                refId,
+                requisiteStageRefIds + lastStages.map(PipelineStage::refId)
+        )
+    }
+
+    private fun insertStage(stage: Stage,
+                              inject: Inject?,
+                              refId: String?,
+                              requisiteStageRefIds: List<String>
     ): Stages {
         val nextStageCount = stageCount + 1
         val nextRefId = refId ?: stage.type + nextStageCount.toString()
@@ -65,30 +96,6 @@ class Stages(
             stageGraph.stageRequirements + mapOf(nextRefId to requisiteStageRefIds)
         }
         return Stages(nextStageCount,
-                firstStages + nextStage,
-                nextStage+ nextStage,
-                StageGraph(allStages, allStageRequirements)
-        )
-    }
-
-    @JvmOverloads fun andThen(stage: Stage,
-                inject: Inject? = null,
-                refId: String? = null,
-                requisiteStageRefIds: List<String> = emptyList()
-    ): Stages {
-        val nextStageCount = stageCount + 1
-        val nextRefId = refId ?: stage.type + nextStageCount.toString()
-        val nextStage = listOf(PipelineStage(nextRefId, stage, inject))
-        val allStages = stageGraph.stages + nextStage
-        val allRequisiteStageRefIds = requisiteStageRefIds + lastStages.map(PipelineStage::refId)
-        val allStageRequirements = if (allRequisiteStageRefIds.isEmpty()) {
-            stageGraph.stageRequirements
-        } else {
-            stageGraph.stageRequirements + mapOf(nextRefId to allRequisiteStageRefIds)
-        }
-        return Stages(nextStageCount,
-                firstStages,
-                nextStage,
                 StageGraph(allStages, allStageRequirements)
         )
     }
@@ -104,12 +111,10 @@ class Stages(
 
     @JvmOverloads fun parallel(stageGroups: List<Stages>): Stages {
         var currentStageCount = stageCount
-        var allTerminalStages: List<PipelineStage> = emptyList()
         var newStages: List<PipelineStage> = emptyList()
         var newStageRequirements: Map<String, List<String>> = mapOf()
         stageGroups.forEach {
             val initialStages = it.firstStages
-            val terminalStages = it.lastStages
             var nextStages: List<PipelineStage> = emptyList()
             val currentStageGraph = it.stageGraph
             var subStageGraphStageRequirements = currentStageGraph.stageRequirements
@@ -118,9 +123,6 @@ class Stages(
                 val newRefId = "${oldRefId}_${++currentStageCount}"
                 val pStage = it.copy(refId = newRefId)
                 newStages += pStage
-                if (terminalStages.contains(it)) {
-                    allTerminalStages += pStage
-                }
                 if (initialStages.contains(it)) {
                     nextStages += pStage
                 }
@@ -145,8 +147,6 @@ class Stages(
         val allStages = stageGraph.stages + newStages
         val allStageRequirements = stageGraph.stageRequirements + newStageRequirements
         return Stages(currentStageCount,
-                firstStages,
-                allTerminalStages,
                 StageGraph(allStages, allStageRequirements)
         )
     }
