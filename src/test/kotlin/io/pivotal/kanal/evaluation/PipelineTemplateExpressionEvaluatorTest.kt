@@ -32,27 +32,32 @@ class PipelineTemplateExpressionEvaluatorTest {
                     "example@example.com"
             ),
             listOf(
-                    IntegerType(
+                    Variable(
                             "waitTime",
                             "The time a wait stage shall pauseth",
-                            42
+                            IntegerType(42)
                     )
             ),
             Pipeline(
-                    stageGraph = Stages.first(WaitStage(
-                            "My Wait Stage",
-                            "\${ templateVariables.waitTime }"
+                    stageGraph = Stages.of(WaitStage(
+                            "\${ templateVariables.waitTime }",
+                            "My Wait Stage"
                     )).stageGraph
             )
     )
 
+    val pipelineConfig = PipelineConfig(
+        "app",
+            "name",
+            TemplateSource("template")
+    )
+
     @Test
     fun `evaluate template expression with error`() {
-        val pipelineExecution = PipelineExecution()
-        val evaluator = ExpressionEvaluator(pipelineExecution)
+        val evaluator = ExpressionEvaluator()
 
         val thrown = catchThrowable {
-            evaluator.evaluate(template)
+            evaluator.evaluate(template, pipelineConfig)
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
@@ -63,14 +68,14 @@ class PipelineTemplateExpressionEvaluatorTest {
 
     @Test
     fun `evaluate template expression`() {
-        val pipelineExecution = PipelineExecution(
-                templateVariables = mapOf(
+        val pipelineConfigWithVariable = pipelineConfig.copy(
+                variables = mapOf(
                         "waitTime" to 4
                 )
         )
-        val evaluator = ExpressionEvaluator(pipelineExecution)
+        val evaluator = ExpressionEvaluator()
 
-        val evaluatedTemplate = evaluator.evaluate(template)
+        val evaluatedTemplate = evaluator.evaluate(template, pipelineConfigWithVariable)
 
         assertThat(evaluatedTemplate).isEqualTo(PipelineTemplate(
                 "newSpelTemplate",
@@ -80,16 +85,16 @@ class PipelineTemplateExpressionEvaluatorTest {
                         "example@example.com"
                 ),
                 listOf(
-                        IntegerType(
+                        Variable(
                                 "waitTime",
                                 "The time a wait stage shall pauseth",
-                                42
+                                IntegerType(42)
                         )
                 ),
                 Pipeline(
-                        stageGraph = Stages.first(WaitStage(
-                                "My Wait Stage",
-                                "4"
+                        stageGraph = Stages.of(WaitStage(
+                                "4",
+                                "My Wait Stage"
                         )).stageGraph
                 )
         ))

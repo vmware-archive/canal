@@ -27,16 +27,16 @@ class FluentPipelineJsonGenerationTest {
 
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
-        val stages = Stages.first(CheckPreconditionsStage(
+        val stages = Stages.of(CheckPreconditionsStage(
                 "Check Preconditions",
                 emptyList()
         )).andThen(WaitStage(
-                "Server Group Timeout",
                 420,
-                "woah"
-        )).fanOut(
+                "woah",
+                "Server Group Timeout"
+        )).parallel(
                 (1..3).map {
-                    Stages.first(DestroyServiceStage(
+                    Stages.of(DestroyServiceStage(
                             "Destroy Service $it Before",
                             "cloudfoundry",
                             "creds1",
@@ -57,7 +57,7 @@ class FluentPipelineJsonGenerationTest {
                             "serviceTags$it"
                     ))
                 }
-        ).fanIn(ManualJudgmentStage(
+        ).andThen(ManualJudgmentStage(
                 "Thumbs Up?",
                 "Give a thumbs up if you like it."
         ))

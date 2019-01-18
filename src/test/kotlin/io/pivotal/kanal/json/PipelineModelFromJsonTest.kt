@@ -38,7 +38,7 @@ class PipelineModelFromJsonTest {
         val orcaStageAdapter = JsonAdapterFactory().jsonAdapterBuilder(Moshi.Builder()).build().adapter(OrcaStage::class.java)
         val stage = orcaStageAdapter.fromJson(stageWithExecutionJson)
         assertThat(stage).isEqualTo(OrcaStage(
-                WaitStage("w", 1, "c"),
+                WaitStage(1, "c", "w"),
                 StageExecution("0", listOf("1", "2", "3"))
         ))
     }

@@ -87,7 +87,6 @@ val basicPipelineModel = Pipeline(
         emptyList(),
         listOf(
                 GitTrigger(
-                        true,
                         "master",
                         "project1",
                         "secret1",
@@ -95,7 +94,6 @@ val basicPipelineModel = Pipeline(
                         "github"
                 ),
                 JenkinsTrigger(
-                        true,
                         "does-nothing",
                         "my-jenkins-master"
                 )
@@ -110,9 +108,9 @@ val basicPipelineModel = Pipeline(
                         ),
                         PipelineStage(2,
                                 WaitStage(
-                                        "Server Group Timeout",
                                         420,
-                                        "woah"
+                                        "woah",
+                                        "Server Group Timeout"
                                 )
                         ),
                         PipelineStage(3,
@@ -131,9 +129,9 @@ val basicPipelineModel = Pipeline(
                         )
                 ),
                 mapOf(
-                        2 to listOf(1),
-                        3 to listOf(1),
-                        4 to listOf(2, 3)
+                        "2" to listOf("1"),
+                        "3" to listOf("1"),
+                        "4" to listOf("2", "3")
                 )
         )
 )

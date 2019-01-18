@@ -18,24 +18,29 @@
 
 package io.pivotal.kanal.model
 
+import io.pivotal.kanal.json.Inject
+
 data class Pipeline(
         val description: String = "",
         val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stageGraph: StageGraph,
-        val source: String? = null,
-        val variables: Map<String, Any> = emptyMap()
+        val stageGraph: StageGraph = StageGraph()
 )
 
 data class PipelineStage(
-        val refId: Int,
-        val attrs: Stage
-)
+        val refId: String,
+        val attrs: Stage,
+        val inject: Inject? = null
+) {
+    constructor(refId: Int,
+                attrs: Stage,
+                inject: Inject? = null) : this(refId.toString(), attrs, inject)
+}
 
 data class StageGraph (
-        val stages: List<PipelineStage>,
-        val stageRequirements: Map<Int, List<Int>> = emptyMap()
+        val stages: List<PipelineStage> = emptyList(),
+        val stageRequirements: Map<String, List<String>> = emptyMap()
 )
 
 interface Named {
@@ -69,18 +74,17 @@ interface HasCloudProvider {
     val cloudProvider: String
 }
 
-interface Stage : Named, Typed {
-}
+interface Stage : Named, Typed
 
 data class CheckPreconditionsStage(
-        override val name: String,
+        override val name: String = "",
         val preconditions: List<Precondition>
 ) : Stage {
     override val type = "checkPreconditions"
 }
 
 data class DestroyServerGroupStage(
-        override val name: String,
+        override val name: String = "",
         override val cloudProvider: String,
         val cluster: String,
         val credentials: String,
@@ -96,7 +100,7 @@ data class DestroyServerGroupStage(
 }
 
 data class DeployServiceStage(
-        override val name: String,
+        override val name: String = "",
         override val cloudProvider: String,
         val comments: String,
         val credentials: String,
@@ -114,7 +118,7 @@ data class DeployServiceStage(
 }
 
 data class DestroyServiceStage(
-        override val name: String,
+        override val name: String = "",
         override val cloudProvider: String,
         val credentials: String,
         val region: String,
@@ -130,11 +134,11 @@ data class DestroyServiceStage(
 }
 
 data class WaitStage(
-        override val name: String,
         val waitTime: String,
-        val comments: String = ""
+        val comments: String = "",
+        override val name: String = ""
 ) : Stage {
-    constructor(name: String, waitTime: Long, comments: String = "") : this(name, waitTime.toString(), comments)
+    constructor(waitTime: Long, comments: String = "", name: String = "") : this(waitTime.toString(), comments, name)
     override val type = "wait"
 }
 
@@ -163,7 +167,7 @@ data class ExpressionContext(
 )
 
 data class ManualJudgmentStage @JvmOverloads constructor(
-        override val name: String,
+        override val name: String = "",
         val instructions: String,
         val notifications: List<Notification> = emptyList(),
         val judgmentInputs: List<String> = emptyList(),
@@ -173,7 +177,7 @@ data class ManualJudgmentStage @JvmOverloads constructor(
 }
 
 data class WebhookStage(
-        override val name: String,
+        override val name: String = "",
         val method: String,
         val url: String,
         val user: String,
@@ -184,7 +188,7 @@ data class WebhookStage(
 }
 
 data class CanaryStage(
-        override val name: String,
+        override val name: String = "",
         val analysisType: String,
         val canaryConfig: CanaryConfig
 
@@ -205,7 +209,7 @@ data class ScoreThresholds(
 )
 
 data class DeployStage(
-        override val name: String,
+        override val name: String = "",
         val comments: String,
         val clusters: List<CloudFoundryCluster>,
         val stageEnabled: Condition
@@ -263,20 +267,32 @@ interface Trigger : Typed {
 }
 
 data class JenkinsTrigger(
-        override val enabled: Boolean,
         val job: String,
-        val master: String
+        val master: String,
+        override val enabled: Boolean = true
 ) : Trigger {
     override val type = "jenkins"
 }
 
 data class GitTrigger(
-        override val enabled: Boolean,
         val branch: String,
         val project: String,
         val secret: String,
         val slug: String,
-        val source: String
+        val source: String,
+        override val enabled: Boolean = true
 ) : Trigger {
     override val type = "git"
+}
+
+data class PubSubTrigger(
+        val pubsubSystem: String,
+        val subscription: String,
+        val source: String,
+        val attributeConstraints: Map<String, Any> = emptyMap(),
+        val payloadConstraints: Map<String, Any> = emptyMap(),
+        override val enabled: Boolean = true
+) : Trigger {
+    override val type = "pubsub"
+    var subscriptionName = subscription
 }

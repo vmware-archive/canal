@@ -35,7 +35,7 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
-                stageGraph = Stages.first(CheckPreconditionsStage(
+                stageGraph = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("hello \${#alphanumerical(trigger['parameters']['account'])}")
@@ -47,7 +47,7 @@ class PipelineExpressionEvaluatorTest {
 
         assertThat(result).isEqualTo(Pipeline(
                 description = "desc1",
-                stageGraph = Stages.first(CheckPreconditionsStage(
+                stageGraph = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("hello account1")
@@ -62,7 +62,7 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
-                stageGraph = Stages.first(CheckPreconditionsStage(
+                stageGraph = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${#alphanumerical('missing paren'}")
@@ -98,15 +98,15 @@ class PipelineExpressionEvaluatorTest {
 
         val pipeline = Pipeline(
                 description = "desc1",
-                stageGraph = Stages.first(CheckPreconditionsStage(
+                stageGraph = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${true}"),
                                 ExpressionPrecondition("\${2 < 1}")
                         )
-                )).fanOut(
+                )).parallel(
                         (1..3).map {
-                            Stages.first(DestroyServiceStage(
+                            Stages.of(DestroyServiceStage(
                                     "Destroy Service $it Before",
                                     "cloudfoundry",
                                     "\${trigger['parameters']['account'] }",
@@ -122,38 +122,36 @@ class PipelineExpressionEvaluatorTest {
 
         assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                 description ="desc1",
-                stageGraph = Stages.first(CheckPreconditionsStage(
+                stageGraph = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                             ExpressionPrecondition("true"),
                             ExpressionPrecondition("false")
                         )
-                )).fanOut(
-                        listOf(
-                                Stages.first(DestroyServiceStage(
-                                        "Destroy Service 1 Before",
-                                        "cloudfoundry",
-                                        "account-1",
-                                        "region-1",
-                                        "One",
-                                        ExpressionCondition("true")
-                                )),
-                                Stages.first(DestroyServiceStage(
-                                        "Destroy Service 2 Before",
-                                        "cloudfoundry",
-                                        "account-1",
-                                        "region-1",
-                                        "Two",
-                                        ExpressionCondition("true")
-                                )),
-                                Stages.first(DestroyServiceStage(
-                                        "Destroy Service 3 Before",
-                                        "cloudfoundry",
-                                        "account-1",
-                                        "region-1",
-                                        "",
-                                        ExpressionCondition("false")
-                                ))
+                )).parallel(
+                        DestroyServiceStage(
+                                "Destroy Service 1 Before",
+                                "cloudfoundry",
+                                "account-1",
+                                "region-1",
+                                "One",
+                                ExpressionCondition("true")
+                        ),
+                        DestroyServiceStage(
+                                "Destroy Service 2 Before",
+                                "cloudfoundry",
+                                "account-1",
+                                "region-1",
+                                "Two",
+                                ExpressionCondition("true")
+                        ),
+                        DestroyServiceStage(
+                                "Destroy Service 3 Before",
+                                "cloudfoundry",
+                                "account-1",
+                                "region-1",
+                                "",
+                                ExpressionCondition("false")
                         )
                 ).stageGraph
         ))

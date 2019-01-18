@@ -16,9 +16,11 @@
 
 package io.pivotal.kanal.fluent
 
+import io.pivotal.kanal.json.Inject
 import io.pivotal.kanal.model.PipelineStage
 import io.pivotal.kanal.model.Stage
 import io.pivotal.kanal.model.StageGraph
+import java.lang.IllegalStateException
 
 class Stages(
         val stageCount: Int = 0,
@@ -27,40 +29,94 @@ class Stages(
         val stageGraph: StageGraph = StageGraph(emptyList(), mapOf())
 ) {
     companion object Factory {
-        fun first(stage: Stage): Stages {
+        @JvmOverloads fun of(stage: Stage,
+               inject: Inject? = null,
+               refId: String? = null,
+               requisiteStageRefIds: List<String> = emptyList()
+        ): Stages {
             val initialRefId = 1
-            val initialStage = listOf(PipelineStage(initialRefId, stage))
+            val nextRefId = refId ?: initialRefId.toString()
+            val initialStage = listOf(PipelineStage(nextRefId, stage, inject))
+            val stageRequirements = if (requisiteStageRefIds.isEmpty()) {
+                emptyMap()
+            } else {
+                mapOf(nextRefId to requisiteStageRefIds)
+            }
             return Stages(initialRefId,
                     initialStage,
                     initialStage,
-                    StageGraph(initialStage, mapOf())
+                    StageGraph(initialStage, stageRequirements)
             )
         }
     }
 
-    fun andThen(stage: Stage): Stages {
-        val nextRefId = stageCount + 1
-        val nextStage = listOf(PipelineStage(nextRefId, stage))
+    @JvmOverloads fun and(stage: Stage,
+            inject: Inject? = null,
+            refId: String? = null,
+            requisiteStageRefIds: List<String> = emptyList()
+    ): Stages {
+        val nextStageCount = stageCount + 1
+        val nextRefId = refId ?: nextStageCount.toString()
+        val nextStage = listOf(PipelineStage(nextRefId, stage, inject))
         val allStages = stageGraph.stages + nextStage
-        val allStageRequirements = stageGraph.stageRequirements + mapOf(nextRefId to lastStages.map(PipelineStage::refId))
-        return Stages(nextRefId,
+        val allStageRequirements = if (requisiteStageRefIds.isEmpty()) {
+            stageGraph.stageRequirements
+        } else {
+            stageGraph.stageRequirements + mapOf(nextRefId to requisiteStageRefIds)
+        }
+        return Stages(nextStageCount,
+                firstStages + nextStage,
+                nextStage+ nextStage,
+                StageGraph(allStages, allStageRequirements)
+        )
+    }
+
+    @JvmOverloads fun andThen(stage: Stage,
+                inject: Inject? = null,
+                refId: String? = null,
+                requisiteStageRefIds: List<String> = emptyList()
+    ): Stages {
+        val nextStageCount = stageCount + 1
+        val nextRefId = refId ?: nextStageCount.toString()
+        val nextStage = listOf(PipelineStage(nextRefId, stage, inject))
+        val allStages = stageGraph.stages + nextStage
+        val allRequisiteStageRefIds = requisiteStageRefIds + lastStages.map(PipelineStage::refId)
+        val allStageRequirements = if (allRequisiteStageRefIds.isEmpty()) {
+            stageGraph.stageRequirements
+        } else {
+            stageGraph.stageRequirements + mapOf(nextRefId to allRequisiteStageRefIds)
+        }
+        return Stages(nextStageCount,
                 firstStages,
                 nextStage,
                 StageGraph(allStages, allStageRequirements)
         )
     }
 
-    fun fanOut(stageGroups: List<Stages>): Stages {
-        var nextRefId = stageCount
+    @JvmOverloads fun parallel(vararg stages: Stage): Stages {
+        val stageGroups: List<Stages> = stages.map { Stages.of(it) }
+        return parallel(stageGroups)
+    }
+
+    @JvmOverloads fun parallel(vararg stageGroups: Stages): Stages {
+        return parallel(stageGroups.asList())
+    }
+
+    @JvmOverloads fun parallel(stageGroups: List<Stages>): Stages {
+        var currentStageCount = stageCount
         var allTerminalStages: List<PipelineStage> = emptyList()
         var newStages: List<PipelineStage> = emptyList()
-        var newStageRequirements: Map<Int, List<Int>> = mapOf()
+        var newStageRequirements: Map<String, List<String>> = mapOf()
         stageGroups.forEach {
             val initialStages = it.firstStages
             val terminalStages = it.lastStages
             var nextStages: List<PipelineStage> = emptyList()
+            val currentStageGraph = it.stageGraph
+            var subStageGraphStageRequirements = currentStageGraph.stageRequirements
             it.stageGraph.stages.forEach {
-                val pStage = PipelineStage(it.refId + nextRefId, it.attrs)
+                val oldRefId = it.refId
+                val newRefId = "${oldRefId}_${++currentStageCount}"
+                val pStage = it.copy(refId = newRefId)
                 newStages += pStage
                 if (terminalStages.contains(it)) {
                     allTerminalStages += pStage
@@ -68,29 +124,31 @@ class Stages(
                 if (initialStages.contains(it)) {
                     nextStages += pStage
                 }
+                if (currentStageGraph.stageRequirements.containsKey(newRefId)) {
+                    throw IllegalStateException("New RefId '$newRefId' is already used as a key in stage graph: $currentStageGraph")
+                }
+                if (currentStageGraph.stageRequirements.values.flatten().contains(newRefId)) {
+                    throw IllegalStateException("New RefId '$newRefId' is already used as a value in stage graph: $currentStageGraph")
+                }
+                subStageGraphStageRequirements = subStageGraphStageRequirements.entries.associate {
+                    val key = if (it.key == oldRefId) newRefId else it.key
+                    val value = it.value.map { if (it == oldRefId) newRefId else it}
+                    key to value
+                }
             }
-            val incrementedStageRequirements = it.stageGraph.stageRequirements.map {
-                (it.key + nextRefId to it.value.map { it + nextRefId })
-            }
-            newStageRequirements += incrementedStageRequirements
-            val requiredStagesForFanOut: Map<Int, List<Int>> = nextStages.map {
+            newStageRequirements += subStageGraphStageRequirements
+            val requiredStagesForFanOut = nextStages.map {
                 (it.refId to lastStages.map { it.refId })
             }.toMap()
             newStageRequirements += requiredStagesForFanOut
-            val largestRefId = it.stageGraph.stages.last().refId
-            nextRefId = nextRefId + largestRefId
         }
         val allStages = stageGraph.stages + newStages
         val allStageRequirements = stageGraph.stageRequirements + newStageRequirements
-        return Stages(nextRefId,
+        return Stages(currentStageCount,
                 firstStages,
                 allTerminalStages,
                 StageGraph(allStages, allStageRequirements)
         )
-    }
-
-    fun fanIn(stage: Stage): Stages {
-        return andThen(stage)
     }
 
 }

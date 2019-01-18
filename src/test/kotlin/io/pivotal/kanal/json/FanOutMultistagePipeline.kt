@@ -19,7 +19,7 @@ object FanOutMultistagePipeline {
                 "name": "Server Group Timeout",
                 "refId": "2",
                 "requisiteStageRefIds": [
-            "1"
+                "1"
               ],
             "type": "wait",
                 "waitTime": "420"
@@ -33,10 +33,10 @@ object FanOutMultistagePipeline {
                 "credentials": "creds1",
                 "failPipeline": false,
                 "name": "Destroy Service 1 Before",
-                "refId": "3",
+                "refId": "1_3",
                 "region": "dev > dev",
                 "requisiteStageRefIds": [
-            "2"
+                "2"
               ],
             "serviceName": "serviceName1",
                 "stageEnabled": {
@@ -53,10 +53,10 @@ object FanOutMultistagePipeline {
                 "credentials": "creds1",
                 "name": "Deploy Service 1",
                 "parameters": "serviceParam1",
-                "refId": "4",
+                "refId": "2_4",
                 "region": "dev > dev",
                 "requisiteStageRefIds": [
-            "3"
+                "1_3"
               ],
             "service": "serviceType1",
                 "serviceName": "serviceName1",
@@ -77,10 +77,10 @@ object FanOutMultistagePipeline {
                 "credentials": "creds1",
                 "failPipeline": false,
                 "name": "Destroy Service 2 Before",
-                "refId": "5",
+                "refId": "1_5",
                 "region": "dev > dev",
                 "requisiteStageRefIds": [
-            "2"
+                "2"
               ],
             "serviceName": "serviceName2",
                 "stageEnabled": {
@@ -97,10 +97,10 @@ object FanOutMultistagePipeline {
                 "credentials": "creds1",
                 "name": "Deploy Service 2",
                 "parameters": "serviceParam2",
-                "refId": "6",
+                "refId": "2_6",
                 "region": "dev > dev",
                 "requisiteStageRefIds": [
-            "5"
+                "1_5"
               ],
             "service": "serviceType2",
                 "serviceName": "serviceName2",
@@ -121,10 +121,10 @@ object FanOutMultistagePipeline {
                 "credentials": "creds1",
                 "failPipeline": false,
                 "name": "Destroy Service 3 Before",
-                "refId": "7",
+                "refId": "1_7",
                 "region": "dev > dev",
                 "requisiteStageRefIds": [
-            "2"
+                "2"
               ],
             "serviceName": "serviceName3",
                 "stageEnabled": {
@@ -141,10 +141,10 @@ object FanOutMultistagePipeline {
                 "credentials": "creds1",
                 "name": "Deploy Service 3",
                 "parameters": "serviceParam3",
-                "refId": "8",
+                "refId": "2_8",
                 "region": "dev > dev",
                 "requisiteStageRefIds": [
-            "7"
+                "1_7"
               ],
             "service": "serviceType3",
                 "serviceName": "serviceName3",
@@ -164,9 +164,9 @@ object FanOutMultistagePipeline {
             "notifications": [],
             "refId": "9",
             "requisiteStageRefIds": [
-                "4",
-                "6",
-                "8"
+                "2_4",
+                "2_6",
+                "2_8"
             ],
             "type": "manualJudgment"
         }

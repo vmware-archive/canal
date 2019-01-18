@@ -8,20 +8,22 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.Pipeline
+import io.pivotal.kanal.model.PipelineConfig
 import io.pivotal.kanal.model.PipelineTemplate
 
-class ExpressionEvaluator(val pipelineExecution: PipelineExecution) {
+class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExecution()) {
 
     val expressionEvaluator = PipelineExpressionEvaluator(
             ContextFunctionConfiguration(UserConfiguredUrlRestrictions.Builder().build()))
 
     fun evaluate(pipeline: Pipeline): Pipeline {
-        val executionWithPipelineVariables = pipelineExecution.copy(templateVariables = pipeline.variables)
-        return evaluateWithAdapter(pipeline, JsonAdapterFactory().pipelineAdapter(), executionWithPipelineVariables)
+        return evaluateWithAdapter(pipeline, JsonAdapterFactory().pipelineAdapter(), pipelineExecution)
     }
 
-    fun evaluate(template: PipelineTemplate): PipelineTemplate {
-        return evaluateWithAdapter(template, JsonAdapterFactory().pipelineTemplateAdapter(), pipelineExecution)
+    fun evaluate(template: PipelineTemplate, pipelineConfig: PipelineConfig): PipelineTemplate {
+        val executionWithPipelineConfigVariables = pipelineExecution.copy(templateVariables = pipelineConfig.variables)
+        return evaluateWithAdapter(template, JsonAdapterFactory().pipelineTemplateAdapter(),
+                executionWithPipelineConfigVariables)
     }
 
     private fun <T>evaluateWithAdapter(m: T, adapter: JsonAdapter<T>, context: Any): T {

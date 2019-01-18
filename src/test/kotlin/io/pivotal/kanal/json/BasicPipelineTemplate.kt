@@ -16,7 +16,10 @@ object BasicPipelineTemplate {
                 "type" : "int",
                 "defaultValue" : 42,
                 "description" : "The time a wait stage shall pauseth",
-                "name" : "waitTime"
+                "name" : "waitTime",
+                "merge" : false,
+                "nullable" : false,
+                "remove" : false
             }
         ],
         "id" : "newSpelTemplate",
@@ -61,16 +64,16 @@ object BasicPipelineTemplate {
                     "example@example.com"
             ),
             listOf(
-                    IntegerType(
+                    Variable(
                             "waitTime",
                             "The time a wait stage shall pauseth",
-                            42
+                            IntegerType(42)
                     )
             ),
             Pipeline(
-                    stageGraph = Stages.first(WaitStage(
-                            "My Wait Stage",
-                            "$\\{ templateVariables.waitTime }"
+                    stageGraph = Stages.of(WaitStage(
+                            "$\\{ templateVariables.waitTime }",
+                            name = "My Wait Stage"
                     )).stageGraph
             )
     )

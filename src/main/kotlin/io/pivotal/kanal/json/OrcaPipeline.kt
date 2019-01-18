@@ -37,6 +37,31 @@ data class OrcaPipeline (
         val updateTs: String = "0"
 )
 
+data class OrcaPipelineConfig (
+        val application: String,
+        val name: String,
+        val template: TemplateSource,
+        val description: String = "",
+        val parameters: List<Parameter> = emptyList(),
+        val notifications: List<Notification> = emptyList(),
+        val triggers: List<Trigger> = emptyList(),
+        val stages: List<OrcaStage>,
+        val variables: Map<String, Any> = emptyMap(),
+        val inherit: List<String> = emptyList(),
+        val schema: String = "v2"
+)
+
+data class OrcaVariable(
+        val name: String,
+        val description: String,
+        val type: String,
+        val defaultValue: Any?,
+        val example: String? = null,
+        val nullable: Boolean = false,
+        val merge: Boolean = false,
+        val remove: Boolean = false
+)
+
 data class OrcaStage(
         val stage: Stage,
         val execution: StageExecution
@@ -44,8 +69,24 @@ data class OrcaStage(
 
 data class StageExecution(
         val refId: String,
-        val requisiteStageRefIds: List<String>
+        val requisiteStageRefIds: List<String>,
+        val inject: Inject? = null
 )
+
+sealed class Inject {
+    data class Before(val before: String) : Inject() {
+        val type = "before"
+    }
+    data class After(val after: String) : Inject() {
+        val type = "after"
+    }
+    data class First(val first: Boolean = true) : Inject() {
+        val type = "first"
+    }
+    data class Last(val last: Boolean = true) : Inject() {
+        val type = "last"
+    }
+}
 
 class PipelineAdapter {
     @ToJson
@@ -69,6 +110,87 @@ class PipelineAdapter {
                 orcaPipeline.notifications,
                 orcaPipeline.triggers,
                 stageGraph
+        )
+    }
+}
+
+class PipelineConfigAdapter {
+    @ToJson
+    fun toJson(pipelineConfig: PipelineConfig): OrcaPipelineConfig {
+        val stages = StageGraphAdapter().toJson(pipelineConfig.pipeline.stageGraph)
+        return OrcaPipelineConfig(
+                pipelineConfig.application,
+                pipelineConfig.name,
+                pipelineConfig.template,
+                pipelineConfig.pipeline.description,
+                pipelineConfig.pipeline.parameters,
+                pipelineConfig.pipeline.notifications,
+                pipelineConfig.pipeline.triggers,
+                stages,
+                pipelineConfig.variables,
+                pipelineConfig.inherit,
+                pipelineConfig.schema
+        )
+    }
+
+    @FromJson
+    fun fromJson(orcaPipelineConfig: OrcaPipelineConfig): PipelineConfig? {
+        val stageGraph = StageGraphAdapter().fromJson(orcaPipelineConfig.stages)
+        return PipelineConfig(
+                orcaPipelineConfig.application,
+                orcaPipelineConfig.name,
+                orcaPipelineConfig.template,
+                Pipeline(
+                        orcaPipelineConfig.description,
+                        orcaPipelineConfig.parameters,
+                        orcaPipelineConfig.notifications,
+                        orcaPipelineConfig.triggers,
+                        stageGraph
+                ),
+                orcaPipelineConfig.variables,
+                orcaPipelineConfig.inherit,
+                orcaPipelineConfig.schema
+        )
+    }
+}
+
+class VariableAdapter {
+    @ToJson
+    fun toJson(variable: Variable): OrcaVariable {
+        return OrcaVariable(
+                variable.name,
+                variable.description,
+                variable.typeAttrs.type,
+                variable.typeAttrs.defaultValue,
+                variable.example,
+                variable.nullable,
+                variable.merge,
+                variable.remove
+        )
+    }
+
+    @FromJson
+    fun fromJson(orcaVariable: OrcaVariable): Variable? {
+        val typeAttrs = when(orcaVariable.type) {
+            "int" -> if (orcaVariable.defaultValue is Float) {
+                IntegerType((orcaVariable.defaultValue as Float).toInt())
+            } else {
+                IntegerType(orcaVariable.defaultValue as Int)
+            }
+            "float" -> FloatType(orcaVariable.defaultValue as Float)
+            "string" -> StringType(orcaVariable.defaultValue as String)
+            "boolean" -> BooleanType(orcaVariable.defaultValue as Boolean)
+            "list" -> ListType(orcaVariable.defaultValue as List<Any>)
+            else -> ObjectType(orcaVariable.defaultValue)
+        }
+        return Variable(
+                orcaVariable.name,
+                orcaVariable.description,
+                typeAttrs,
+                orcaVariable.example,
+                orcaVariable.nullable,
+                orcaVariable.merge,
+                orcaVariable.remove
         )
     }
 }
@@ -124,20 +246,20 @@ class StageGraphAdapter {
     @ToJson
     fun toJson(stageGraph: StageGraph): List<OrcaStage> {
         return stageGraph.stages.map {
-            val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it.toString() }
-            OrcaStage(it.attrs, StageExecution(it.refId.toString(), stageRequirements))
+            val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it }
+            OrcaStage(it.attrs, StageExecution(it.refId, stageRequirements, it.inject))
         }
     }
 
     @FromJson
     fun fromJson(orcaStages: List<OrcaStage>): StageGraph {
         var stages: List<PipelineStage> = emptyList()
-        var stageRequirements: Map<Int, List<Int>> = mapOf()
+        var stageRequirements: Map<String, List<String>> = mapOf()
         orcaStages.map {
-            val refId = it.execution.refId.toInt()
-            stages += PipelineStage(refId, it.stage)
+            val refId = it.execution.refId
+            stages += PipelineStage(refId, it.stage, it.execution.inject)
             if (it.execution.requisiteStageRefIds.isNotEmpty()) {
-                stageRequirements += (refId to it.execution.requisiteStageRefIds.map { it.toInt() })
+                stageRequirements += (refId to it.execution.requisiteStageRefIds.map { it })
             }
         }
         return StageGraph(stages, stageRequirements)
@@ -165,16 +287,16 @@ val jsonNumberAdapter = object : JsonAdapter.Factory {
                     delegate.fromJson(reader)
                 } else {
                     val s = reader.nextString()
-                    if (s.contains(".")) {
-                        BigDecimal(s)
-                    } else {
-                        Integer(s)
+                    try {
+                        Integer.parseInt(s)
+                    } catch (e: NumberFormatException) {
+                        s.toFloat()
                     }
                 }
             }
 
             override fun toJson(writer: JsonWriter, value: Any?) {
-                throw UnsupportedOperationException()
+                delegate.toJson(writer, value)
             }
         }
     }
@@ -189,10 +311,13 @@ class JsonAdapterFactory {
                 .add(ScoreThresholdsAdapter())
                 .add(ExpressionConditionAdapter())
                 .add(ExpressionPreconditionAdapter())
+                .add(PipelineConfigAdapter())
+                .add(VariableAdapter())
                 .add(jsonNumberAdapter)
                 .add(PolymorphicJsonAdapterFactory.of(Trigger::class.java, "type")
                         .withSubtype(JenkinsTrigger::class.java, "jenkins")
                         .withSubtype(GitTrigger::class.java, "git")
+                        .withSubtype(PubSubTrigger::class.java, "pubsub")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Condition::class.java, "type")
                         .withSubtype(ExpressionCondition::class.java, "expression")
@@ -220,9 +345,19 @@ class JsonAdapterFactory {
                         .withSubtype(DeployStage::class.java, "deploy")
                         .withSubtype(CheckPreconditionsStage::class.java, "checkPreconditions")
                 )
-                .add(PolymorphicJsonAdapterFactory.of(Variable::class.java, "type")
+                .add(PolymorphicJsonAdapterFactory.of(VariableType::class.java, "type")
                         .withSubtype(IntegerType::class.java, "int")
                         .withSubtype(StringType::class.java, "string")
+                        .withSubtype(FloatType::class.java, "float")
+                        .withSubtype(BooleanType::class.java, "boolean")
+                        .withSubtype(ListType::class.java, "list")
+                        .withSubtype(ObjectType::class.java, "object")
+                )
+                .add(PolymorphicJsonAdapterFactory.of(Inject::class.java, "type")
+                        .withSubtype(Inject.Before::class.java, "before")
+                        .withSubtype(Inject.After::class.java, "after")
+                        .withSubtype(Inject.First::class.java, "first")
+                        .withSubtype(Inject.Last::class.java, "last")
                 )
                 .add(KotlinJsonAdapterFactory())
         return builder
@@ -236,6 +371,10 @@ class JsonAdapterFactory {
         return jsonAdapterBuilder(Moshi.Builder()).build().adapter(PipelineTemplate::class.java)
     }
 
+    fun pipelineConfigAdapter(): JsonAdapter<PipelineConfig> {
+        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(PipelineConfig::class.java)
+    }
+
     fun stageGraphAdapter(): JsonAdapter<StageGraph> {
         return jsonAdapterBuilder(Moshi.Builder()).build().adapter(StageGraph::class.java)
     }
@@ -246,5 +385,9 @@ class JsonAdapterFactory {
 
     fun stageExecutionAdapter(): JsonAdapter<StageExecution> {
         return jsonAdapterBuilder(Moshi.Builder()).build().adapter(StageExecution::class.java)
+    }
+
+    fun injectAdapter(): JsonAdapter<Inject> {
+        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(Inject::class.java)
     }
 }

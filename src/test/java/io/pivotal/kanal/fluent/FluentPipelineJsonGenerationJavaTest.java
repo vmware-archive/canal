@@ -14,15 +14,15 @@ class FluentPipelineJsonGenerationJavaTest {
 
     @Test
     void fluentStagesDslWithFanOutAndFanIn() {
-        Stages stages = Stages.Factory.first(new CheckPreconditionsStage(
+        Stages stages = Stages.Factory.of(new CheckPreconditionsStage(
                 "Check Preconditions",
                 emptyList()
         )).andThen(new WaitStage(
-                "Server Group Timeout",
                 420,
-                "woah"
-        )).fanOut(
-                range(1, 4).mapToObj( it -> Stages.Factory.first(new DestroyServiceStage(
+                "woah",
+                "Server Group Timeout"
+        )).parallel(
+                range(1, 4).mapToObj( it -> Stages.Factory.of(new DestroyServiceStage(
                         "Destroy Service " + it + " Before",
                         "cloudfoundry",
                         "creds1",
@@ -42,7 +42,7 @@ class FluentPipelineJsonGenerationJavaTest {
                         new ExpressionCondition("exp2"),
                         "serviceTags" + it
                 ))).collect(Collectors.toList())
-        ).fanIn(new ManualJudgmentStage(
+        ).andThen(new ManualJudgmentStage(
                 "Thumbs Up?",
                 "Give a thumbs up if you like it."
         ));

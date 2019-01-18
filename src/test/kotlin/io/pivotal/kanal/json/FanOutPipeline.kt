@@ -338,7 +338,6 @@ val fanOutPipelineModel = Pipeline(
         emptyList(),
         listOf(
                 GitTrigger(
-                        true,
                         "master",
                         "project1",
                         "secret1",
@@ -346,7 +345,6 @@ val fanOutPipelineModel = Pipeline(
                         "github"
                 ),
                 JenkinsTrigger(
-                        true,
                         "does-nothing",
                         "my-jenkins-master"
                 )
@@ -372,16 +370,16 @@ val fanOutPipelineModel = Pipeline(
                         ),
                         PipelineStage(3,
                                 WaitStage(
-                                        "Server Group Timeout",
                                         420,
-                                        "woah"
+                                        "woah",
+                                        "Server Group Timeout"
                                 )
                         ),
                         PipelineStage(4,
                                 WaitStage(
-                                        "External service Wait",
                                         7,
-                                        "Wait on other service to reset"
+                                        "Wait on other service to reset",
+                                        "External service Wait"
                                 )
                         ),
                         PipelineStage(5,
@@ -512,18 +510,18 @@ val fanOutPipelineModel = Pipeline(
                         )
                 ),
                 mapOf(
-                        2 to listOf(1),
-                        3 to listOf(2),
-                        5 to listOf(4),
-                        6 to listOf(4),
-                        7 to listOf(4),
-                        8 to listOf(5),
-                        9 to listOf(6),
-                        10 to listOf(7),
-                        11 to listOf(8, 9, 10),
-                        12 to listOf(11),
-                        13 to listOf(11),
-                        14 to listOf(12)
+                        "2" to listOf("1"),
+                        "3" to listOf("2"),
+                        "5" to listOf("4"),
+                        "6" to listOf("4"),
+                        "7" to listOf("4"),
+                        "8" to listOf("5"),
+                        "9" to listOf("6"),
+                        "10" to listOf("7"),
+                        "11" to listOf("8", "9", "10"),
+                        "12" to listOf("11"),
+                        "13" to listOf("11"),
+                        "14" to listOf("12")
                 )
         )
 )
