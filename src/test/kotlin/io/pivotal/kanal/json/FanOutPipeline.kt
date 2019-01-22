@@ -1,6 +1,9 @@
 package io.pivotal.kanal.json
 
 import io.pivotal.kanal.model.*
+import io.pivotal.kanal.model.cloudfoundry.ArtifactManifest
+import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCluster
+import io.pivotal.kanal.model.cloudfoundry.ReferencedArtifact
 import org.intellij.lang.annotations.Language
 
 @Language("JSON")
@@ -231,8 +234,13 @@ val fanOutPipelineJson = """
                     "reference": "s3://bucket1",
                     "type": "artifact"
                   },
+                  "capacity": {
+                    "desired": "1",
+                    "max": "1",
+                    "min": "1"
+                  },
                   "cloudProvider": "cloudfoundry",
-                  "freeFormDetails": "ffd",
+                  "detail": "ffd",
                   "manifest": {
                     "account": "account3",
                     "reference": "s3://bucket2",
@@ -241,7 +249,6 @@ val fanOutPipelineJson = """
                   "provider": "cloudfoundry",
                   "region": "dev > dev",
                   "stack": "stack1",
-                  "startApplication": true,
                   "strategy": "RedBlack"
                 }
               ],
@@ -460,25 +467,25 @@ val fanOutPipelineModel = Pipeline(
                         PipelineStage(11,
                                 DeployStage(
                                         "Deploy",
-                                        "Deployment Strategy is RedBlack",
-                                        listOf(CloudFoundryCluster(
+                                        CloudFoundryCluster(
+                                                "app1",
                                                 "account1",
                                                 "dev > dev",
-                                                "stack1",
                                                 "RedBlack",
-                                                true,
-                                                "app1",
-                                                "ffd",
                                                 ReferencedArtifact(
                                                         "account2",
                                                         "s3://bucket1"
                                                 ),
+                                                Capacity(1),
                                                 ArtifactManifest(
                                                         "account3",
                                                         "s3://bucket2"
-                                                )
-                                        )),
-                                        ExpressionCondition("execution['trigger']['parameters']['deployServerGroup'] == 'true'")
+                                                ),
+                                                "stack1",
+                                                "ffd"
+                                        ),
+                                        ExpressionCondition("execution['trigger']['parameters']['deployServerGroup'] == 'true'"),
+                                        "Deployment Strategy is RedBlack"
                                 )
                         ),
                         PipelineStage(12,

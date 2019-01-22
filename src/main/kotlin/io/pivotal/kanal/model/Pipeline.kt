@@ -25,7 +25,8 @@ data class Pipeline(
         val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stageGraph: StageGraph = StageGraph()
+        val stageGraph: StageGraph = StageGraph(),
+        val limitConcurrent: Boolean = false
 )
 
 data class PipelineStage(
@@ -142,6 +143,19 @@ data class WaitStage(
     override val type = "wait"
 }
 
+data class JenkinsStage(
+        override val name: String = "",
+        val job: String,
+        val master: String,
+        val parameters: Map<String, String> = emptyMap(),
+        val stageEnabled: Condition? = null
+) : Stage {
+    override val type = "jenkins"
+    var waitForCompletion = true
+    var continuePipeline = false
+    var failPipeline = true
+}
+
 interface Condition : Typed
 
 data class ExpressionCondition(
@@ -150,6 +164,9 @@ data class ExpressionCondition(
     constructor(expression: Boolean) : this(expression.toString())
     override val type = "expression"
 }
+
+val trueCondition = ExpressionCondition(true)
+val falseCondition = ExpressionCondition(false)
 
 interface Precondition : Typed
 
@@ -168,7 +185,7 @@ data class ExpressionContext(
 
 data class ManualJudgmentStage @JvmOverloads constructor(
         override val name: String = "",
-        val instructions: String,
+        val instructions: String? = null,
         val notifications: List<Notification> = emptyList(),
         val judgmentInputs: List<String> = emptyList(),
         val failPipeline: Boolean = true
@@ -210,48 +227,31 @@ data class ScoreThresholds(
 
 data class DeployStage(
         override val name: String = "",
-        val comments: String,
-        val clusters: List<CloudFoundryCluster>,
-        val stageEnabled: Condition
+        val clusters: List<Cluster>,
+        val stageEnabled: Condition? = null,
+        val comments: String? = null
 ) : Stage {
+    constructor(name: String = "",
+                cluster: Cluster,
+                stageEnabled: Condition? = null,
+                comments: String? = null) : this(name, listOf(cluster), stageEnabled, comments)
     override val type = "deploy"
 }
 
-data class CloudFoundryCluster(
-        val account: String,
-        val region: String,
-        val stack: String,
-        val strategy: String,
-        val startApplication: Boolean,
-        val application: String,
-        val freeFormDetails: String,
-        val artifact: Artifact,
-        val manifest: Manifest
-) : HasCloudProvider {
-    override var cloudProvider = "cloudfoundry"
-    var provider = cloudProvider
+interface Cluster : HasCloudProvider {
+    val capacity: Capacity
 }
 
-interface Manifest : Typed {
-    val account: String
+data class Capacity(
+    val desired: String,
+    val max: String,
+    val min: String
+) {
+    constructor(desired: Int,
+                max: Int,
+                min: Int) : this(desired.toString(), desired.toString(), desired.toString())
+    constructor(desired: Int) : this(desired, desired, desired)
 }
-
-data class ArtifactManifest(
-        override val account: String,
-        val reference: String
-) : Manifest {
-    override val type = "artifact"
-}
-
-interface Artifact : Typed
-
-data class ReferencedArtifact(
-        val account: String,
-        val reference: String
-) : Artifact {
-    override val type = "artifact"
-}
-
 
 interface Notification : Typed
 
@@ -269,6 +269,7 @@ interface Trigger : Typed {
 data class JenkinsTrigger(
         val job: String,
         val master: String,
+        val propertyFile: String? = null,
         override val enabled: Boolean = true
 ) : Trigger {
     override val type = "jenkins"

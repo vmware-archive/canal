@@ -20,14 +20,15 @@ import com.squareup.moshi.*
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.pivotal.kanal.model.*
+import io.pivotal.kanal.model.cloudfoundry.*
 import java.lang.reflect.Type
 
 data class OrcaPipeline (
-        val description: String,
-        val parameterConfig: List<Parameter>,
-        val notifications: List<Notification>,
-        val triggers: List<Trigger>,
-        val stages: List<OrcaStage>,
+        val description: String = "",
+        val parameterConfig: List<Parameter> = emptyList(),
+        val notifications: List<Notification> = emptyList(),
+        val triggers: List<Trigger> = emptyList(),
+        val stages: List<OrcaStage> = emptyList(),
         val appConfig: Map<String, Any> = mapOf(),
         val expectedArtifacts: List<Any> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
@@ -96,7 +97,8 @@ class PipelineAdapter {
                 pipeline.parameters,
                 pipeline.notifications,
                 pipeline.triggers,
-                stages
+                stages,
+                limitConcurrent = pipeline.limitConcurrent
         )
     }
 
@@ -108,7 +110,8 @@ class PipelineAdapter {
                 orcaPipeline.parameterConfig,
                 orcaPipeline.notifications,
                 orcaPipeline.triggers,
-                stageGraph
+                stageGraph,
+                limitConcurrent = orcaPipeline.limitConcurrent
         )
     }
 }
@@ -327,10 +330,15 @@ class JsonAdapterFactory {
                 .add(PolymorphicJsonAdapterFactory.of(Notification::class.java, "type")
                         .withSubtype(EmailNotification::class.java, "email")
                 )
+                .add(PolymorphicJsonAdapterFactory.of(Cluster::class.java, "cloudProvider")
+                        .withSubtype(CloudFoundryCluster::class.java, "cloudfoundry")
+                )
                 .add(PolymorphicJsonAdapterFactory.of(Artifact::class.java, "type")
+                        .withSubtype(TriggerArtifact::class.java, "trigger")
                         .withSubtype(ReferencedArtifact::class.java, "artifact")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Manifest::class.java, "type")
+                        .withSubtype(DirectManifest::class.java, "direct")
                         .withSubtype(ArtifactManifest::class.java, "artifact")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Stage::class.java, "type")
@@ -343,6 +351,7 @@ class JsonAdapterFactory {
                         .withSubtype(CanaryStage::class.java, "kayentaCanary")
                         .withSubtype(DeployStage::class.java, "deploy")
                         .withSubtype(CheckPreconditionsStage::class.java, "checkPreconditions")
+                        .withSubtype(JenkinsStage::class.java, "jenkins")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(VariableType::class.java, "type")
                         .withSubtype(IntegerType::class.java, "int")
