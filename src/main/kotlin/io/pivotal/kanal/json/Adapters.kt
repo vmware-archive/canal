@@ -21,6 +21,7 @@ import io.pivotal.kanal.model.*
 import java.lang.reflect.Type
 
 class PipelineAdapter {
+
     @ToJson
     fun toJson(pipeline: Pipeline): OrcaPipeline {
         val stages = StageGraphAdapter().toJson(pipeline.stageGraph)
@@ -130,10 +131,16 @@ class VariableAdapter {
 }
 
 class OrcaStageAdapter {
+
+    val stageAdapter by lazy {
+        JsonAdapterFactory().createAdapter<Stage>()
+    }
+    val executionDetailsAdapter by lazy {
+        JsonAdapterFactory().createAdapter<StageExecution>()
+    }
+
     @ToJson
     fun toJson(writer: JsonWriter, value: OrcaStage) {
-        val stageAdapter = JsonAdapterFactory().createAdapter<Stage>()
-        val executionDetailsAdapter = JsonAdapterFactory().createAdapter<StageExecution>()
         writer.beginObject()
         val token = writer.beginFlatten()
         executionDetailsAdapter.toJson(writer, value.execution)
@@ -144,8 +151,6 @@ class OrcaStageAdapter {
 
     @FromJson
     fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): OrcaStage {
-        val stageAdapter = JsonAdapterFactory().createAdapter<Stage>()
-        val executionDetailsAdapter = JsonAdapterFactory().createAdapter<StageExecution>()
         val stage = stageAdapter.fromJsonValue(map)!!
         val execution = executionDetailsAdapter.fromJsonValue(map)!!
         return OrcaStage(stage, execution)
