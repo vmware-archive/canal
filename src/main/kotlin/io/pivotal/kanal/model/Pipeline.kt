@@ -18,8 +18,6 @@
 
 package io.pivotal.kanal.model
 
-import io.pivotal.kanal.json.Inject
-
 data class Pipeline(
         val description: String = "",
         val parameters: List<Parameter> = emptyList(),
@@ -37,6 +35,21 @@ data class PipelineStage(
     constructor(refId: Int,
                 attrs: Stage,
                 inject: Inject? = null) : this(refId.toString(), attrs, inject)
+}
+
+sealed class Inject {
+    data class Before(val before: String) : Inject() {
+        val type = "before"
+    }
+    data class After(val after: String) : Inject() {
+        val type = "after"
+    }
+    data class First(val first: Boolean = true) : Inject() {
+        val type = "first"
+    }
+    data class Last(val last: Boolean = true) : Inject() {
+        val type = "last"
+    }
 }
 
 data class StageGraph (

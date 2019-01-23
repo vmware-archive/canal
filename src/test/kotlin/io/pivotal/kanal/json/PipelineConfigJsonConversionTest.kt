@@ -1,10 +1,7 @@
 package io.pivotal.kanal.json
 
 import io.pivotal.kanal.fluent.Stages
-import io.pivotal.kanal.model.Pipeline
-import io.pivotal.kanal.model.PubSubTrigger
-import io.pivotal.kanal.model.TemplateSource
-import io.pivotal.kanal.model.WaitStage
+import io.pivotal.kanal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions
 import org.intellij.lang.annotations.Language

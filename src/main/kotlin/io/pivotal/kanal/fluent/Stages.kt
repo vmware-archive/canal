@@ -16,7 +16,7 @@
 
 package io.pivotal.kanal.fluent
 
-import io.pivotal.kanal.json.Inject
+import io.pivotal.kanal.model.Inject
 import io.pivotal.kanal.model.PipelineStage
 import io.pivotal.kanal.model.Stage
 import io.pivotal.kanal.model.StageGraph

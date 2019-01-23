@@ -1,7 +1,6 @@
 package io.pivotal.kanal.model
 
 import com.squareup.moshi.Json
-import java.math.BigDecimal
 
 data class PipelineConfig(
         val application: String,
