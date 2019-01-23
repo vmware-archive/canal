@@ -9,6 +9,7 @@ import com.squareup.moshi.Moshi
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.Pipeline
 import io.pivotal.kanal.model.PipelineConfig
+import io.pivotal.kanal.model.PipelineExecution
 import io.pivotal.kanal.model.PipelineTemplate
 
 class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExecution()) {
@@ -45,10 +46,5 @@ class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExe
     }
 
 }
-
-data class PipelineExecution(
-        val trigger: Map<String, Any> = emptyMap(),
-        val templateVariables: Map<String, Any> = emptyMap()
-)
 
 class IllegalExpressionException(val summary: ExpressionEvaluationSummary) : Exception("Failed to evaluate expressions!")
