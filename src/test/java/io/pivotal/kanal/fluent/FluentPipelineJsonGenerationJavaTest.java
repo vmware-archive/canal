@@ -1,6 +1,5 @@
 package io.pivotal.kanal.fluent;
 
-import io.pivotal.kanal.json.FanOutMultistagePipeline;
 import io.pivotal.kanal.json.JsonAdapterFactory;
 import io.pivotal.kanal.model.*;
 import java.util.stream.Collectors;
@@ -48,7 +47,7 @@ class FluentPipelineJsonGenerationJavaTest {
         ));
 
         String json = new JsonAdapterFactory().stageGraphAdapter().toJson(stages.getStageGraph());
-        assertThatJson(json).isEqualTo(FanOutMultistagePipeline.getJson());
+        assertThatJson(json).isEqualTo(FluentPipelineJsonGenerationTest.getJson());
     }
 
 }

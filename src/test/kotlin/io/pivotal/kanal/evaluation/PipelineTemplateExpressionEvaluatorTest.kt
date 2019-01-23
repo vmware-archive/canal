@@ -17,7 +17,6 @@
 package io.pivotal.kanal.evaluation
 
 import io.pivotal.kanal.fluent.Stages
-import io.pivotal.kanal.json.BasicPipelineTemplate
 import io.pivotal.kanal.model.*
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
