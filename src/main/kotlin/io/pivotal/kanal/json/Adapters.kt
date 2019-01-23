@@ -24,26 +24,24 @@ class PipelineAdapter {
 
     @ToJson
     fun toJson(pipeline: Pipeline): OrcaPipeline {
-        val stages = StageGraphAdapter().toJson(pipeline.stageGraph)
         return OrcaPipeline(
                 pipeline.description,
                 pipeline.parameters,
                 pipeline.notifications,
                 pipeline.triggers,
-                stages,
+                pipeline.stageGraph,
                 limitConcurrent = pipeline.limitConcurrent
         )
     }
 
     @FromJson
     fun fromJson(orcaPipeline: OrcaPipeline): Pipeline? {
-        val stageGraph = StageGraphAdapter().fromJson(orcaPipeline.stages)
         return Pipeline(
                 orcaPipeline.description,
                 orcaPipeline.parameterConfig,
                 orcaPipeline.notifications,
                 orcaPipeline.triggers,
-                stageGraph,
+                orcaPipeline.stages,
                 limitConcurrent = orcaPipeline.limitConcurrent
         )
     }
@@ -52,7 +50,6 @@ class PipelineAdapter {
 class PipelineConfigAdapter {
     @ToJson
     fun toJson(pipelineConfig: PipelineConfig): OrcaPipelineConfig {
-        val stages = StageGraphAdapter().toJson(pipelineConfig.pipeline.stageGraph)
         return OrcaPipelineConfig(
                 pipelineConfig.application,
                 pipelineConfig.name,
@@ -61,7 +58,7 @@ class PipelineConfigAdapter {
                 pipelineConfig.pipeline.parameters,
                 pipelineConfig.pipeline.notifications,
                 pipelineConfig.pipeline.triggers,
-                stages,
+                pipelineConfig.pipeline.stageGraph,
                 pipelineConfig.variables,
                 pipelineConfig.inherit,
                 pipelineConfig.schema
@@ -70,7 +67,6 @@ class PipelineConfigAdapter {
 
     @FromJson
     fun fromJson(orcaPipelineConfig: OrcaPipelineConfig): PipelineConfig? {
-        val stageGraph = StageGraphAdapter().fromJson(orcaPipelineConfig.stages)
         return PipelineConfig(
                 orcaPipelineConfig.application,
                 orcaPipelineConfig.name,
@@ -80,7 +76,7 @@ class PipelineConfigAdapter {
                         orcaPipelineConfig.parameters,
                         orcaPipelineConfig.notifications,
                         orcaPipelineConfig.triggers,
-                        stageGraph
+                        orcaPipelineConfig.stages
                 ),
                 orcaPipelineConfig.variables,
                 orcaPipelineConfig.inherit,

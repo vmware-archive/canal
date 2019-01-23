@@ -8,7 +8,7 @@ data class OrcaPipeline (
         val parameterConfig: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stages: List<OrcaStage> = emptyList(),
+        val stages: StageGraph = StageGraph(),
         val appConfig: Map<String, Any> = mapOf(),
         val expectedArtifacts: List<Any> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
@@ -25,7 +25,7 @@ data class OrcaPipelineConfig (
         val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stages: List<OrcaStage>,
+        val stages: StageGraph = StageGraph(),
         val variables: Map<String, Any> = emptyMap(),
         val inherit: List<String> = emptyList(),
         val schema: String = "v2"
