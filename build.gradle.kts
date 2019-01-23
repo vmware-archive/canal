@@ -41,7 +41,7 @@ dependencies {
     compile("com.squareup.moshi:moshi-kotlin:1.8.0")
     compile("com.squareup.moshi:moshi-adapters:1.8.0")
     compile("net.javacrumbs.json-unit:json-unit-assertj:2.2.0")
-    compile("com.netflix.spinnaker.orca:orca-core:6.115.0")
+    compile("com.netflix.spinnaker.orca:orca-core:6.126.0")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:5.2.0")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.2.0")

@@ -60,8 +60,7 @@ class PipelineTemplateExpressionEvaluatorTest {
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
-        // why is com.netflix.spinnaker.orca.pipeline.expressions.ExpressionEvaluationSummary.Result not public?
-        assertThat((thrown as IllegalExpressionException).summary.expressionResult.values.first().first().toString())
+        assertThat((thrown as IllegalExpressionException).summary.expressionResult.values.first().first().description)
                 .contains("templateVariables.waitTime not found")
     }
 

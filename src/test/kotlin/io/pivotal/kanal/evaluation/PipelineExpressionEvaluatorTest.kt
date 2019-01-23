@@ -75,9 +75,8 @@ class PipelineExpressionEvaluatorTest {
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
-        // why is com.netflix.spinnaker.orca.pipeline.expressions.ExpressionEvaluationSummary.Result not public?
-        assertThat((thrown as IllegalExpressionException).summary.expressionResult.values.first().first().toString())
-                .contains("Found closing '}' at position 33 but most recent opening is '(' at position 17'")
+        assertThat((thrown as IllegalExpressionException).summary.expressionResult.values.first().first().description)
+                .contains("Found closing '}' at position 33 but most recent opening is '(' at position 17")
     }
 
     @Test
