@@ -86,13 +86,13 @@ class PipelineTemplateJsonGenerationTest {
 
     @Test
     fun `generate pipeline template JSON`() {
-        val json = JsonAdapterFactory().pipelineTemplateAdapter().toJson(model)
+        val json = JsonAdapterFactory().createAdapter<PipelineTemplate>().toJson(model)
         JsonAssertions.assertThatJson(json).isEqualTo(json)
     }
 
     @Test
     fun `JSON pipeline template to model`() {
-        val pipeline = JsonAdapterFactory().pipelineTemplateAdapter().fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<PipelineTemplate>().fromJson(json)
         Assertions.assertThat(pipeline).isEqualTo(model)
     }
 

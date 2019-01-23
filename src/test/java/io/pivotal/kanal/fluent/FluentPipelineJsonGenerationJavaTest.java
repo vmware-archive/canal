@@ -1,5 +1,6 @@
 package io.pivotal.kanal.fluent;
 
+import com.squareup.moshi.JsonAdapter;
 import io.pivotal.kanal.json.JsonAdapterFactory;
 import io.pivotal.kanal.model.*;
 import java.util.stream.Collectors;
@@ -46,7 +47,9 @@ class FluentPipelineJsonGenerationJavaTest {
                 "Give a thumbs up if you like it."
         ));
 
-        String json = new JsonAdapterFactory().stageGraphAdapter().toJson(stages.getStageGraph());
+        JsonAdapter<StageGraph> adapter =
+                new JsonAdapterFactory().jsonAdapterBuilder().build().adapter(StageGraph.class);
+        String json = adapter.toJson(stages.getStageGraph());
         assertThatJson(json).isEqualTo(FluentPipelineJsonGenerationTest.getJson());
     }
 

@@ -158,13 +158,13 @@ class BasicPipelineJsonConversionTest {
 
     @Test
     fun `pipeline model should convert to JSON with execution details placed in stage`() {
-        val json = JsonAdapterFactory().pipelineAdapter().toJson(model)
+        val json = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
         JsonAssertions.assertThatJson(json).isEqualTo(json)
     }
 
     @Test
     fun `JSON pipeline should convert to Pipeline object`() {
-        val pipeline = JsonAdapterFactory().pipelineAdapter().fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().fromJson(json)
         assertThat(pipeline).isEqualTo(model)
     }
 

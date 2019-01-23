@@ -17,12 +17,12 @@ class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExe
             ContextFunctionConfiguration(UserConfiguredUrlRestrictions.Builder().build()))
 
     fun evaluate(pipeline: Pipeline): Pipeline {
-        return evaluateWithAdapter(pipeline, JsonAdapterFactory().pipelineAdapter(), pipelineExecution)
+        return evaluateWithAdapter(pipeline, JsonAdapterFactory().createAdapter(), pipelineExecution)
     }
 
     fun evaluate(template: PipelineTemplate, pipelineConfig: PipelineConfig): PipelineTemplate {
         val executionWithPipelineConfigVariables = pipelineExecution.copy(templateVariables = pipelineConfig.variables)
-        return evaluateWithAdapter(template, JsonAdapterFactory().pipelineTemplateAdapter(),
+        return evaluateWithAdapter(template, JsonAdapterFactory().createAdapter(),
                 executionWithPipelineConfigVariables)
     }
 

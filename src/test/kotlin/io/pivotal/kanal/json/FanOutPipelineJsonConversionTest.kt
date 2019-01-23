@@ -540,13 +540,13 @@ class FanOutPipelineJsonConversionTest {
 
     @Test
     fun `JSON pipeline with fan out and fan in should convert to Pipeline object`() {
-        val pipeline = JsonAdapterFactory().pipelineAdapter().fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().fromJson(json)
         Assertions.assertThat(pipeline).isEqualTo(model)
     }
 
     @Test
     fun `generate pipeline JSON with stages that fan out and back in`() {
-        val json = JsonAdapterFactory().pipelineAdapter().toJson(model)
+        val json = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
         JsonAssertions.assertThatJson(json).isEqualTo(json)
     }
 

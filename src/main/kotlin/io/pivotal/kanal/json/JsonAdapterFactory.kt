@@ -8,7 +8,7 @@ import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.*
 
 class JsonAdapterFactory {
-    fun jsonAdapterBuilder(builder: Moshi.Builder): Moshi.Builder {
+    @JvmOverloads fun jsonAdapterBuilder(builder: Moshi.Builder = Moshi.Builder()): Moshi.Builder {
         builder
                 .add(StageGraphAdapter())
                 .add(OrcaStageAdapter())
@@ -74,28 +74,7 @@ class JsonAdapterFactory {
         return builder
     }
 
-    fun pipelineAdapter(): JsonAdapter<Pipeline> {
-        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(Pipeline::class.java)
-    }
-
-    fun pipelineTemplateAdapter(): JsonAdapter<PipelineTemplate> {
-        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(PipelineTemplate::class.java)
-    }
-
-    fun pipelineConfigAdapter(): JsonAdapter<PipelineConfig> {
-        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(PipelineConfig::class.java)
-    }
-
-    fun stageGraphAdapter(): JsonAdapter<StageGraph> {
-        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(StageGraph::class.java)
-    }
-
-    fun stageAdapter(): JsonAdapter<Stage> {
-        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(Stage::class.java)
-    }
-
-    fun stageExecutionAdapter(): JsonAdapter<StageExecution> {
-        return jsonAdapterBuilder(Moshi.Builder()).build().adapter(StageExecution::class.java)
-    }
+    inline fun <reified T> createAdapter(): JsonAdapter<T> =
+            jsonAdapterBuilder(Moshi.Builder()).build().adapter(T::class.java)
 
 }

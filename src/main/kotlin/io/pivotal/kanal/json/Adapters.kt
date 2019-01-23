@@ -17,10 +17,7 @@
 package io.pivotal.kanal.json
 
 import com.squareup.moshi.*
-import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import io.pivotal.kanal.model.*
-import io.pivotal.kanal.model.cloudfoundry.*
 import java.lang.reflect.Type
 
 class PipelineAdapter {
@@ -135,8 +132,8 @@ class VariableAdapter {
 class OrcaStageAdapter {
     @ToJson
     fun toJson(writer: JsonWriter, value: OrcaStage) {
-        val stageAdapter = JsonAdapterFactory().stageAdapter()
-        val executionDetailsAdapter = JsonAdapterFactory().stageExecutionAdapter()
+        val stageAdapter = JsonAdapterFactory().createAdapter<Stage>()
+        val executionDetailsAdapter = JsonAdapterFactory().createAdapter<StageExecution>()
         writer.beginObject()
         val token = writer.beginFlatten()
         executionDetailsAdapter.toJson(writer, value.execution)
@@ -147,8 +144,8 @@ class OrcaStageAdapter {
 
     @FromJson
     fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): OrcaStage {
-        val stageAdapter = JsonAdapterFactory().stageAdapter()
-        val executionDetailsAdapter = JsonAdapterFactory().stageExecutionAdapter()
+        val stageAdapter = JsonAdapterFactory().createAdapter<Stage>()
+        val executionDetailsAdapter = JsonAdapterFactory().createAdapter<StageExecution>()
         val stage = stageAdapter.fromJsonValue(map)!!
         val execution = executionDetailsAdapter.fromJsonValue(map)!!
         return OrcaStage(stage, execution)

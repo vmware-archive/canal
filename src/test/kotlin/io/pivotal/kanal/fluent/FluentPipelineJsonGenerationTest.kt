@@ -220,7 +220,7 @@ class FluentPipelineJsonGenerationTest {
                 "Give a thumbs up if you like it."
         ))
 
-        val json = JsonAdapterFactory().stageGraphAdapter().toJson(stages.stageGraph)
+        val json = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages.stageGraph)
         assertThatJson(json).isEqualTo(json)
     }
 

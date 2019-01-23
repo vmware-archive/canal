@@ -505,17 +505,15 @@ class CloudPipelineExampleTest  {
                     .stageGraph
     )
 
-    val pipelineAdapter = JsonAdapterFactory().pipelineAdapter()
-
     @Test
     fun `Generate Cloud Pipeline Example JSON`() {
-        val pipelineJson = pipelineAdapter.toJson(model)
+        val pipelineJson = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
         JsonAssertions.assertThatJson(pipelineJson).isEqualTo(json)
     }
 
     @Test
     fun `Generate Model from Cloud Pipeline Example JSON`() {
-        val pipeline = pipelineAdapter.fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().fromJson(json)
         Assertions.assertThat(pipeline).isEqualTo(model)
     }
 
