@@ -126,19 +126,17 @@ class PipelineConfigAdapter {
     }
 }
 
+class StageGraphAdapter {
+    data class OrcaStage(
+            val stage: Stage,
+            val execution: StageExecution
+    )
 
-data class OrcaStage(
-        val stage: Stage,
-        val execution: StageExecution
-)
-
-data class StageExecution(
-        val refId: String,
-        val requisiteStageRefIds: List<String>,
-        val inject: Inject? = null
-)
-
-class OrcaStageAdapter {
+    data class StageExecution(
+            val refId: String,
+            val requisiteStageRefIds: List<String>,
+            val inject: Inject? = null
+    )
 
     val stageAdapter by lazy {
         JsonAdapterFactory().createAdapter<Stage>()
@@ -148,34 +146,28 @@ class OrcaStageAdapter {
     }
 
     @ToJson
-    fun toJson(writer: JsonWriter, value: OrcaStage) {
-        writer.beginObject()
-        val token = writer.beginFlatten()
-        executionDetailsAdapter.toJson(writer, value.execution)
-        stageAdapter.toJson(writer, value.stage)
-        writer.endFlatten(token)
-        writer.endObject()
-    }
-
-    @FromJson
-    fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): OrcaStage {
-        val stage = stageAdapter.fromJsonValue(map)!!
-        val execution = executionDetailsAdapter.fromJsonValue(map)!!
-        return OrcaStage(stage, execution)
-    }
-}
-
-class StageGraphAdapter {
-    @ToJson
-    fun toJson(stageGraph: StageGraph): List<OrcaStage> {
-        return stageGraph.stages.map {
+    fun toJson(writer: JsonWriter, stageGraph: StageGraph) {
+        writer.beginArray()
+        stageGraph.stages.forEach {
             val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it }
-            OrcaStage(it.stage, StageExecution(it.refId, stageRequirements, it.inject))
+            val execution = StageExecution(it.refId, stageRequirements, it.inject)
+            writer.beginObject()
+            val token = writer.beginFlatten()
+            executionDetailsAdapter.toJson(writer, execution)
+            stageAdapter.toJson(writer, it.stage)
+            writer.endFlatten(token)
+            writer.endObject()
         }
+        writer.endArray()
     }
 
     @FromJson
-    fun fromJson(orcaStages: List<OrcaStage>): StageGraph {
+    fun fromJson(stageMaps: List<Map<String, @JvmSuppressWildcards Any>>): StageGraph {
+        val orcaStages = stageMaps.map {
+            val stage = stageAdapter.fromJsonValue(it)!!
+            val execution = executionDetailsAdapter.fromJsonValue(it)!!
+            OrcaStage(stage, execution)
+        }
         var stages: List<PipelineStage> = emptyList()
         var stageRequirements: Map<String, List<String>> = mapOf()
         orcaStages.map {

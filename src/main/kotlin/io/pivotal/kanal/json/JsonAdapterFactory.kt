@@ -11,7 +11,6 @@ class JsonAdapterFactory {
     @JvmOverloads fun jsonAdapterBuilder(builder: Moshi.Builder = Moshi.Builder()): Moshi.Builder {
         builder
                 .add(StageGraphAdapter())
-                .add(OrcaStageAdapter())
                 .add(ExpressionConditionAdapter())
                 .add(ExpressionPreconditionAdapter())
                 .add(PipelineConfigAdapter())
