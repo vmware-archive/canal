@@ -8,7 +8,7 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.Pipeline
-import io.pivotal.kanal.model.PipelineConfig
+import io.pivotal.kanal.model.PipelineTemplateInstance
 import io.pivotal.kanal.model.PipelineExecution
 import io.pivotal.kanal.model.PipelineTemplate
 
@@ -21,8 +21,9 @@ class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExe
         return evaluateWithAdapter(pipeline, JsonAdapterFactory().createAdapter(), pipelineExecution)
     }
 
-    fun evaluate(template: PipelineTemplate, pipelineConfig: PipelineConfig): PipelineTemplate {
-        val executionWithPipelineConfigVariables = pipelineExecution.copy(templateVariables = pipelineConfig.variables)
+    fun evaluate(template: PipelineTemplate, pipelineConfig: PipelineTemplateInstance): PipelineTemplate {
+        val executionWithPipelineConfigVariables = pipelineExecution
+                .copy(templateVariables = pipelineConfig.config.variables)
         return evaluateWithAdapter(template, JsonAdapterFactory().createAdapter(),
                 executionWithPipelineConfigVariables)
     }

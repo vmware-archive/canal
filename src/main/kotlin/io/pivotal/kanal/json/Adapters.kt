@@ -73,65 +73,36 @@ class VariableAdapter {
     }
 }
 
-class PipelineConfigAdapter {
+class PipelineTemplateInstanceAdapter {
 
-    data class OrcaPipelineConfig (
-            val application: String,
-            val name: String,
-            val template: TemplateSource,
-            val description: String = "",
-            val parameters: List<Parameter> = emptyList(),
-            val notifications: List<Notification> = emptyList(),
-            val triggers: List<Trigger> = emptyList(),
-            val stages: StageGraph = StageGraph(),
-            val variables: Map<String, Any> = emptyMap(),
-            val inherit: List<String> = emptyList(),
-            val schema: String = "v2"
-    )
+    val pipelineConfigurationAdapter by lazy {
+        JsonAdapterFactory().createAdapter<PipelineConfiguration>()
+    }
+    val pipelineAdapter by lazy {
+        JsonAdapterFactory().createAdapter<Pipeline>()
+    }
 
     @ToJson
-    fun toJson(pipelineConfig: PipelineConfig): OrcaPipelineConfig {
-        return OrcaPipelineConfig(
-                pipelineConfig.application,
-                pipelineConfig.name,
-                pipelineConfig.template,
-                pipelineConfig.pipeline.description,
-                pipelineConfig.pipeline.parameters,
-                pipelineConfig.pipeline.notifications,
-                pipelineConfig.pipeline.triggers,
-                pipelineConfig.pipeline.stages,
-                pipelineConfig.variables,
-                pipelineConfig.inherit,
-                pipelineConfig.schema
-        )
+    fun toJson(writer: JsonWriter, pipelineTemplateInstance: PipelineTemplateInstance) {
+        writer.beginObject()
+        val token = writer.beginFlatten()
+        pipelineConfigurationAdapter.toJson(writer, pipelineTemplateInstance.config)
+        pipelineAdapter.toJson(writer, pipelineTemplateInstance.pipeline)
+        writer.endFlatten(token)
+        writer.endObject()
     }
 
     @FromJson
-    fun fromJson(orcaPipelineConfig: OrcaPipelineConfig): PipelineConfig? {
-        return PipelineConfig(
-                orcaPipelineConfig.application,
-                orcaPipelineConfig.name,
-                orcaPipelineConfig.template,
-                Pipeline(
-                        orcaPipelineConfig.description,
-                        orcaPipelineConfig.parameters,
-                        orcaPipelineConfig.notifications,
-                        orcaPipelineConfig.triggers,
-                        orcaPipelineConfig.stages
-                ),
-                orcaPipelineConfig.variables,
-                orcaPipelineConfig.inherit,
-                orcaPipelineConfig.schema
+    fun fromJson(pipelineTemplateInstance: Map<String, @JvmSuppressWildcards Any>): PipelineTemplateInstance {
+        return PipelineTemplateInstance(
+                pipelineConfigurationAdapter.fromJsonValue(pipelineTemplateInstance)!!,
+                pipelineAdapter.fromJsonValue(pipelineTemplateInstance)!!
         )
     }
+
 }
 
 class StageGraphAdapter {
-    data class OrcaStage(
-            val stage: Stage,
-            val execution: StageExecution
-    )
-
     data class StageExecution(
             val refId: String,
             val requisiteStageRefIds: List<String>,
@@ -163,18 +134,15 @@ class StageGraphAdapter {
 
     @FromJson
     fun fromJson(stageMaps: List<Map<String, @JvmSuppressWildcards Any>>): StageGraph {
-        val orcaStages = stageMaps.map {
-            val stage = stageAdapter.fromJsonValue(it)!!
-            val execution = executionDetailsAdapter.fromJsonValue(it)!!
-            OrcaStage(stage, execution)
-        }
         var stages: List<PipelineStage> = emptyList()
         var stageRequirements: Map<String, List<String>> = mapOf()
-        orcaStages.map {
-            val refId = it.execution.refId
-            stages += PipelineStage(refId, it.stage, it.execution.inject)
-            if (it.execution.requisiteStageRefIds.isNotEmpty()) {
-                stageRequirements += (refId to it.execution.requisiteStageRefIds.map { it })
+        stageMaps.map {
+            val stage = stageAdapter.fromJsonValue(it)!!
+            val execution = executionDetailsAdapter.fromJsonValue(it)!!
+            val refId = execution.refId
+            stages += PipelineStage(refId, stage, execution.inject)
+            if (execution.requisiteStageRefIds.isNotEmpty()) {
+                stageRequirements += (refId to execution.requisiteStageRefIds.map { it })
             }
         }
         return StageGraph(stages, stageRequirements)

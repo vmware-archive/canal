@@ -45,8 +45,8 @@ class PipelineTemplateExpressionEvaluatorTest {
             )
     )
 
-    val pipelineConfig = PipelineConfig(
-        "app",
+    val pipelineConfig = PipelineConfiguration(
+            "app",
             "name",
             TemplateSource("template")
     )
@@ -56,7 +56,7 @@ class PipelineTemplateExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator()
 
         val thrown = catchThrowable {
-            evaluator.evaluate(template, pipelineConfig)
+            evaluator.evaluate(template, PipelineTemplateInstance(pipelineConfig))
         }
 
         assertThat(thrown.message).isEqualTo("Failed to evaluate expressions!")
@@ -73,7 +73,8 @@ class PipelineTemplateExpressionEvaluatorTest {
         )
         val evaluator = ExpressionEvaluator()
 
-        val evaluatedTemplate = evaluator.evaluate(template, pipelineConfigWithVariable)
+        val evaluatedTemplate = evaluator.evaluate(template,
+                PipelineTemplateInstance(pipelineConfigWithVariable))
 
         assertThat(evaluatedTemplate).isEqualTo(PipelineTemplate(
                 "newSpelTemplate",

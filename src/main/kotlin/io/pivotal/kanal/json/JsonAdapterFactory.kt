@@ -13,7 +13,7 @@ class JsonAdapterFactory {
                 .add(StageGraphAdapter())
                 .add(ExpressionConditionAdapter())
                 .add(ExpressionPreconditionAdapter())
-                .add(PipelineConfigAdapter())
+                .add(PipelineTemplateInstanceAdapter())
                 .add(VariableAdapter())
                 .add(jsonNumberAdapter)
                 .add(PolymorphicJsonAdapterFactory.of(Trigger::class.java, "type")

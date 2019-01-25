@@ -66,10 +66,13 @@ class PipelineConfigJsonConversionTest  {
     """.trimMargin()
 
         @JvmStatic
-        val model = io.pivotal.kanal.model.PipelineConfig(
-                "waze",
-                "My First SpEL Pipeline",
-                TemplateSource("spinnaker://newSpelTemplate"),
+        val model = io.pivotal.kanal.model.PipelineTemplateInstance(
+                PipelineConfiguration(
+                        "waze",
+                        "My First SpEL Pipeline",
+                        TemplateSource("spinnaker://newSpelTemplate"),
+                        mapOf("waitTime" to 6)
+                ),
                 Pipeline(
                         triggers = listOf(
                                 PubSubTrigger(
@@ -87,20 +90,19 @@ class PipelineConfigJsonConversionTest  {
                                 refId = "wait0",
                                 inject = Inject.First()
                         ).stageGraph
-                ),
-                mapOf("waitTime" to 6)
+                )
         )
     }
 
     @Test
     fun `JSON pipeline template to model`() {
-        val pipeline = JsonAdapterFactory().createAdapter<PipelineConfig>().fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<PipelineTemplateInstance>().fromJson(json)
         Assertions.assertThat(pipeline).isEqualTo(model)
     }
 
     @Test
     fun `generate pipeline template JSON`() {
-        val json = JsonAdapterFactory().createAdapter<PipelineConfig>().toJson(model)
+        val json = JsonAdapterFactory().createAdapter<PipelineTemplateInstance>().toJson(model)
         JsonAssertions.assertThatJson(json).isEqualTo(json)
     }
 

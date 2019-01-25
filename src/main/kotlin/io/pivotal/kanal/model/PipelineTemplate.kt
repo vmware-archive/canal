@@ -2,11 +2,15 @@ package io.pivotal.kanal.model
 
 import com.squareup.moshi.Json
 
-data class PipelineConfig(
+data class PipelineTemplateInstance(
+        val config: PipelineConfiguration,
+        val pipeline: Pipeline = Pipeline()
+)
+
+data class PipelineConfiguration(
         val application: String,
         val name: String,
         val template: TemplateSource,
-        val pipeline: Pipeline = Pipeline(),
         val variables: Map<String, Any> = emptyMap(),
         val inherit: List<String> = emptyList(),
         val schema: String = "v2"
