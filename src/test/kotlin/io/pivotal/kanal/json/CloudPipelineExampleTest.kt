@@ -335,6 +335,24 @@ class CloudPipelineExampleTest  {
 }
     """.trimIndent()
 
+    fun clusterFor(region: String, artifact: String, route: String) : CloudFoundryCluster {
+        return CloudFoundryCluster(
+                "githubwebhook",
+                "calabasasaccount",
+                "scpipelines > ${region}",
+                "highlander",
+                TriggerArtifact(
+                        "jenkins",
+                        artifact
+                ),
+                Capacity(1),
+                DirectManifest(
+                        listOf("github-rabbitmq", "github-eureka"),
+                        listOf(route)
+                )
+        )
+    }
+
     val model = Pipeline(
             limitConcurrent = true,
             triggers = listOf(
@@ -354,21 +372,9 @@ class CloudPipelineExampleTest  {
             ).andThen(
                     DeployStage(
                             "Deploy to test",
-                            CloudFoundryCluster(
-                                    "githubwebhook",
-                                    "calabasasaccount",
-                                    "scpipelines > sc-pipelines-test-github-webhook",
-                                    "highlander",
-                                    TriggerArtifact(
-                                            "jenkins",
-                                            "^github-webhook.*VERSION.jar${'$'}"
-                                    ),
-                                    Capacity(1),
-                                    DirectManifest(
-                                            listOf("github-rabbitmq", "github-eureka"),
-                                            listOf("sc-pipelines-test-github-webhook.test.foo.com")
-                                    )
-                            )
+                            clusterFor("sc-pipelines-test-github-webhook",
+                                    "^github-webhook.*VERSION.jar${'$'}",
+                                    "sc-pipelines-test-github-webhook.test.foo.com")
                     )
             ).andThen(
                     JenkinsStage(
@@ -380,21 +386,9 @@ class CloudPipelineExampleTest  {
             ).andThen(
                     DeployStage(
                             "Deploy to test latest prod version",
-                            CloudFoundryCluster(
-                                    "githubwebhook",
-                                    "calabasasaccount",
-                                    "scpipelines > sc-pipelines-test-github-webhook",
-                                    "highlander",
-                                    TriggerArtifact(
-                                            "jenkins",
-                                            "^github-webhook.*VERSION-latestprodversion.jar${'$'}"
-                                    ),
-                                    Capacity(1),
-                                    DirectManifest(
-                                            listOf("github-rabbitmq", "github-eureka"),
-                                            listOf("sc-pipelines-test-github-webhook.test.foo.com")
-                                    )
-                            ),
+                            clusterFor("sc-pipelines-test-github-webhook",
+                                    "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
+                                    "sc-pipelines-test-github-webhook.test.foo.com"),
                             ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
                     )
             ).andThen(
@@ -420,21 +414,9 @@ class CloudPipelineExampleTest  {
             ).andThen(
                     DeployStage(
                             "Deploy to stage",
-                            CloudFoundryCluster(
-                                    "githubwebhook",
-                                    "calabasasaccount",
-                                    "scpipelines > sc-pipelines-stage",
-                                    "highlander",
-                                    TriggerArtifact(
-                                            "jenkins",
-                                            "^github-webhook.*VERSION.jar${'$'}"
-                                    ),
-                                    Capacity(1),
-                                    DirectManifest(
-                                            listOf("github-rabbitmq", "github-eureka"),
-                                            listOf("github-webhook-sc-pipelines-stage.stage.foo.com")
-                                    )
-                            )
+                            clusterFor("sc-pipelines-stage",
+                                    "^github-webhook.*VERSION.jar${'$'}",
+                                    "github-webhook-sc-pipelines-stage.stage.foo.com")
                     )
             ).andThen(
                     ManualJudgmentStage("Prepare for end to end tests")
@@ -450,21 +432,9 @@ class CloudPipelineExampleTest  {
             ).andThen(
                     DeployStage(
                             "Deploy to prod",
-                            CloudFoundryCluster(
-                                    "githubwebhook",
-                                    "calabasasaccount",
-                                    "scpipelines > sc-pipelines-prod",
-                                    "highlander",
-                                    TriggerArtifact(
-                                            "jenkins",
-                                            "^github-webhook.*VERSION.jar${'$'}"
-                                    ),
-                                    Capacity(1),
-                                    DirectManifest(
-                                            listOf("github-rabbitmq", "github-eureka"),
-                                            listOf("github-webhook.prod.foo.com")
-                                    )
-                            )
+                            clusterFor("sc-pipelines-prod",
+                                    "^github-webhook.*VERSION.jar${'$'}",
+                                    "github-webhook.prod.foo.com")
                     )
             ).parallel(
                     Stages.of(JenkinsStage(
@@ -477,21 +447,9 @@ class CloudPipelineExampleTest  {
                             .andThen(
                                     DeployStage(
                                             "Rollback",
-                                                    CloudFoundryCluster(
-                                                    "githubwebhook",
-                                                    "calabasasaccount",
-                                                    "scpipelines > sc-pipelines-prod",
-                                                    "highlander",
-                                                    TriggerArtifact(
-                                                            "jenkins",
-                                                            "^github-webhook.*VERSION-latestprodversion.jar${'$'}"
-                                                    ),
-                                                    Capacity(1),
-                                                    DirectManifest(
-                                                            listOf("github-rabbitmq", "github-eureka"),
-                                                            listOf("github-webhook.prod.foo.com")
-                                                    )
-                                            )
+                                            clusterFor("sc-pipelines-prod",
+                                                    "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
+                                                    "github-webhook.prod.foo.com")
                                     )
                             ).andThen(
                                     JenkinsStage(
