@@ -18,18 +18,25 @@
 
 package io.pivotal.kanal.model
 
+import com.squareup.moshi.Json
+
 data class Pipeline(
         val description: String = "",
-        val parameters: List<Parameter> = emptyList(),
+        @Json(name = "parameterConfig") val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stageGraph: StageGraph = StageGraph(),
-        val limitConcurrent: Boolean = false
+        val stages: StageGraph = StageGraph(),
+        val appConfig: Map<String, Any> = mapOf(),
+        val expectedArtifacts: List<Any> = emptyList(),
+        val keepWaitingPipelines: Boolean = false,
+        val lastModifiedBy: String = "anonymous",
+        val limitConcurrent: Boolean = false,
+        val updateTs: String = "0"
 )
 
 data class PipelineStage(
         val refId: String,
-        val attrs: Stage,
+        val stage: Stage,
         val inject: Inject? = null
 ) {
     constructor(refId: Int,
@@ -187,6 +194,7 @@ data class ExpressionPrecondition(
         val context: ExpressionContext
 ) : Precondition {
     constructor(expression: String) : this(ExpressionContext(expression))
+    constructor(expression: Boolean) : this(expression.toString())
 
     override val type = "expression"
     var failPipeline = true
@@ -234,9 +242,12 @@ data class CanaryConfig(
 )
 
 data class ScoreThresholds(
-        val marginal: Int,
-        val pass: Int
-)
+        val marginal: String,
+        val pass: String
+) {
+    constructor(marginal: Int,
+                pass: Int) : this(marginal.toString(), pass.toString())
+}
 
 data class DeployStage(
         override val name: String = "",

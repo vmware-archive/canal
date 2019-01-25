@@ -20,34 +20,75 @@ import com.squareup.moshi.*
 import io.pivotal.kanal.model.*
 import java.lang.reflect.Type
 
-class PipelineAdapter {
+class VariableAdapter {
+
+    data class OrcaVariable(
+            val name: String,
+            val description: String,
+            val type: String,
+            val defaultValue: Any?,
+            val example: String? = null,
+            val nullable: Boolean = false,
+            val merge: Boolean = false,
+            val remove: Boolean = false
+    )
 
     @ToJson
-    fun toJson(pipeline: Pipeline): OrcaPipeline {
-        return OrcaPipeline(
-                pipeline.description,
-                pipeline.parameters,
-                pipeline.notifications,
-                pipeline.triggers,
-                pipeline.stageGraph,
-                limitConcurrent = pipeline.limitConcurrent
+    fun toJson(variable: Variable): OrcaVariable {
+        return OrcaVariable(
+                variable.name,
+                variable.description,
+                variable.typeAttrs.type,
+                variable.typeAttrs.defaultValue,
+                variable.example,
+                variable.nullable,
+                variable.merge,
+                variable.remove
         )
     }
 
     @FromJson
-    fun fromJson(orcaPipeline: OrcaPipeline): Pipeline? {
-        return Pipeline(
-                orcaPipeline.description,
-                orcaPipeline.parameterConfig,
-                orcaPipeline.notifications,
-                orcaPipeline.triggers,
-                orcaPipeline.stages,
-                limitConcurrent = orcaPipeline.limitConcurrent
+    fun fromJson(orcaVariable: OrcaVariable): Variable? {
+        val typeAttrs = when(orcaVariable.type) {
+            "int" -> if (orcaVariable.defaultValue is Float) {
+                IntegerType((orcaVariable.defaultValue).toInt())
+            } else {
+                IntegerType(orcaVariable.defaultValue as Int)
+            }
+            "float" -> FloatType(orcaVariable.defaultValue as Float)
+            "string" -> StringType(orcaVariable.defaultValue as String)
+            "boolean" -> BooleanType(orcaVariable.defaultValue as Boolean)
+            "list" -> ListType(orcaVariable.defaultValue as List<Any>)
+            else -> ObjectType(orcaVariable.defaultValue)
+        }
+        return Variable(
+                orcaVariable.name,
+                orcaVariable.description,
+                typeAttrs,
+                orcaVariable.example,
+                orcaVariable.nullable,
+                orcaVariable.merge,
+                orcaVariable.remove
         )
     }
 }
 
 class PipelineConfigAdapter {
+
+    data class OrcaPipelineConfig (
+            val application: String,
+            val name: String,
+            val template: TemplateSource,
+            val description: String = "",
+            val parameters: List<Parameter> = emptyList(),
+            val notifications: List<Notification> = emptyList(),
+            val triggers: List<Trigger> = emptyList(),
+            val stages: StageGraph = StageGraph(),
+            val variables: Map<String, Any> = emptyMap(),
+            val inherit: List<String> = emptyList(),
+            val schema: String = "v2"
+    )
+
     @ToJson
     fun toJson(pipelineConfig: PipelineConfig): OrcaPipelineConfig {
         return OrcaPipelineConfig(
@@ -58,7 +99,7 @@ class PipelineConfigAdapter {
                 pipelineConfig.pipeline.parameters,
                 pipelineConfig.pipeline.notifications,
                 pipelineConfig.pipeline.triggers,
-                pipelineConfig.pipeline.stageGraph,
+                pipelineConfig.pipeline.stages,
                 pipelineConfig.variables,
                 pipelineConfig.inherit,
                 pipelineConfig.schema
@@ -85,46 +126,17 @@ class PipelineConfigAdapter {
     }
 }
 
-class VariableAdapter {
-    @ToJson
-    fun toJson(variable: Variable): OrcaVariable {
-        return OrcaVariable(
-                variable.name,
-                variable.description,
-                variable.typeAttrs.type,
-                variable.typeAttrs.defaultValue,
-                variable.example,
-                variable.nullable,
-                variable.merge,
-                variable.remove
-        )
-    }
 
-    @FromJson
-    fun fromJson(orcaVariable: OrcaVariable): Variable? {
-        val typeAttrs = when(orcaVariable.type) {
-            "int" -> if (orcaVariable.defaultValue is Float) {
-                IntegerType((orcaVariable.defaultValue as Float).toInt())
-            } else {
-                IntegerType(orcaVariable.defaultValue as Int)
-            }
-            "float" -> FloatType(orcaVariable.defaultValue as Float)
-            "string" -> StringType(orcaVariable.defaultValue as String)
-            "boolean" -> BooleanType(orcaVariable.defaultValue as Boolean)
-            "list" -> ListType(orcaVariable.defaultValue as List<Any>)
-            else -> ObjectType(orcaVariable.defaultValue)
-        }
-        return Variable(
-                orcaVariable.name,
-                orcaVariable.description,
-                typeAttrs,
-                orcaVariable.example,
-                orcaVariable.nullable,
-                orcaVariable.merge,
-                orcaVariable.remove
-        )
-    }
-}
+data class OrcaStage(
+        val stage: Stage,
+        val execution: StageExecution
+)
+
+data class StageExecution(
+        val refId: String,
+        val requisiteStageRefIds: List<String>,
+        val inject: Inject? = null
+)
 
 class OrcaStageAdapter {
 
@@ -153,6 +165,29 @@ class OrcaStageAdapter {
     }
 }
 
+class StageGraphAdapter {
+    @ToJson
+    fun toJson(stageGraph: StageGraph): List<OrcaStage> {
+        return stageGraph.stages.map {
+            val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it }
+            OrcaStage(it.stage, StageExecution(it.refId, stageRequirements, it.inject))
+        }
+    }
+
+    @FromJson
+    fun fromJson(orcaStages: List<OrcaStage>): StageGraph {
+        var stages: List<PipelineStage> = emptyList()
+        var stageRequirements: Map<String, List<String>> = mapOf()
+        orcaStages.map {
+            val refId = it.execution.refId
+            stages += PipelineStage(refId, it.stage, it.execution.inject)
+            if (it.execution.requisiteStageRefIds.isNotEmpty()) {
+                stageRequirements += (refId to it.execution.requisiteStageRefIds.map { it })
+            }
+        }
+        return StageGraph(stages, stageRequirements)
+    }
+}
 
 class ExpressionConditionAdapter {
     @FromJson
@@ -174,40 +209,6 @@ class ExpressionPreconditionAdapter {
             is Boolean -> ExpressionPrecondition(expression.toString())
             else -> ExpressionPrecondition(expression.toString())
         }
-    }
-}
-
-class StageGraphAdapter {
-    @ToJson
-    fun toJson(stageGraph: StageGraph): List<OrcaStage> {
-        return stageGraph.stages.map {
-            val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it }
-            OrcaStage(it.attrs, StageExecution(it.refId, stageRequirements, it.inject))
-        }
-    }
-
-    @FromJson
-    fun fromJson(orcaStages: List<OrcaStage>): StageGraph {
-        var stages: List<PipelineStage> = emptyList()
-        var stageRequirements: Map<String, List<String>> = mapOf()
-        orcaStages.map {
-            val refId = it.execution.refId
-            stages += PipelineStage(refId, it.stage, it.execution.inject)
-            if (it.execution.requisiteStageRefIds.isNotEmpty()) {
-                stageRequirements += (refId to it.execution.requisiteStageRefIds.map { it })
-            }
-        }
-        return StageGraph(stages, stageRequirements)
-    }
-}
-
-class ScoreThresholdsAdapter {
-    @ToJson
-    fun toJson(scoreThresholds: ScoreThresholds): Map<String, String> {
-        return mapOf(
-                "marginal" to scoreThresholds.marginal.toString(),
-                "pass" to scoreThresholds.pass.toString()
-        )
     }
 }
 

@@ -78,7 +78,7 @@ class PipelineConfigJsonConversionTest  {
                                         "jack"
                                 )
                         ),
-                        stageGraph = Stages.of(
+                        stages = Stages.of(
                                 WaitStage(67),
                                 refId = "wait2",
                                 requisiteStageRefIds = listOf("wait1")

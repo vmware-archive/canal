@@ -35,7 +35,7 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
-                stageGraph = Stages.of(CheckPreconditionsStage(
+                stages = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("hello \${#alphanumerical(trigger['parameters']['account'])}")
@@ -47,7 +47,7 @@ class PipelineExpressionEvaluatorTest {
 
         assertThat(result).isEqualTo(Pipeline(
                 description = "desc1",
-                stageGraph = Stages.of(CheckPreconditionsStage(
+                stages = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("hello account1")
@@ -62,7 +62,7 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
-                stageGraph = Stages.of(CheckPreconditionsStage(
+                stages = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${#alphanumerical('missing paren'}")
@@ -97,7 +97,7 @@ class PipelineExpressionEvaluatorTest {
 
         val pipeline = Pipeline(
                 description = "desc1",
-                stageGraph = Stages.of(CheckPreconditionsStage(
+                stages = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${true}"),
@@ -121,7 +121,7 @@ class PipelineExpressionEvaluatorTest {
 
         assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                 description ="desc1",
-                stageGraph = Stages.of(CheckPreconditionsStage(
+                stages = Stages.of(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                             ExpressionPrecondition("true"),

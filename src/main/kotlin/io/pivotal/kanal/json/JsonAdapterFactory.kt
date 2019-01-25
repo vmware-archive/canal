@@ -12,8 +12,6 @@ class JsonAdapterFactory {
         builder
                 .add(StageGraphAdapter())
                 .add(OrcaStageAdapter())
-                .add(PipelineAdapter())
-                .add(ScoreThresholdsAdapter())
                 .add(ExpressionConditionAdapter())
                 .add(ExpressionPreconditionAdapter())
                 .add(PipelineConfigAdapter())

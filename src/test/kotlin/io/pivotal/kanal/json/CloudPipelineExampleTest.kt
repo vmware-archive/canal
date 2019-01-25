@@ -344,7 +344,7 @@ class CloudPipelineExampleTest  {
                             "trigger.properties"
                     )
             ),
-            stageGraph = Stages.of(
+            stages = Stages.of(
                     JenkinsStage(
                             "Prepare test environment",
                             "spinnaker-github-webhook-pipeline-test-prepare",
