@@ -31,10 +31,10 @@ class PipelineTemplateExpressionEvaluatorTest {
                     "example@example.com"
             ),
             listOf(
-                    Variable(
+                    IntegerVariable(
                             "waitTime",
                             "The time a wait stage shall pauseth",
-                            IntegerType(42)
+                            42
                     )
             ),
             Pipeline(
@@ -84,10 +84,10 @@ class PipelineTemplateExpressionEvaluatorTest {
                         "example@example.com"
                 ),
                 listOf(
-                        Variable(
+                        IntegerVariable(
                                 "waitTime",
                                 "The time a wait stage shall pauseth",
-                                IntegerType(42)
+                                42
                         )
                 ),
                 Pipeline(

@@ -20,59 +20,6 @@ import com.squareup.moshi.*
 import io.pivotal.kanal.model.*
 import java.lang.reflect.Type
 
-class VariableAdapter {
-
-    data class OrcaVariable(
-            val name: String,
-            val description: String,
-            val type: String,
-            val defaultValue: Any?,
-            val example: String? = null,
-            val nullable: Boolean = false,
-            val merge: Boolean = false,
-            val remove: Boolean = false
-    )
-
-    @ToJson
-    fun toJson(variable: Variable): OrcaVariable {
-        return OrcaVariable(
-                variable.name,
-                variable.description,
-                variable.typeAttrs.type,
-                variable.typeAttrs.defaultValue,
-                variable.example,
-                variable.nullable,
-                variable.merge,
-                variable.remove
-        )
-    }
-
-    @FromJson
-    fun fromJson(orcaVariable: OrcaVariable): Variable? {
-        val typeAttrs = when(orcaVariable.type) {
-            "int" -> if (orcaVariable.defaultValue is Float) {
-                IntegerType((orcaVariable.defaultValue).toInt())
-            } else {
-                IntegerType(orcaVariable.defaultValue as Int)
-            }
-            "float" -> FloatType(orcaVariable.defaultValue as Float)
-            "string" -> StringType(orcaVariable.defaultValue as String)
-            "boolean" -> BooleanType(orcaVariable.defaultValue as Boolean)
-            "list" -> ListType(orcaVariable.defaultValue as List<Any>)
-            else -> ObjectType(orcaVariable.defaultValue)
-        }
-        return Variable(
-                orcaVariable.name,
-                orcaVariable.description,
-                typeAttrs,
-                orcaVariable.example,
-                orcaVariable.nullable,
-                orcaVariable.merge,
-                orcaVariable.remove
-        )
-    }
-}
-
 class PipelineTemplateInstanceAdapter {
 
     val pipelineConfigurationAdapter by lazy {
