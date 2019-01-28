@@ -335,6 +335,9 @@ class CloudPipelineExampleTest  {
 }
     """.trimIndent()
 
+    val projectName = "spinnaker-github-webhook-pipeline"
+    val master = "Spinnaker-Jenkins"
+
     fun clusterFor(region: String, artifact: String, route: String) : CloudFoundryCluster {
         return CloudFoundryCluster(
                 "githubwebhook",
@@ -353,21 +356,36 @@ class CloudPipelineExampleTest  {
         )
     }
 
+    fun jenkinsStageFor(name: String,
+                        jobName: String,
+                        parameters: Map<String, String> = mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}"),
+                        stageEnabled: Condition? = null) : JenkinsStage {
+        return JenkinsStage(
+                name,
+                "$projectName-$jobName",
+                master,
+                parameters,
+                stageEnabled
+        )
+    }
+
+    fun jenkinsTestJobName(env: String, testName: String) : String {
+        return "$env-env-$testName"
+    }
+
     val model = Pipeline(
             limitConcurrent = true,
             triggers = listOf(
                     JenkinsTrigger(
-                            "spinnaker-github-webhook-pipeline-build",
-                            "Spinnaker-Jenkins",
+                            "$projectName-build",
+                            master,
                             "trigger.properties"
                     )
             ),
             stages = Stages.of(
-                    JenkinsStage(
+                    jenkinsStageFor(
                             "Prepare test environment",
-                            "spinnaker-github-webhook-pipeline-test-prepare",
-                            "Spinnaker-Jenkins",
-                            mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")
+                            "test-prepare"
                     )
             ).andThen(
                     DeployStage(
@@ -377,11 +395,9 @@ class CloudPipelineExampleTest  {
                                     "sc-pipelines-test-github-webhook.test.foo.com")
                     )
             ).andThen(
-                    JenkinsStage(
+                    jenkinsStageFor(
                             "Run tests on test",
-                            "spinnaker-github-webhook-pipeline-test-env-test",
-                            "Spinnaker-Jenkins",
-                            mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")
+                            jenkinsTestJobName("test", "test")
                     )
             ).andThen(
                     DeployStage(
@@ -392,10 +408,9 @@ class CloudPipelineExampleTest  {
                             ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
                     )
             ).andThen(
-                    JenkinsStage(
+                    jenkinsStageFor(
                             "Run rollback tests on test",
-                            "spinnaker-github-webhook-pipeline-test-env-rollback-test",
-                            "Spinnaker-Jenkins",
+                            jenkinsTestJobName("test", "rollback-test"),
                             mapOf(
                                     "PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}",
                                     "PASSED_LATEST_PROD_TAG" to "$\\{trigger.properties['PASSED_LATEST_PROD_TAG']}"
@@ -405,11 +420,9 @@ class CloudPipelineExampleTest  {
             ).andThen(
                     ManualJudgmentStage("Wait for stage env")
             ).andThen(
-                    JenkinsStage(
+                    jenkinsStageFor(
                             "Prepare stage environment",
-                            "spinnaker-github-webhook-pipeline-stage-prepare",
-                            "Spinnaker-Jenkins",
-                            mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")
+                            "stage-prepare"
                     )
             ).andThen(
                     DeployStage(
@@ -421,11 +434,9 @@ class CloudPipelineExampleTest  {
             ).andThen(
                     ManualJudgmentStage("Prepare for end to end tests")
             ).andThen(
-                    JenkinsStage(
+                    jenkinsStageFor(
                             "End to end tests on stage",
-                            "spinnaker-github-webhook-pipeline-stage-env-test",
-                            "Spinnaker-Jenkins",
-                            mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")
+                            jenkinsTestJobName("stage", "test")
                     )
             ).andThen(
                     ManualJudgmentStage("Approve production")
@@ -437,11 +448,9 @@ class CloudPipelineExampleTest  {
                                     "github-webhook.prod.foo.com")
                     )
             ).parallel(
-                    Stages.of(JenkinsStage(
+                    Stages.of(jenkinsStageFor(
                             "Push prod tag",
-                            "spinnaker-github-webhook-pipeline-prod-tag-repo",
-                            "Spinnaker-Jenkins",
-                            mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")
+                            "prod-tag-repo"
                     )),
                     Stages.of(ManualJudgmentStage("Approve rollback"))
                             .andThen(
@@ -452,11 +461,9 @@ class CloudPipelineExampleTest  {
                                                     "github-webhook.prod.foo.com")
                                     )
                             ).andThen(
-                                    JenkinsStage(
+                                    jenkinsStageFor(
                                             "Remove prod tag",
-                                            "spinnaker-github-webhook-pipeline-prod-env-remove-tag",
-                                            "Spinnaker-Jenkins",
-                                            mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")
+                                            jenkinsTestJobName("prod", "remove-tag")
                                     )
                             )
             )
