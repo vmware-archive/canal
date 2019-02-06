@@ -16,6 +16,7 @@
 
 package io.pivotal.kanal.fluent
 
+import io.pivotal.kanal.extensions.*
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.*
 import org.junit.jupiter.api.Test
@@ -32,7 +33,11 @@ class FluentPipelineJsonGenerationTest {
     [
         {
             "name": "Check Preconditions",
-            "preconditions": [],
+            "preconditions": [{
+              "type":"expression",
+              "context":{"expression":"true"},
+              "failPipeline":true
+            }],
             "refId": "checkPreconditions1",
             "requisiteStageRefIds": [],
             "type": "checkPreconditions"
@@ -43,7 +48,7 @@ class FluentPipelineJsonGenerationTest {
             "refId": "wait2",
             "requisiteStageRefIds": ["checkPreconditions1"],
             "type": "wait",
-                "waitTime": "420"
+            "waitTime": "420"
         },
         {
             "action": "destroyService",
@@ -185,7 +190,7 @@ class FluentPipelineJsonGenerationTest {
 
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
-        val stages = Stages.of(CheckPreconditionsStage(
+        val stages = StageGraph().with(CheckPreconditionsStage(
                 "Check Preconditions",
                 emptyList()
         )).andThen(WaitStage(
@@ -194,7 +199,7 @@ class FluentPipelineJsonGenerationTest {
                 "Server Group Timeout"
         )).parallel(
                 (1..3).map {
-                    Stages.of(DestroyServiceStage(
+                    StageGraph().with(DestroyServiceStage(
                             "Destroy Service $it Before",
                             "cloudfoundry",
                             "creds1",
@@ -220,7 +225,7 @@ class FluentPipelineJsonGenerationTest {
                 "Give a thumbs up if you like it."
         ))
 
-        val json = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages.stageGraph)
+        val json = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages)
         assertThatJson(json).isEqualTo(json)
     }
 

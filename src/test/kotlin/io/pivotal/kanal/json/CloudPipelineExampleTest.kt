@@ -1,6 +1,6 @@
 package io.pivotal.kanal.json
 
-import io.pivotal.kanal.fluent.Stages
+import io.pivotal.kanal.extensions.*
 import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -382,7 +382,7 @@ class CloudPipelineExampleTest  {
                             "trigger.properties"
                     )
             ),
-            stages = Stages.of(
+            stages = StageGraph().with(
                     jenkinsStageFor(
                             "Prepare test environment",
                             "test-prepare"
@@ -448,11 +448,11 @@ class CloudPipelineExampleTest  {
                                     "github-webhook.prod.foo.com")
                     )
             ).parallel(
-                    Stages.of(jenkinsStageFor(
+                    StageGraph().with(jenkinsStageFor(
                             "Push prod tag",
                             "prod-tag-repo"
                     )),
-                    Stages.of(ManualJudgmentStage("Approve rollback"))
+                    StageGraph().with(ManualJudgmentStage("Approve rollback"))
                             .andThen(
                                     DeployStage(
                                             "Rollback",
@@ -467,7 +467,6 @@ class CloudPipelineExampleTest  {
                                     )
                             )
             )
-                    .stageGraph
     )
 
     @Test

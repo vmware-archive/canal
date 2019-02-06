@@ -16,7 +16,7 @@
 
 package io.pivotal.kanal.evaluation
 
-import io.pivotal.kanal.fluent.Stages
+import io.pivotal.kanal.extensions.*
 import io.pivotal.kanal.model.*
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -35,24 +35,24 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
-                stages = Stages.of(CheckPreconditionsStage(
+                stages = StageGraph().with(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("hello \${#alphanumerical(trigger['parameters']['account'])}")
                         )
-                )).stageGraph
+                ))
         )
 
         val result = evaluator.evaluate(pipeline)
 
         assertThat(result).isEqualTo(Pipeline(
                 description = "desc1",
-                stages = Stages.of(CheckPreconditionsStage(
+                stages = StageGraph().with(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("hello account1")
                         )
-                )).stageGraph
+                ))
         ))
     }
 
@@ -62,12 +62,12 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline(
                 description = "desc1",
-                stages = Stages.of(CheckPreconditionsStage(
+                stages = StageGraph().with(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${#alphanumerical('missing paren'}")
                         )
-                )).stageGraph
+                ))
         )
 
         val thrown = catchThrowable {
@@ -97,7 +97,7 @@ class PipelineExpressionEvaluatorTest {
 
         val pipeline = Pipeline(
                 description = "desc1",
-                stages = Stages.of(CheckPreconditionsStage(
+                stages = StageGraph().with(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                                 ExpressionPrecondition("\${true}"),
@@ -105,7 +105,7 @@ class PipelineExpressionEvaluatorTest {
                         )
                 )).parallel(
                         (1..3).map {
-                            Stages.of(DestroyServiceStage(
+                            StageGraph().with(DestroyServiceStage(
                                     "Destroy Service $it Before",
                                     "cloudfoundry",
                                     "\${trigger['parameters']['account'] }",
@@ -114,20 +114,20 @@ class PipelineExpressionEvaluatorTest {
                                     ExpressionCondition("\${trigger['parameters']['destroyServicesBefore']=='true' && trigger['parameters']['serviceName$it']!='none' && trigger['parameters']['serviceName$it']!=\"\"}")
                             ))
                         }
-                ).stageGraph
+                )
         )
 
         val evaluatedPipeline = evaluator.evaluate(pipeline)
 
         assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                 description ="desc1",
-                stages = Stages.of(CheckPreconditionsStage(
+                stages = StageGraph().with(CheckPreconditionsStage(
                         "Check Preconditions",
                         listOf(
                             ExpressionPrecondition("true"),
                             ExpressionPrecondition("false")
                         )
-                )).parallel(
+                )).parallelStages(
                         DestroyServiceStage(
                                 "Destroy Service 1 Before",
                                 "cloudfoundry",
@@ -152,7 +152,7 @@ class PipelineExpressionEvaluatorTest {
                                 "",
                                 ExpressionCondition("false")
                         )
-                ).stageGraph
+                )
         ))
     }
 

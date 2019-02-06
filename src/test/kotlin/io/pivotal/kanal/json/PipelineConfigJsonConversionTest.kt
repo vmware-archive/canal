@@ -1,6 +1,6 @@
 package io.pivotal.kanal.json
 
-import io.pivotal.kanal.fluent.Stages
+import io.pivotal.kanal.extensions.with
 import io.pivotal.kanal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions
@@ -81,15 +81,15 @@ class PipelineConfigJsonConversionTest  {
                                         "jack"
                                 )
                         ),
-                        stages = Stages.of(
+                        stages = StageGraph().with(
                                 WaitStage(67),
                                 refId = "wait2",
                                 requisiteStageRefIds = listOf("wait1")
-                        ).and(
+                        ).with(
                                 WaitStage(2),
                                 refId = "wait0",
                                 inject = Inject.First()
-                        ).stageGraph
+                        )
                 )
         )
     }
