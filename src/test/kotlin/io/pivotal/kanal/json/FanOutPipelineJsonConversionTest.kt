@@ -20,7 +20,7 @@ class FanOutPipelineJsonConversionTest {
           "expectedArtifacts": [],
           "keepWaitingPipelines": false,
           "lastModifiedBy": "anonymous",
-          "limitConcurrent": false,
+          "limitConcurrent": true,
           "notifications": [],
           "updateTs" : "0",
           "parameterConfig": [

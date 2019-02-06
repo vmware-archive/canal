@@ -39,7 +39,7 @@ class PipelineTemplateJsonGenerationTest {
             "lastModifiedBy" : "anonymous",
             "updateTs" : "0",
             "parameterConfig" : [],
-            "limitConcurrent": false,
+            "limitConcurrent": true,
             "keepWaitingPipelines": false,
             "description" : "",
             "triggers" : [],

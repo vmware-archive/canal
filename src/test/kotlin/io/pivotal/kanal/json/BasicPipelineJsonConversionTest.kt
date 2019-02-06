@@ -33,7 +33,7 @@ class BasicPipelineJsonConversionTest {
             "expectedArtifacts": [],
             "keepWaitingPipelines": false,
             "lastModifiedBy": "anonymous",
-            "limitConcurrent": false,
+            "limitConcurrent": true,
             "notifications": [],
             "parameterConfig": [],
             "updateTs" : "0",

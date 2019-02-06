@@ -28,7 +28,7 @@ data class Pipeline(
         val stages: StageGraph = StageGraph(),
         val expectedArtifacts: List<ExpectedArtifact> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
-        val limitConcurrent: Boolean = false
+        val limitConcurrent: Boolean = true
 )
 
 interface ExpectedArtifact
