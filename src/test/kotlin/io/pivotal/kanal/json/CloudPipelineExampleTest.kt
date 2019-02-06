@@ -13,12 +13,10 @@ class CloudPipelineExampleTest  {
     @Language("JSON")
     val json = """
 {
-  "appConfig" : { },
   "keepWaitingPipelines" : false,
   "limitConcurrent" : true,
   "description":"",
   "expectedArtifacts": [],
-  "lastModifiedBy": "anonymous",
   "notifications": [],
   "parameterConfig": [],
   "stages" : [ {
@@ -330,8 +328,7 @@ class CloudPipelineExampleTest  {
     "master" : "Spinnaker-Jenkins",
     "type" : "jenkins",
     "propertyFile" : "trigger.properties"
-  } ],
-  "updateTs": "0"
+  } ]
 }
     """.trimIndent()
 
@@ -373,101 +370,101 @@ class CloudPipelineExampleTest  {
         return "$env-env-$testName"
     }
 
-    val model = Pipeline(
-            limitConcurrent = true,
-            triggers = listOf(
-                    JenkinsTrigger(
-                            "$projectName-build",
-                            master,
-                            "trigger.properties"
-                    )
-            ),
-            stages = StageGraph().with(
-                    jenkinsStageFor(
-                            "Prepare test environment",
-                            "test-prepare"
-                    )
-            ).andThen(
-                    DeployStage(
-                            "Deploy to test",
-                            clusterFor("sc-pipelines-test-github-webhook",
-                                    "^github-webhook.*VERSION.jar${'$'}",
-                                    "sc-pipelines-test-github-webhook.test.foo.com")
-                    )
-            ).andThen(
-                    jenkinsStageFor(
-                            "Run tests on test",
-                            jenkinsTestJobName("test", "test")
-                    )
-            ).andThen(
-                    DeployStage(
-                            "Deploy to test latest prod version",
-                            clusterFor("sc-pipelines-test-github-webhook",
-                                    "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
-                                    "sc-pipelines-test-github-webhook.test.foo.com"),
-                            ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
-                    )
-            ).andThen(
-                    jenkinsStageFor(
-                            "Run rollback tests on test",
-                            jenkinsTestJobName("test", "rollback-test"),
-                            mapOf(
-                                    "PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}",
-                                    "PASSED_LATEST_PROD_TAG" to "$\\{trigger.properties['PASSED_LATEST_PROD_TAG']}"
-                            ),
-                            ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
-                    )
-            ).andThen(
-                    ManualJudgmentStage("Wait for stage env")
-            ).andThen(
-                    jenkinsStageFor(
-                            "Prepare stage environment",
-                            "stage-prepare"
-                    )
-            ).andThen(
-                    DeployStage(
-                            "Deploy to stage",
-                            clusterFor("sc-pipelines-stage",
-                                    "^github-webhook.*VERSION.jar${'$'}",
-                                    "github-webhook-sc-pipelines-stage.stage.foo.com")
-                    )
-            ).andThen(
-                    ManualJudgmentStage("Prepare for end to end tests")
-            ).andThen(
-                    jenkinsStageFor(
-                            "End to end tests on stage",
-                            jenkinsTestJobName("stage", "test")
-                    )
-            ).andThen(
-                    ManualJudgmentStage("Approve production")
-            ).andThen(
-                    DeployStage(
-                            "Deploy to prod",
-                            clusterFor("sc-pipelines-prod",
-                                    "^github-webhook.*VERSION.jar${'$'}",
-                                    "github-webhook.prod.foo.com")
-                    )
-            ).parallel(
-                    StageGraph().with(jenkinsStageFor(
-                            "Push prod tag",
-                            "prod-tag-repo"
-                    )),
-                    StageGraph().with(ManualJudgmentStage("Approve rollback"))
-                            .andThen(
-                                    DeployStage(
-                                            "Rollback",
-                                            clusterFor("sc-pipelines-prod",
-                                                    "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
-                                                    "github-webhook.prod.foo.com")
-                                    )
-                            ).andThen(
-                                    jenkinsStageFor(
-                                            "Remove prod tag",
-                                            jenkinsTestJobName("prod", "remove-tag")
-                                    )
-                            )
-            )
-    )
+    val model = Pipeline().with {
+        limitConcurrent = true
+        triggers = listOf(
+                JenkinsTrigger(
+                        "$projectName-build",
+                        master,
+                        "trigger.properties"
+                )
+        )
+        stages = StageGraph().with(
+                jenkinsStageFor(
+                        "Prepare test environment",
+                        "test-prepare"
+                )
+        ).andThen(
+                DeployStage(
+                        "Deploy to test",
+                        clusterFor("sc-pipelines-test-github-webhook",
+                                "^github-webhook.*VERSION.jar${'$'}",
+                                "sc-pipelines-test-github-webhook.test.foo.com")
+                )
+        ).andThen(
+                jenkinsStageFor(
+                        "Run tests on test",
+                        jenkinsTestJobName("test", "test")
+                )
+        ).andThen(
+                DeployStage(
+                        "Deploy to test latest prod version",
+                        clusterFor("sc-pipelines-test-github-webhook",
+                                "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
+                                "sc-pipelines-test-github-webhook.test.foo.com"),
+                        ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
+                )
+        ).andThen(
+                jenkinsStageFor(
+                        "Run rollback tests on test",
+                        jenkinsTestJobName("test", "rollback-test"),
+                        mapOf(
+                                "PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}",
+                                "PASSED_LATEST_PROD_TAG" to "$\\{trigger.properties['PASSED_LATEST_PROD_TAG']}"
+                        ),
+                        ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
+                )
+        ).andThen(
+                ManualJudgmentStage("Wait for stage env")
+        ).andThen(
+                jenkinsStageFor(
+                        "Prepare stage environment",
+                        "stage-prepare"
+                )
+        ).andThen(
+                DeployStage(
+                        "Deploy to stage",
+                        clusterFor("sc-pipelines-stage",
+                                "^github-webhook.*VERSION.jar${'$'}",
+                                "github-webhook-sc-pipelines-stage.stage.foo.com")
+                )
+        ).andThen(
+                ManualJudgmentStage("Prepare for end to end tests")
+        ).andThen(
+                jenkinsStageFor(
+                        "End to end tests on stage",
+                        jenkinsTestJobName("stage", "test")
+                )
+        ).andThen(
+                ManualJudgmentStage("Approve production")
+        ).andThen(
+                DeployStage(
+                        "Deploy to prod",
+                        clusterFor("sc-pipelines-prod",
+                                "^github-webhook.*VERSION.jar${'$'}",
+                                "github-webhook.prod.foo.com")
+                )
+        ).parallel(
+                StageGraph().with(jenkinsStageFor(
+                        "Push prod tag",
+                        "prod-tag-repo"
+                )),
+                StageGraph().with(ManualJudgmentStage("Approve rollback"))
+                        .andThen(
+                                DeployStage(
+                                        "Rollback",
+                                        clusterFor("sc-pipelines-prod",
+                                                "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
+                                                "github-webhook.prod.foo.com")
+                                )
+                        ).andThen(
+                                jenkinsStageFor(
+                                        "Remove prod tag",
+                                        jenkinsTestJobName("prod", "remove-tag")
+                                )
+                        )
+        )
+    }
 
     @Test
     fun `Generate Cloud Pipeline Example JSON`() {

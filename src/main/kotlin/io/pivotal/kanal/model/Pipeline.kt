@@ -26,13 +26,12 @@ data class Pipeline(
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
         val stages: StageGraph = StageGraph(),
-        val appConfig: Map<String, Any> = mapOf(),
-        val expectedArtifacts: List<Any> = emptyList(),
+        val expectedArtifacts: List<ExpectedArtifact> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
-        val lastModifiedBy: String = "anonymous",
-        val limitConcurrent: Boolean = false,
-        val updateTs: String = "0"
+        val limitConcurrent: Boolean = false
 )
+
+interface ExpectedArtifact
 
 data class PipelineStage(
         val refId: String,
@@ -70,9 +69,9 @@ interface Named {
 
 data class Parameter(
         override val name: String,
-        val required: Boolean,
-        val label: String,
-        val description: String,
+        val required: Boolean = true,
+        val label: String = "",
+        val description: String = "",
         val options: List<Value> = emptyList(),
         val default: String? = null
 ) : Named {

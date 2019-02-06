@@ -1,5 +1,6 @@
 package io.pivotal.kanal.json
 
+import io.pivotal.kanal.extensions.with
 import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.ArtifactManifest
 import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCluster
@@ -335,208 +336,207 @@ class FanOutPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = Pipeline(
-            "desc1",
-            listOf(
-                    Parameter(
-                            "param1",
-                            "Parameter One",
-                            true,
-                            "a description of the parameter",
-                            listOf("1", "2"),
-                            "1"
-                    )
-            ),
-            emptyList(),
-            listOf(
-                    GitTrigger(
-                            "master",
-                            "project1",
-                            "secret1",
-                            "slug1",
-                            "github"
-                    ),
-                    JenkinsTrigger(
-                            "does-nothing",
-                            "my-jenkins-master"
-                    )
-            ),
-            StageGraph(
-                    listOf(
-                            PipelineStage(1,
-                                    CheckPreconditionsStage(
-                                            "Check Preconditions",
-                                            listOf(ExpressionPrecondition("2 > 1"))
-                                    )
-                            ),
-                            PipelineStage(2,
-                                    DestroyServerGroupStage(
-                                            "Destroy Server Group Before",
-                                            "cloudfoundry",
-                                            "cluster1",
-                                            "creds1",
-                                            listOf("dev > dev"),
-                                            ExpressionCondition("execution['trigger']['parameters']['destroyServerGroupBefore']=='true'"),
-                                            "current_asg_dynamic"
-                                    )
-                            ),
-                            PipelineStage(3,
-                                    WaitStage(
-                                            420,
-                                            "woah",
-                                            "Server Group Timeout"
-                                    )
-                            ),
-                            PipelineStage(4,
-                                    WaitStage(
-                                            7,
-                                            "Wait on other service to reset",
-                                            "External service Wait"
-                                    )
-                            ),
-                            PipelineStage(5,
-                                    DestroyServiceStage(
-                                            "Destroy Service 1 Before",
-                                            "cloudfoundry",
-                                            "creds1",
-                                            "dev > dev",
-                                            "serviceName1",
-                                            ExpressionCondition("exp1")
-                                    )
-                            ),
-                            PipelineStage(6,
-                                    DestroyServiceStage(
-                                            "Destroy Service 2 Before",
-                                            "cloudfoundry",
-                                            "creds1",
-                                            "dev > dev",
-                                            "serviceName2",
-                                            ExpressionCondition("exp1")
-                                    )
-                            ),
-                            PipelineStage(7,
-                                    DestroyServiceStage(
-                                            "Destroy Service 3 Before",
-                                            "cloudfoundry",
-                                            "creds1",
-                                            "dev > dev",
-                                            "serviceName3",
-                                            ExpressionCondition("exp1")
-                                    )
-                            ),
-                            PipelineStage(8,
-                                    DeployServiceStage(
-                                            "Deploy Service 1",
-                                            "cloudfoundry",
-                                            "deploy comment",
-                                            "creds1",
-                                            "serviceParam1",
-                                            "dev > dev",
-                                            "serviceType1",
-                                            "serviceName1",
-                                            "servicePlan1",
-                                            ExpressionCondition("exp2"),
-                                            "serviceTags1"
-                                    )
-                            ),
-                            PipelineStage(9,
-                                    DeployServiceStage(
-                                            "Deploy Service 2",
-                                            "cloudfoundry",
-                                            "deploy comment",
-                                            "creds1",
-                                            "serviceParam2",
-                                            "dev > dev",
-                                            "serviceType2",
-                                            "serviceName2",
-                                            "servicePlan2",
-                                            ExpressionCondition("exp2"),
-                                            "serviceTags2"
-                                    )
-                            ),
-                            PipelineStage(10,
-                                    DeployServiceStage(
-                                            "Deploy Service 3",
-                                            "cloudfoundry",
-                                            "deploy comment",
-                                            "creds1",
-                                            "serviceParam3",
-                                            "dev > dev",
-                                            "serviceType3",
-                                            "serviceName3",
-                                            "servicePlan3",
-                                            ExpressionCondition("exp2"),
-                                            "serviceTags3"
-                                    )
-                            ),
-                            PipelineStage(11,
-                                    DeployStage(
-                                            "Deploy",
-                                            CloudFoundryCluster(
-                                                    "app1",
-                                                    "account1",
-                                                    "dev > dev",
-                                                    "RedBlack",
-                                                    ReferencedArtifact(
-                                                            "account2",
-                                                            "s3://bucket1"
-                                                    ),
-                                                    Capacity(1),
-                                                    ArtifactManifest(
-                                                            "account3",
-                                                            "s3://bucket2"
-                                                    ),
-                                                    "stack1",
-                                                    "ffd"
-                                            ),
-                                            ExpressionCondition("execution['trigger']['parameters']['deployServerGroup'] == 'true'"),
-                                            "Deployment Strategy is RedBlack"
-                                    )
-                            ),
-                            PipelineStage(12,
-                                    ManualJudgmentStage(
-                                            "Thumbs Up?",
-                                            "Give a thumbs up if you like it."
-                                    )
-                            ),
-                            PipelineStage(13,
-                                    WebhookStage(
-                                            "Do that nonstandard thing",
-                                            "POST",
-                                            "https://github.com/spinnaker/clouddriver",
-                                            "cmccoy@pivotal.io"
-                                    )
-                            ),
-                            PipelineStage(14,
-                                    CanaryStage(
-                                            "Canary Analysis",
-                                            "realTimeAutomatic",
-                                            CanaryConfig(
-                                                    "PT1H0M",
-                                                    ScoreThresholds(1, 2),
-                                                    "san",
-                                                    "man"
+    val model = Pipeline().with {
+        description = "desc1"
+        parameters(
+                Parameter(
+                        "param1",
+                        "Parameter One",
+                        true,
+                        "a description of the parameter",
+                        listOf("1", "2"),
+                        "1"
+                )
+        )
+        triggers(
+                GitTrigger(
+                        "master",
+                        "project1",
+                        "secret1",
+                        "slug1",
+                        "github"
+                ),
+                JenkinsTrigger(
+                        "does-nothing",
+                        "my-jenkins-master"
+                )
+        )
+        stages = StageGraph(
+                listOf(
+                        PipelineStage(1,
+                                CheckPreconditionsStage(
+                                        "Check Preconditions",
+                                        listOf(ExpressionPrecondition("2 > 1"))
+                                )
+                        ),
+                        PipelineStage(2,
+                                DestroyServerGroupStage(
+                                        "Destroy Server Group Before",
+                                        "cloudfoundry",
+                                        "cluster1",
+                                        "creds1",
+                                        listOf("dev > dev"),
+                                        ExpressionCondition("execution['trigger']['parameters']['destroyServerGroupBefore']=='true'"),
+                                        "current_asg_dynamic"
+                                )
+                        ),
+                        PipelineStage(3,
+                                WaitStage(
+                                        420,
+                                        "woah",
+                                        "Server Group Timeout"
+                                )
+                        ),
+                        PipelineStage(4,
+                                WaitStage(
+                                        7,
+                                        "Wait on other service to reset",
+                                        "External service Wait"
+                                )
+                        ),
+                        PipelineStage(5,
+                                DestroyServiceStage(
+                                        "Destroy Service 1 Before",
+                                        "cloudfoundry",
+                                        "creds1",
+                                        "dev > dev",
+                                        "serviceName1",
+                                        ExpressionCondition("exp1")
+                                )
+                        ),
+                        PipelineStage(6,
+                                DestroyServiceStage(
+                                        "Destroy Service 2 Before",
+                                        "cloudfoundry",
+                                        "creds1",
+                                        "dev > dev",
+                                        "serviceName2",
+                                        ExpressionCondition("exp1")
+                                )
+                        ),
+                        PipelineStage(7,
+                                DestroyServiceStage(
+                                        "Destroy Service 3 Before",
+                                        "cloudfoundry",
+                                        "creds1",
+                                        "dev > dev",
+                                        "serviceName3",
+                                        ExpressionCondition("exp1")
+                                )
+                        ),
+                        PipelineStage(8,
+                                DeployServiceStage(
+                                        "Deploy Service 1",
+                                        "cloudfoundry",
+                                        "deploy comment",
+                                        "creds1",
+                                        "serviceParam1",
+                                        "dev > dev",
+                                        "serviceType1",
+                                        "serviceName1",
+                                        "servicePlan1",
+                                        ExpressionCondition("exp2"),
+                                        "serviceTags1"
+                                )
+                        ),
+                        PipelineStage(9,
+                                DeployServiceStage(
+                                        "Deploy Service 2",
+                                        "cloudfoundry",
+                                        "deploy comment",
+                                        "creds1",
+                                        "serviceParam2",
+                                        "dev > dev",
+                                        "serviceType2",
+                                        "serviceName2",
+                                        "servicePlan2",
+                                        ExpressionCondition("exp2"),
+                                        "serviceTags2"
+                                )
+                        ),
+                        PipelineStage(10,
+                                DeployServiceStage(
+                                        "Deploy Service 3",
+                                        "cloudfoundry",
+                                        "deploy comment",
+                                        "creds1",
+                                        "serviceParam3",
+                                        "dev > dev",
+                                        "serviceType3",
+                                        "serviceName3",
+                                        "servicePlan3",
+                                        ExpressionCondition("exp2"),
+                                        "serviceTags3"
+                                )
+                        ),
+                        PipelineStage(11,
+                                DeployStage(
+                                        "Deploy",
+                                        CloudFoundryCluster(
+                                                "app1",
+                                                "account1",
+                                                "dev > dev",
+                                                "RedBlack",
+                                                ReferencedArtifact(
+                                                        "account2",
+                                                        "s3://bucket1"
+                                                ),
+                                                Capacity(1),
+                                                ArtifactManifest(
+                                                        "account3",
+                                                        "s3://bucket2"
+                                                ),
+                                                "stack1",
+                                                "ffd"
+                                        ),
+                                        ExpressionCondition("execution['trigger']['parameters']['deployServerGroup'] == 'true'"),
+                                        "Deployment Strategy is RedBlack"
+                                )
+                        ),
+                        PipelineStage(12,
+                                ManualJudgmentStage(
+                                        "Thumbs Up?",
+                                        "Give a thumbs up if you like it."
+                                )
+                        ),
+                        PipelineStage(13,
+                                WebhookStage(
+                                        "Do that nonstandard thing",
+                                        "POST",
+                                        "https://github.com/spinnaker/clouddriver",
+                                        "cmccoy@pivotal.io"
+                                )
+                        ),
+                        PipelineStage(14,
+                                CanaryStage(
+                                        "Canary Analysis",
+                                        "realTimeAutomatic",
+                                        CanaryConfig(
+                                                "PT1H0M",
+                                                ScoreThresholds(1, 2),
+                                                "san",
+                                                "man"
 
-                                            )
-                                    )
-                            )
-                    ),
-                    mapOf(
-                            "2" to listOf("1"),
-                            "3" to listOf("2"),
-                            "5" to listOf("4"),
-                            "6" to listOf("4"),
-                            "7" to listOf("4"),
-                            "8" to listOf("5"),
-                            "9" to listOf("6"),
-                            "10" to listOf("7"),
-                            "11" to listOf("8", "9", "10"),
-                            "12" to listOf("11"),
-                            "13" to listOf("11"),
-                            "14" to listOf("12")
-                    )
-            )
-    )
+                                        )
+                                )
+                        )
+                ),
+                mapOf(
+                        "2" to listOf("1"),
+                        "3" to listOf("2"),
+                        "5" to listOf("4"),
+                        "6" to listOf("4"),
+                        "7" to listOf("4"),
+                        "8" to listOf("5"),
+                        "9" to listOf("6"),
+                        "10" to listOf("7"),
+                        "11" to listOf("8", "9", "10"),
+                        "12" to listOf("11"),
+                        "13" to listOf("11"),
+                        "14" to listOf("12")
+                )
+        )
+    }
 
     @Test
     fun `JSON pipeline with fan out and fan in should convert to Pipeline object`() {

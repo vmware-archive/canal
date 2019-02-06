@@ -16,6 +16,7 @@
 
 package io.pivotal.kanal.json
 
+import io.pivotal.kanal.extensions.with
 import io.pivotal.kanal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions.assertThat
@@ -101,60 +102,58 @@ class BasicPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = Pipeline(
-            "desc1",
-            emptyList(),
-            emptyList(),
-            listOf(
-                    GitTrigger(
-                            "master",
-                            "project1",
-                            "secret1",
-                            "slug1",
-                            "github"
-                    ),
-                    JenkinsTrigger(
-                            "does-nothing",
-                            "my-jenkins-master"
-                    )
-            ),
-            StageGraph(
-                    listOf(
-                            PipelineStage(1,
-                                    CheckPreconditionsStage(
-                                            "Check Preconditions",
-                                            emptyList()
-                                    )
-                            ),
-                            PipelineStage(2,
-                                    WaitStage(
-                                            420,
-                                            "woah",
-                                            "Server Group Timeout"
-                                    )
-                            ),
-                            PipelineStage(3,
-                                    ManualJudgmentStage(
-                                            "Thumbs Up?",
-                                            "Give a thumbs up if you like it."
-                                    )
-                            ),
-                            PipelineStage(4,
-                                    WebhookStage(
-                                            "Do that nonstandard thing",
-                                            "POST",
-                                            "https://github.com/spinnaker/clouddriver",
-                                            "cmccoy@pivotal.io"
-                                    )
-                            )
-                    ),
-                    mapOf(
-                            "2" to listOf("1"),
-                            "3" to listOf("1"),
-                            "4" to listOf("2", "3")
-                    )
-            )
-    )
+    val model = Pipeline().with {
+        description = "desc1"
+        triggers(
+                GitTrigger(
+                        "master",
+                        "project1",
+                        "secret1",
+                        "slug1",
+                        "github"
+                ),
+                JenkinsTrigger(
+                        "does-nothing",
+                        "my-jenkins-master"
+                )
+        )
+        stages = StageGraph(
+                listOf(
+                        PipelineStage(1,
+                                CheckPreconditionsStage(
+                                        "Check Preconditions",
+                                        emptyList()
+                                )
+                        ),
+                        PipelineStage(2,
+                                WaitStage(
+                                        420,
+                                        "woah",
+                                        "Server Group Timeout"
+                                )
+                        ),
+                        PipelineStage(3,
+                                ManualJudgmentStage(
+                                        "Thumbs Up?",
+                                        "Give a thumbs up if you like it."
+                                )
+                        ),
+                        PipelineStage(4,
+                                WebhookStage(
+                                        "Do that nonstandard thing",
+                                        "POST",
+                                        "https://github.com/spinnaker/clouddriver",
+                                        "cmccoy@pivotal.io"
+                                )
+                        )
+                ),
+                mapOf(
+                        "2" to listOf("1"),
+                        "3" to listOf("1"),
+                        "4" to listOf("2", "3")
+                )
+        )
+    }
 
     @Test
     fun `pipeline model should convert to JSON with execution details placed in stage`() {

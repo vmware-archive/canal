@@ -66,6 +66,8 @@ class JsonAdapterFactory {
                         .withSubtype(Inject.First::class.java, "first")
                         .withSubtype(Inject.Last::class.java, "last")
                 )
+                .add(PolymorphicJsonAdapterFactory.of(ExpectedArtifact::class.java, "type")
+                )
                 .add(KotlinJsonAdapterFactory())
         return builder
     }

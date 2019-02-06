@@ -73,24 +73,24 @@ class PipelineConfigJsonConversionTest  {
                         TemplateSource("spinnaker://newSpelTemplate"),
                         mapOf("waitTime" to 6)
                 ),
-                Pipeline(
-                        triggers = listOf(
-                                PubSubTrigger(
-                                        "google",
-                                        "super-derp",
-                                        "jack"
-                                )
-                        ),
-                        stages = StageGraph().with(
-                                WaitStage(67),
-                                refId = "wait2",
-                                requisiteStageRefIds = listOf("wait1")
-                        ).with(
-                                WaitStage(2),
-                                refId = "wait0",
-                                inject = Inject.First()
-                        )
-                )
+                Pipeline().with {
+                    triggers = listOf(
+                            PubSubTrigger(
+                                    "google",
+                                    "super-derp",
+                                    "jack"
+                            )
+                    )
+                    stages = StageGraph().with(
+                            WaitStage(67),
+                            refId = "wait2",
+                            requisiteStageRefIds = listOf("wait1")
+                    ).with(
+                            WaitStage(2),
+                            refId = "wait0",
+                            inject = Inject.First()
+                    )
+                }
         )
     }
 

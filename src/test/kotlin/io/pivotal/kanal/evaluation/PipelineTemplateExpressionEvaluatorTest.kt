@@ -37,12 +37,12 @@ class PipelineTemplateExpressionEvaluatorTest {
                             42
                     )
             ),
-            Pipeline(
-                    stages = StageGraph().with(WaitStage(
-                            "\${ templateVariables.waitTime }",
-                            "My Wait Stage"
-                    ))
-            )
+            Pipeline().with {
+                stages = StageGraph().with(WaitStage(
+                        "\${ templateVariables.waitTime }",
+                        "My Wait Stage"
+                ))
+            }
     )
 
     val pipelineConfig = PipelineConfiguration(
@@ -90,12 +90,12 @@ class PipelineTemplateExpressionEvaluatorTest {
                                 42
                         )
                 ),
-                Pipeline(
-                        stages = StageGraph().with(WaitStage(
-                                "4",
-                                "My Wait Stage"
-                        ))
-                )
+                Pipeline().with {
+                    stages = StageGraph().with(WaitStage(
+                            "4",
+                            "My Wait Stage"
+                    ))
+                }
         ))
     }
 
