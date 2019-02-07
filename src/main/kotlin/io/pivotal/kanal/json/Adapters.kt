@@ -18,7 +18,12 @@ package io.pivotal.kanal.json
 
 import com.squareup.moshi.*
 import io.pivotal.kanal.model.*
+import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCloudProvider
 import java.lang.reflect.Type
+import java.util.ArrayList
+import kotlin.reflect.full.declaredMemberProperties
+import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.full.memberProperties
 
 class PipelineTemplateInstanceAdapter {
 
@@ -50,17 +55,14 @@ class PipelineTemplateInstanceAdapter {
 }
 
 class StageGraphAdapter {
-    data class StageExecution(
-            val refId: String,
-            val requisiteStageRefIds: List<String>,
-            val inject: Inject? = null
-    )
-
     val stageAdapter by lazy {
         JsonAdapterFactory().createAdapter<Stage>()
     }
     val executionDetailsAdapter by lazy {
         JsonAdapterFactory().createAdapter<StageExecution>()
+    }
+    val commonStageAttributesAdapter by lazy {
+        JsonAdapterFactory().createAdapter<BaseStage>()
     }
 
     @ToJson
@@ -73,6 +75,9 @@ class StageGraphAdapter {
             val token = writer.beginFlatten()
             executionDetailsAdapter.toJson(writer, execution)
             stageAdapter.toJson(writer, it.stage)
+            if (it.common != null) {
+                commonStageAttributesAdapter.toJson(writer, it.common)
+            }
             writer.endFlatten(token)
             writer.endObject()
         }
@@ -86,13 +91,54 @@ class StageGraphAdapter {
         stageMaps.map {
             val stage = stageAdapter.fromJsonValue(it)!!
             val execution = executionDetailsAdapter.fromJsonValue(it)!!
-            val refId = execution.refId
-            stages += PipelineStage(refId, stage, execution.inject)
+            val common = commonStageAttributesAdapter.fromJsonValue(it)
+            val refId = execution.refId!!
+            stages += PipelineStage(refId, stage, common, execution.inject)
             if (execution.requisiteStageRefIds.isNotEmpty()) {
                 stageRequirements += (refId to execution.requisiteStageRefIds.map { it })
             }
         }
         return StageGraph(stages, stageRequirements)
+    }
+}
+
+class CloudSpecificToJsonAdapter {
+    val cloudProviderAdapter by lazy {
+        JsonAdapterFactory().createAdapter<CloudProvider>()
+    }
+    val stageAdapter by lazy {
+        JsonAdapterFactory().createNonCloudSpecificAdapter<Stage>()
+    }
+    val providerPropertyName = "provider"
+
+    @ToJson
+    fun toJson(stage: Stage): Map<String, Any?> {
+        val stageClass = stage.javaClass.kotlin
+        val properties = stageClass.memberProperties
+        val propertiesMap = properties.map { it.name to it.get(stage) }.toMap()
+        return when (stage) {
+            is CloudSpecific -> {
+                val provider = propertiesMap.get(providerPropertyName) as CloudProvider
+                val providerProperties = provider.javaClass.kotlin.memberProperties
+                val providerPropertiesMap = providerProperties.map { it.name to it.get(provider) }.toMap()
+                propertiesMap.minus(providerPropertyName) + providerPropertiesMap
+            }
+            else -> propertiesMap
+        }
+    }
+
+    @FromJson
+    fun fromJson(stageJson: Map<String, @JvmSuppressWildcards Any>): Stage {
+        val stageMap = try {
+            val cloudProvider = cloudProviderAdapter.fromJsonValue(stageJson)!!
+            val cloudProviderPropertyNames = cloudProvider.javaClass.kotlin.memberProperties.map { it.name }
+            val cloudProviderMap = stageJson.filter { cloudProviderPropertyNames.contains(it.key) }
+            stageJson + (providerPropertyName to cloudProviderMap)
+        } catch (e: JsonDataException) {
+            stageJson
+        }
+        val stage = stageAdapter.fromJsonValue(stageMap)!!
+        return stage
     }
 }
 

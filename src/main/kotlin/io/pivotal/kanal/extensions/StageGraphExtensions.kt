@@ -1,9 +1,6 @@
 package io.pivotal.kanal.extensions
 
-import io.pivotal.kanal.model.Inject
-import io.pivotal.kanal.model.PipelineStage
-import io.pivotal.kanal.model.Stage
-import io.pivotal.kanal.model.StageGraph
+import io.pivotal.kanal.model.*
 import java.lang.IllegalStateException
 
 val StageGraph.firstStages: List<PipelineStage> get() {
@@ -25,45 +22,40 @@ val StageGraph.stageCount: Int get() {
 }
 
 private fun StageGraph.insertStage(stage: Stage,
-                                   inject: Inject? = null,
-                                   refId: String? = null,
-                                   requisiteStageRefIds: List<String> = emptyList()
+                                   base: BaseStage? = BaseStage(),
+                                   execution: StageExecution = StageExecution()
 ): StageGraph {
     val nextStageCount = stageCount + 1
-    val nextRefId = refId ?: stage.type + nextStageCount.toString()
-    val nextStage = listOf(PipelineStage(nextRefId, stage, inject))
+    val nextRefId = execution.refId ?: stage.type + nextStageCount.toString()
+    val nextStage = listOf(PipelineStage(nextRefId, stage, base, execution.inject))
     val allStages = this.stages + nextStage
-    val allStageRequirements = if (requisiteStageRefIds.isEmpty()) {
+    val allStageRequirements = if (execution.requisiteStageRefIds.isEmpty()) {
         this.stageRequirements
     } else {
-        this.stageRequirements + mapOf(nextRefId to requisiteStageRefIds)
+        this.stageRequirements + mapOf(nextRefId to execution.requisiteStageRefIds)
     }
     return StageGraph(allStages, allStageRequirements)
 }
 
-fun StageGraph.with(stage: Stage,
-                   inject: Inject? = null,
-                   refId: String? = null,
-                   requisiteStageRefIds: List<String> = emptyList()
+fun StageGraph.addStage(stage: Stage,
+                        base: BaseStage? = BaseStage(),
+                        execution: StageExecution = StageExecution()
 ): StageGraph {
     return insertStage(
             stage,
-            inject,
-            refId,
-            requisiteStageRefIds
+            base,
+            execution
     )
 }
 
 fun StageGraph.andThen(stage: Stage,
-                          inject: Inject? = null,
-                          refId: String? = null,
-                          requisiteStageRefIds: List<String> = emptyList()
+                       base: BaseStage? = BaseStage(),
+                       execution: StageExecution = StageExecution()
 ): StageGraph {
     return insertStage(
             stage,
-            inject,
-            refId,
-            requisiteStageRefIds + lastStages.map(PipelineStage::refId)
+            base,
+            execution.copy(requisiteStageRefIds = execution.requisiteStageRefIds  + lastStages.map(PipelineStage::refId))
     )
 }
 

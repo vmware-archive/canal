@@ -1,10 +1,8 @@
 package io.pivotal.kanal.json
 
-import io.pivotal.kanal.extensions.with
+import io.pivotal.kanal.extensions.addStage
 import io.pivotal.kanal.model.*
-import io.pivotal.kanal.model.cloudfoundry.ArtifactManifest
-import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCluster
-import io.pivotal.kanal.model.cloudfoundry.ReferencedArtifact
+import io.pivotal.kanal.model.cloudfoundry.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions
 import org.intellij.lang.annotations.Language
@@ -43,13 +41,11 @@ class FanOutPipelineJsonConversionTest {
           ],
           "stages": [
             {
-              "name": "Check Preconditions",
               "preconditions": [
                 {
                   "context": {
                     "expression": "2 > 1"
                   },
-                  "failPipeline": true,
                   "type": "expression"
                 }
               ],
@@ -61,10 +57,7 @@ class FanOutPipelineJsonConversionTest {
               "cloudProvider": "cloudfoundry",
               "cloudProviderType": "cloudfoundry",
               "cluster": "cluster1",
-              "completeOtherBranchesThenFail": false,
-              "continuePipeline": true,
               "credentials": "creds1",
-              "failPipeline": false,
               "name": "Destroy Server Group Before",
               "refId": "2",
               "regions": [
@@ -81,8 +74,6 @@ class FanOutPipelineJsonConversionTest {
               "type": "destroyServerGroup"
             },
             {
-              "comments": "woah",
-              "name": "Server Group Timeout",
               "refId": "3",
               "requisiteStageRefIds": [
                 "2"
@@ -91,8 +82,6 @@ class FanOutPipelineJsonConversionTest {
               "waitTime": "420"
             },
             {
-              "comments": "Wait on other service to reset",
-              "name": "External service Wait",
               "refId": "4",
               "requisiteStageRefIds": [],
               "type": "wait",
@@ -102,10 +91,7 @@ class FanOutPipelineJsonConversionTest {
               "action": "destroyService",
               "cloudProvider": "cloudfoundry",
               "cloudProviderType": "cloudfoundry",
-              "completeOtherBranchesThenFail": false,
-              "continuePipeline": true,
               "credentials": "creds1",
-              "failPipeline": false,
               "name": "Destroy Service 1 Before",
               "refId": "5",
               "region": "dev > dev",
@@ -123,10 +109,7 @@ class FanOutPipelineJsonConversionTest {
               "action": "destroyService",
               "cloudProvider": "cloudfoundry",
               "cloudProviderType": "cloudfoundry",
-              "completeOtherBranchesThenFail": false,
-              "continuePipeline": true,
               "credentials": "creds1",
-              "failPipeline": false,
               "name": "Destroy Service 2 Before",
               "refId": "6",
               "region": "dev > dev",
@@ -144,10 +127,7 @@ class FanOutPipelineJsonConversionTest {
               "action": "destroyService",
               "cloudProvider": "cloudfoundry",
               "cloudProviderType": "cloudfoundry",
-              "completeOtherBranchesThenFail": false,
-              "continuePipeline": true,
               "credentials": "creds1",
-              "failPipeline": false,
               "name": "Destroy Service 3 Before",
               "refId": "7",
               "region": "dev > dev",
@@ -168,20 +148,23 @@ class FanOutPipelineJsonConversionTest {
               "comments": "deploy comment",
               "credentials": "creds1",
               "name": "Deploy Service 1",
-              "parameters": "serviceParam1",
               "refId": "8",
               "region": "dev > dev",
               "requisiteStageRefIds": [
                 "5"
               ],
-              "service": "serviceType1",
-              "serviceName": "serviceName1",
-              "servicePlan": "servicePlan1",
+              "manifest": {
+                "service": "serviceType1",
+                "serviceName": "serviceName1",
+                "servicePlan": "servicePlan1",
+                "parameters": "serviceParam1",
+                "tags": ["serviceTags1"],
+                "type": "direct"
+              },
               "stageEnabled": {
                 "expression": "exp2",
                 "type": "expression"
               },
-              "tags": "serviceTags1",
               "type": "deployService"
             },
             {
@@ -191,20 +174,23 @@ class FanOutPipelineJsonConversionTest {
               "comments": "deploy comment",
               "credentials": "creds1",
               "name": "Deploy Service 2",
-              "parameters": "serviceParam2",
               "refId": "9",
               "region": "dev > dev",
               "requisiteStageRefIds": [
                 "6"
               ],
-              "service": "serviceType2",
-              "serviceName": "serviceName2",
-              "servicePlan": "servicePlan2",
+              "manifest": {
+                "service": "serviceType2",
+                "serviceName": "serviceName2",
+                "servicePlan": "servicePlan2",
+                "parameters": "serviceParam2",
+                "tags": ["serviceTags2"],
+                "type": "direct"
+              },
               "stageEnabled": {
                 "expression": "exp2",
                 "type": "expression"
               },
-              "tags": "serviceTags2",
               "type": "deployService"
             },
             {
@@ -214,20 +200,23 @@ class FanOutPipelineJsonConversionTest {
               "comments": "deploy comment",
               "credentials": "creds1",
               "name": "Deploy Service 3",
-              "parameters": "serviceParam3",
               "refId": "10",
               "region": "dev > dev",
               "requisiteStageRefIds": [
                 "7"
               ],
-              "service": "serviceType3",
-              "serviceName": "serviceName3",
-              "servicePlan": "servicePlan3",
+              "manifest": {
+                "service": "serviceType3",
+                "serviceName": "serviceName3",
+                "servicePlan": "servicePlan3",
+                "parameters": "serviceParam3",
+                "tags": ["serviceTags3"],
+                "type": "direct"
+              },
               "stageEnabled": {
                 "expression": "exp2",
                 "type": "expression"
               },
-              "tags": "serviceTags3",
               "type": "deployService"
             },
             {
@@ -255,7 +244,7 @@ class FanOutPipelineJsonConversionTest {
                   "provider": "cloudfoundry",
                   "region": "dev > dev",
                   "stack": "stack1",
-                  "strategy": "RedBlack"
+                  "strategy": "redblack"
                 }
               ],
               "comments": "Deployment Strategy is RedBlack",
@@ -273,11 +262,8 @@ class FanOutPipelineJsonConversionTest {
               "type": "deploy"
             },
             {
-              "failPipeline": true,
               "instructions": "Give a thumbs up if you like it.",
               "judgmentInputs": [],
-              "name": "Thumbs Up?",
-              "notifications": [],
               "refId": "12",
               "requisiteStageRefIds": [
                 "11"
@@ -285,9 +271,7 @@ class FanOutPipelineJsonConversionTest {
               "type": "manualJudgment"
             },
             {
-              "failPipeline": true,
               "method": "POST",
-              "name": "Do that nonstandard thing",
               "refId": "13",
               "requisiteStageRefIds": [
                 "11"
@@ -308,7 +292,6 @@ class FanOutPipelineJsonConversionTest {
                 },
                 "storageAccountName": "san"
               },
-              "name": "Canary Analysis",
               "refId": "14",
               "requisiteStageRefIds": [
                 "12"
@@ -336,7 +319,7 @@ class FanOutPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = Pipeline().with {
+    val model = Pipeline().addStage {
         description = "desc1"
         parameters(
                 Parameter(
@@ -361,122 +344,116 @@ class FanOutPipelineJsonConversionTest {
                         "my-jenkins-master"
                 )
         )
+        val cloudProvider = CloudFoundryCloudProvider("creds1")
         stages = StageGraph(
                 listOf(
                         PipelineStage(1,
                                 CheckPreconditionsStage(
-                                        "Check Preconditions",
-                                        listOf(ExpressionPrecondition("2 > 1"))
+                                        ExpressionPrecondition("2 > 1")
                                 )
                         ),
                         PipelineStage(2,
                                 DestroyServerGroupStage(
-                                        "Destroy Server Group Before",
-                                        "cloudfoundry",
-                                        "cluster1",
-                                        "creds1",
+                                        cloudProvider,
                                         listOf("dev > dev"),
-                                        ExpressionCondition("execution['trigger']['parameters']['destroyServerGroupBefore']=='true'"),
+                                        "cluster1",
                                         "current_asg_dynamic"
+                                ),
+                                BaseStage("Destroy Server Group Before",
+                                        stageEnabled = ExpressionCondition("execution['trigger']['parameters']['destroyServerGroupBefore']=='true'")
                                 )
                         ),
                         PipelineStage(3,
-                                WaitStage(
-                                        420,
-                                        "woah",
-                                        "Server Group Timeout"
-                                )
+                                WaitStage(420)
                         ),
                         PipelineStage(4,
-                                WaitStage(
-                                        7,
-                                        "Wait on other service to reset",
-                                        "External service Wait"
-                                )
+                                WaitStage(7)
                         ),
                         PipelineStage(5,
                                 DestroyServiceStage(
-                                        "Destroy Service 1 Before",
-                                        "cloudfoundry",
-                                        "creds1",
+                                        cloudProvider,
                                         "dev > dev",
-                                        "serviceName1",
-                                        ExpressionCondition("exp1")
+                                        "serviceName1"
+                                ),
+                                BaseStage("Destroy Service 1 Before",
+                                        stageEnabled = ExpressionCondition("exp1")
                                 )
                         ),
                         PipelineStage(6,
                                 DestroyServiceStage(
-                                        "Destroy Service 2 Before",
-                                        "cloudfoundry",
-                                        "creds1",
+                                        cloudProvider,
                                         "dev > dev",
-                                        "serviceName2",
-                                        ExpressionCondition("exp1")
+                                        "serviceName2"
+                                ),
+                                BaseStage("Destroy Service 2 Before",
+                                        stageEnabled = ExpressionCondition("exp1")
                                 )
                         ),
                         PipelineStage(7,
                                 DestroyServiceStage(
-                                        "Destroy Service 3 Before",
-                                        "cloudfoundry",
-                                        "creds1",
+                                        cloudProvider,
                                         "dev > dev",
-                                        "serviceName3",
-                                        ExpressionCondition("exp1")
+                                        "serviceName3"
+                                ),
+                                BaseStage("Destroy Service 3 Before",
+                                        stageEnabled = ExpressionCondition("exp1")
                                 )
                         ),
                         PipelineStage(8,
                                 DeployServiceStage(
-                                        "Deploy Service 1",
-                                        "cloudfoundry",
+                                        cloudProvider.copy(manifest = ManifestSourceDirect(
+                                                "serviceType1",
+                                                "serviceName1",
+                                                "servicePlan1",
+                                                listOf("serviceTags1"),
+                                                "serviceParam1"
+                                        )),
+                                        "dev > dev"
+                                ),
+                                BaseStage("Deploy Service 1",
                                         "deploy comment",
-                                        "creds1",
-                                        "serviceParam1",
-                                        "dev > dev",
-                                        "serviceType1",
-                                        "serviceName1",
-                                        "servicePlan1",
-                                        ExpressionCondition("exp2"),
-                                        "serviceTags1"
+                                        ExpressionCondition("exp2")
                                 )
                         ),
                         PipelineStage(9,
                                 DeployServiceStage(
-                                        "Deploy Service 2",
-                                        "cloudfoundry",
+                                        cloudProvider.copy(manifest = ManifestSourceDirect(
+                                                "serviceType2",
+                                                "serviceName2",
+                                                "servicePlan2",
+                                                listOf("serviceTags2"),
+                                                "serviceParam2"
+                                        )),
+                                        "dev > dev"
+                                ),
+                                BaseStage("Deploy Service 2",
                                         "deploy comment",
-                                        "creds1",
-                                        "serviceParam2",
-                                        "dev > dev",
-                                        "serviceType2",
-                                        "serviceName2",
-                                        "servicePlan2",
-                                        ExpressionCondition("exp2"),
-                                        "serviceTags2"
+                                        ExpressionCondition("exp2")
                                 )
                         ),
                         PipelineStage(10,
                                 DeployServiceStage(
-                                        "Deploy Service 3",
-                                        "cloudfoundry",
+                                        cloudProvider.copy(manifest = ManifestSourceDirect(
+                                                "serviceType3",
+                                                "serviceName3",
+                                                "servicePlan3",
+                                                listOf("serviceTags3"),
+                                                "serviceParam3"
+                                        )),
+                                        "dev > dev"
+                                ),
+                                BaseStage("Deploy Service 3",
                                         "deploy comment",
-                                        "creds1",
-                                        "serviceParam3",
-                                        "dev > dev",
-                                        "serviceType3",
-                                        "serviceName3",
-                                        "servicePlan3",
-                                        ExpressionCondition("exp2"),
-                                        "serviceTags3"
+                                        ExpressionCondition("exp2")
                                 )
                         ),
                         PipelineStage(11,
                                 DeployStage(
-                                        "Deploy",
                                         CloudFoundryCluster(
                                                 "app1",
                                                 "account1",
                                                 "dev > dev",
-                                                "RedBlack",
+                                                DeploymentStrategy.RedBlack,
                                                 ReferencedArtifact(
                                                         "account2",
                                                         "s3://bucket1"
@@ -488,20 +465,21 @@ class FanOutPipelineJsonConversionTest {
                                                 ),
                                                 "stack1",
                                                 "ffd"
-                                        ),
-                                        ExpressionCondition("execution['trigger']['parameters']['deployServerGroup'] == 'true'"),
-                                        "Deployment Strategy is RedBlack"
+                                        )
+
+                                ),
+                                BaseStage("Deploy",
+                                        "Deployment Strategy is RedBlack",
+                                        ExpressionCondition("execution['trigger']['parameters']['deployServerGroup'] == 'true'")
                                 )
                         ),
                         PipelineStage(12,
                                 ManualJudgmentStage(
-                                        "Thumbs Up?",
                                         "Give a thumbs up if you like it."
                                 )
                         ),
                         PipelineStage(13,
                                 WebhookStage(
-                                        "Do that nonstandard thing",
                                         "POST",
                                         "https://github.com/spinnaker/clouddriver",
                                         "cmccoy@pivotal.io"
@@ -509,7 +487,6 @@ class FanOutPipelineJsonConversionTest {
                         ),
                         PipelineStage(14,
                                 CanaryStage(
-                                        "Canary Analysis",
                                         "realTimeAutomatic",
                                         CanaryConfig(
                                                 "PT1H0M",

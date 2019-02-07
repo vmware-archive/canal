@@ -1,15 +1,20 @@
 package io.pivotal.kanal.model.cloudfoundry
 
-import io.pivotal.kanal.model.Capacity
-import io.pivotal.kanal.model.Cluster
-import io.pivotal.kanal.model.Typed
+import io.pivotal.kanal.model.*
 
+data class CloudFoundryCloudProvider @JvmOverloads constructor(
+        override val credentials: String,
+        val manifest: ManifestSource? = null
+) : CloudProvider {
+    override var cloudProvider = "cloudfoundry"
+    override var cloudProviderType = cloudProvider
+}
 
-data class CloudFoundryCluster(
+data class CloudFoundryCluster @JvmOverloads constructor(
         val application: String,
         val account: String,
         val region: String,
-        val strategy: String,
+        val strategy: DeploymentStrategy,
         val artifact: Artifact,
         override val capacity: Capacity,
         val manifest: Manifest,
@@ -27,18 +32,50 @@ data class ArtifactManifest(
         val account: String,
         val reference: String
 ) : Manifest {
-    override val type = "artifact"
+    override var type = "artifact"
 }
 
-data class DirectManifest(
+data class DirectManifest @JvmOverloads constructor(
         val services: List<String>,
         val routes: List<String> = emptyList(),
         val diskQuota: String = "1024M",
-        val instances: Int = 1,
         val memory: String = "1024M",
+        @Transient val instanceCount: Int = 1,
         val env: List<String> = emptyList()
 ) : Manifest {
-    override val type: String = "direct"
+    override var type: String = "direct"
+    var instances = instanceCount
+}
+
+interface ManifestSource : Typed
+
+data class ManifestSourceArtifact @JvmOverloads constructor(
+        val account: String,
+        val reference: String,
+        val timeout: String? = null
+) : ManifestSource {
+    override var type: String = "artifact"
+}
+
+data class ManifestSourceUserProvided @JvmOverloads constructor(
+        val credentials: String,
+        val routeServiceUrl: String,
+        val serviceName: String,
+        val syslogDrainUrl: String,
+        val tags: List<String>  = emptyList()
+) : ManifestSource {
+    override var type: String = "userProvided"
+}
+
+data class ManifestSourceDirect @JvmOverloads constructor(
+        val service: String,
+        val serviceName: String,
+        val servicePlan: String,
+        val tags: List<String>  = emptyList(),
+        val parameters: String? = null,
+        val timeout: String? = null
+) : ManifestSource {
+    override var type: String = "direct"
 }
 
 interface Artifact : Typed
@@ -47,12 +84,12 @@ data class TriggerArtifact(
         val account: String,
         val pattern: String
 ) : Artifact {
-    override val type = "trigger"
+    override var type = "trigger"
 }
 
 data class ReferencedArtifact(
         val account: String,
         val reference: String
 ) : Artifact {
-    override val type = "artifact"
+    override var type = "artifact"
 }

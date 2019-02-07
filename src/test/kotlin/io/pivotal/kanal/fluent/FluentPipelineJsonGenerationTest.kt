@@ -19,6 +19,8 @@ package io.pivotal.kanal.fluent
 import io.pivotal.kanal.extensions.*
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.*
+import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCloudProvider
+import io.pivotal.kanal.model.cloudfoundry.ManifestSourceDirect
 import org.junit.jupiter.api.Test
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
@@ -35,16 +37,13 @@ class FluentPipelineJsonGenerationTest {
             "name": "Check Preconditions",
             "preconditions": [{
               "type":"expression",
-              "context":{"expression":"true"},
-              "failPipeline":true
+              "context":{"expression":"true"}
             }],
             "refId": "checkPreconditions1",
             "requisiteStageRefIds": [],
             "type": "checkPreconditions"
         },
         {
-            "comments": "woah",
-            "name": "Server Group Timeout",
             "refId": "wait2",
             "requisiteStageRefIds": ["checkPreconditions1"],
             "type": "wait",
@@ -54,10 +53,7 @@ class FluentPipelineJsonGenerationTest {
             "action": "destroyService",
             "cloudProvider": "cloudfoundry",
             "cloudProviderType": "cloudfoundry",
-            "completeOtherBranchesThenFail": false,
-            "continuePipeline": true,
             "credentials": "creds1",
-            "failPipeline": false,
             "name": "Destroy Service 1 Before",
             "refId": "destroyService1_3",
             "region": "dev > dev",
@@ -76,28 +72,28 @@ class FluentPipelineJsonGenerationTest {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 1",
-            "parameters": "serviceParam1",
             "refId": "deployService2_4",
             "region": "dev > dev",
             "requisiteStageRefIds": ["destroyService1_3"],
-            "service": "serviceType1",
-            "serviceName": "serviceName1",
-            "servicePlan": "servicePlan1",
+            "manifest": {
+              "service": "serviceType1",
+              "serviceName": "serviceName1",
+              "servicePlan": "servicePlan1",
+              "parameters": "serviceParam1",
+              "tags": ["serviceTags1"],
+              "type": "direct"
+            },
             "stageEnabled": {
             "expression": "exp2",
               "type": "expression"
             },
-            "tags": "serviceTags1",
             "type": "deployService"
         },
         {
             "action": "destroyService",
             "cloudProvider": "cloudfoundry",
             "cloudProviderType": "cloudfoundry",
-            "completeOtherBranchesThenFail": false,
-            "continuePipeline": true,
             "credentials": "creds1",
-            "failPipeline": false,
             "name": "Destroy Service 2 Before",
             "refId": "destroyService1_5",
             "region": "dev > dev",
@@ -116,28 +112,28 @@ class FluentPipelineJsonGenerationTest {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 2",
-            "parameters": "serviceParam2",
             "refId": "deployService2_6",
             "region": "dev > dev",
             "requisiteStageRefIds": ["destroyService1_5"],
-            "service": "serviceType2",
-            "serviceName": "serviceName2",
-            "servicePlan": "servicePlan2",
+            "manifest": {
+              "service": "serviceType2",
+              "serviceName": "serviceName2",
+              "servicePlan": "servicePlan2",
+              "parameters": "serviceParam2",
+              "tags": ["serviceTags2"],
+              "type": "direct"
+            },
             "stageEnabled": {
               "expression": "exp2",
               "type": "expression"
             },
-            "tags": "serviceTags2",
             "type": "deployService"
         },
         {
             "action": "destroyService",
             "cloudProvider": "cloudfoundry",
             "cloudProviderType": "cloudfoundry",
-            "completeOtherBranchesThenFail": false,
-            "continuePipeline": true,
             "credentials": "creds1",
-            "failPipeline": false,
             "name": "Destroy Service 3 Before",
             "refId": "destroyService1_7",
             "region": "dev > dev",
@@ -156,26 +152,26 @@ class FluentPipelineJsonGenerationTest {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 3",
-            "parameters": "serviceParam3",
             "refId": "deployService2_8",
             "region": "dev > dev",
             "requisiteStageRefIds": ["destroyService1_7"],
-            "service": "serviceType3",
-            "serviceName": "serviceName3",
-            "servicePlan": "servicePlan3",
+            "manifest": {
+              "service": "serviceType3",
+              "serviceName": "serviceName3",
+              "servicePlan": "servicePlan3",
+              "parameters": "serviceParam3",
+              "tags": ["serviceTags3"],
+              "type": "direct"
+            },
             "stageEnabled": {
               "expression": "exp2",
               "type": "expression"
             },
-            "tags": "serviceTags3",
             "type": "deployService"
         },
         {
-            "failPipeline": true,
             "instructions": "Give a thumbs up if you like it.",
             "judgmentInputs": [],
-            "name": "Thumbs Up?",
-            "notifications": [],
             "refId": "manualJudgment9",
             "requisiteStageRefIds": [
                 "deployService2_4",
@@ -190,38 +186,40 @@ class FluentPipelineJsonGenerationTest {
 
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
-        val stages = StageGraph().with(CheckPreconditionsStage(
-                "Check Preconditions",
-                emptyList()
+        val cloudProvider = CloudFoundryCloudProvider("creds1")
+        val stages = StageGraph().addStage(CheckPreconditionsStage(
         )).andThen(WaitStage(
-                420,
-                "woah",
-                "Server Group Timeout"
+                420
         )).parallel(
                 (1..3).map {
-                    StageGraph().with(DestroyServiceStage(
-                            "Destroy Service $it Before",
-                            "cloudfoundry",
-                            "creds1",
-                            "dev > dev",
-                            "serviceName$it",
-                            ExpressionCondition("exp1")
-                    )).andThen(DeployServiceStage(
-                            "Deploy Service $it",
-                            "cloudfoundry",
-                            "deploy comment",
-                            "creds1",
-                            "serviceParam$it",
-                            "dev > dev",
-                            "serviceType$it",
-                            "serviceName$it",
-                            "servicePlan$it",
-                            ExpressionCondition("exp2"),
-                            "serviceTags$it"
-                    ))
+                    StageGraph().addStage(
+                            DestroyServiceStage(
+                                    cloudProvider,
+                                    "dev > dev",
+                                    "serviceName$it"
+                            ),
+                            BaseStage("Destroy Service $it Before",
+                                    stageEnabled = ExpressionCondition("exp1")
+                            )
+                    ).andThen(
+                            DeployServiceStage(
+                                    cloudProvider.copy(manifest = ManifestSourceDirect(
+                                            "serviceType$it",
+                                            "serviceName$it",
+                                            "servicePlan$it",
+                                            listOf("serviceTags$it"),
+                                            "serviceParam$it"
+                                    )),
+                                    "dev > dev"
+                            ),
+                            BaseStage(
+                                    "Deploy Service $it",
+                                    "deploy comment",
+                                    ExpressionCondition("exp2")
+                            )
+                    )
                 }
         ).andThen(ManualJudgmentStage(
-                "Thumbs Up?",
                 "Give a thumbs up if you like it."
         ))
 

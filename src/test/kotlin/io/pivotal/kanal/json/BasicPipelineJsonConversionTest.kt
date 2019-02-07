@@ -16,7 +16,7 @@
 
 package io.pivotal.kanal.json
 
-import io.pivotal.kanal.extensions.with
+import io.pivotal.kanal.extensions.addStage
 import io.pivotal.kanal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions.assertThat
@@ -56,15 +56,12 @@ class BasicPipelineJsonConversionTest {
             ],
             "stages": [
                 {
-                  "name": "Check Preconditions",
                   "preconditions": [],
                   "refId": "1",
                   "requisiteStageRefIds": [],
                   "type": "checkPreconditions"
                 },
                 {
-                  "comments": "woah",
-                  "name": "Server Group Timeout",
                   "refId": "2",
                   "requisiteStageRefIds": [
                     "1"
@@ -73,11 +70,8 @@ class BasicPipelineJsonConversionTest {
                   "waitTime": "420"
                 },
                 {
-                  "failPipeline": true,
                   "instructions": "Give a thumbs up if you like it.",
                   "judgmentInputs": [],
-                  "name": "Thumbs Up?",
-                  "notifications": [],
                   "refId": "3",
                   "requisiteStageRefIds": [
                     "1"
@@ -85,9 +79,7 @@ class BasicPipelineJsonConversionTest {
                   "type": "manualJudgment"
                 },
                 {
-                  "failPipeline": true,
                   "method": "POST",
-                  "name": "Do that nonstandard thing",
                   "refId": "4",
                   "requisiteStageRefIds": [
                     "2",
@@ -102,7 +94,7 @@ class BasicPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = Pipeline().with {
+    val model = Pipeline().addStage {
         description = "desc1"
         triggers(
                 GitTrigger(
@@ -120,27 +112,18 @@ class BasicPipelineJsonConversionTest {
         stages = StageGraph(
                 listOf(
                         PipelineStage(1,
-                                CheckPreconditionsStage(
-                                        "Check Preconditions",
-                                        emptyList()
-                                )
+                                CheckPreconditionsStage()
                         ),
                         PipelineStage(2,
-                                WaitStage(
-                                        420,
-                                        "woah",
-                                        "Server Group Timeout"
-                                )
+                                WaitStage(420)
                         ),
                         PipelineStage(3,
                                 ManualJudgmentStage(
-                                        "Thumbs Up?",
                                         "Give a thumbs up if you like it."
                                 )
                         ),
                         PipelineStage(4,
                                 WebhookStage(
-                                        "Do that nonstandard thing",
                                         "POST",
                                         "https://github.com/spinnaker/clouddriver",
                                         "cmccoy@pivotal.io"

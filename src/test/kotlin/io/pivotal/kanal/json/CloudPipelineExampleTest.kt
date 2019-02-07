@@ -20,7 +20,6 @@ class CloudPipelineExampleTest  {
   "notifications": [],
   "parameterConfig": [],
   "stages" : [ {
-    "failPipeline" : true,
     "name" : "Prepare test environment",
     "refId" : "jenkins1",
     "requisiteStageRefIds" : [ ],
@@ -30,8 +29,7 @@ class CloudPipelineExampleTest  {
       "PIPELINE_VERSION" : "$\\{trigger.properties['PIPELINE_VERSION']}"
     },
     "master" : "Spinnaker-Jenkins",
-    "job" : "spinnaker-github-webhook-pipeline-test-prepare",
-    "continuePipeline" : false
+    "job" : "spinnaker-github-webhook-pipeline-test-prepare"
   }, {
     "clusters" : [ {
       "account" : "calabasasaccount",
@@ -67,7 +65,6 @@ class CloudPipelineExampleTest  {
     "requisiteStageRefIds" : [ "jenkins1" ],
     "type" : "deploy"
   }, {
-    "failPipeline" : true,
     "name" : "Run tests on test",
     "refId" : "jenkins3",
     "requisiteStageRefIds" : [ "deploy2" ],
@@ -77,8 +74,7 @@ class CloudPipelineExampleTest  {
       "PIPELINE_VERSION" : "$\\{trigger.properties['PIPELINE_VERSION']}"
     },
     "master" : "Spinnaker-Jenkins",
-    "job" : "spinnaker-github-webhook-pipeline-test-env-test",
-    "continuePipeline" : false
+    "job" : "spinnaker-github-webhook-pipeline-test-env-test"
   }, {
     "clusters" : [ {
       "account" : "calabasasaccount",
@@ -118,7 +114,6 @@ class CloudPipelineExampleTest  {
       "type" : "expression"
     }
   }, {
-    "failPipeline" : true,
     "name" : "Run rollback tests on test",
     "refId" : "jenkins5",
     "requisiteStageRefIds" : [ "deploy4" ],
@@ -130,21 +125,17 @@ class CloudPipelineExampleTest  {
     },
     "master" : "Spinnaker-Jenkins",
     "job" : "spinnaker-github-webhook-pipeline-test-env-rollback-test",
-    "continuePipeline" : false,
     "stageEnabled" : {
       "expression" : "$\\{trigger.properties['LATEST_PROD_VERSION']}",
       "type" : "expression"
     }
   }, {
-    "failPipeline" : true,
-    "name" : "Wait for stage env",
+    "instructions" : "Wait for stage env",
     "refId" : "manualJudgment6",
     "requisiteStageRefIds" : [ "jenkins5" ],
     "type" : "manualJudgment",
-    "judgmentInputs" : [ ],
-    "notifications" : [ ]
+    "judgmentInputs" : []
   }, {
-    "failPipeline" : true,
     "name" : "Prepare stage environment",
     "refId" : "jenkins7",
     "requisiteStageRefIds" : [ "manualJudgment6" ],
@@ -154,8 +145,7 @@ class CloudPipelineExampleTest  {
       "PIPELINE_VERSION" : "$\\{trigger.properties['PIPELINE_VERSION']}"
     },
     "master" : "Spinnaker-Jenkins",
-    "job" : "spinnaker-github-webhook-pipeline-stage-prepare",
-    "continuePipeline" : false
+    "job" : "spinnaker-github-webhook-pipeline-stage-prepare"
   }, {
     "clusters" : [ {
       "account" : "calabasasaccount",
@@ -191,15 +181,12 @@ class CloudPipelineExampleTest  {
     "requisiteStageRefIds" : [ "jenkins7" ],
     "type" : "deploy"
   }, {
-    "failPipeline" : true,
-    "name" : "Prepare for end to end tests",
+    "instructions" : "Prepare for end to end tests",
     "refId" : "manualJudgment9",
     "requisiteStageRefIds" : [ "deploy8" ],
     "type" : "manualJudgment",
-    "judgmentInputs" : [ ],
-    "notifications" : [ ]
+    "judgmentInputs" : [ ]
   }, {
-    "failPipeline" : true,
     "name" : "End to end tests on stage",
     "refId" : "jenkins10",
     "requisiteStageRefIds" : [ "manualJudgment9" ],
@@ -209,16 +196,13 @@ class CloudPipelineExampleTest  {
       "PIPELINE_VERSION" : "$\\{trigger.properties['PIPELINE_VERSION']}"
     },
     "master" : "Spinnaker-Jenkins",
-    "job" : "spinnaker-github-webhook-pipeline-stage-env-test",
-    "continuePipeline" : false
+    "job" : "spinnaker-github-webhook-pipeline-stage-env-test"
   }, {
-    "failPipeline" : true,
-    "name" : "Approve production",
+    "instructions" : "Approve production",
     "refId" : "manualJudgment11",
     "requisiteStageRefIds" : [ "jenkins10" ],
     "type" : "manualJudgment",
-    "judgmentInputs" : [ ],
-    "notifications" : [ ]
+    "judgmentInputs" : [ ]
   }, {
     "clusters" : [ {
       "account" : "calabasasaccount",
@@ -254,7 +238,6 @@ class CloudPipelineExampleTest  {
     "requisiteStageRefIds" : [ "manualJudgment11" ],
     "type" : "deploy"
   }, {
-    "failPipeline" : true,
     "name" : "Push prod tag",
     "refId" : "jenkins1_13",
     "requisiteStageRefIds" : [ "deploy12" ],
@@ -264,16 +247,13 @@ class CloudPipelineExampleTest  {
       "PIPELINE_VERSION" : "$\\{trigger.properties['PIPELINE_VERSION']}"
     },
     "master" : "Spinnaker-Jenkins",
-    "job" : "spinnaker-github-webhook-pipeline-prod-tag-repo",
-    "continuePipeline" : false
+    "job" : "spinnaker-github-webhook-pipeline-prod-tag-repo"
   }, {
-    "failPipeline" : true,
-    "name" : "Approve rollback",
+    "instructions" : "Approve rollback",
     "refId" : "manualJudgment1_14",
     "requisiteStageRefIds" : [ "deploy12" ],
     "type" : "manualJudgment",
-    "judgmentInputs" : [ ],
-    "notifications" : [ ]
+    "judgmentInputs" : [ ]
   }, {
     "clusters" : [ {
       "account" : "calabasasaccount",
@@ -340,7 +320,7 @@ class CloudPipelineExampleTest  {
                 "githubwebhook",
                 "calabasasaccount",
                 "scpipelines > ${region}",
-                "highlander",
+                DeploymentStrategy.Highlander,
                 TriggerArtifact(
                         "jenkins",
                         artifact
@@ -353,16 +333,12 @@ class CloudPipelineExampleTest  {
         )
     }
 
-    fun jenkinsStageFor(name: String,
-                        jobName: String,
-                        parameters: Map<String, String> = mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}"),
-                        stageEnabled: Condition? = null) : JenkinsStage {
+    fun jenkinsStageFor(jobName: String,
+                        parameters: Map<String, String> = mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")) : JenkinsStage {
         return JenkinsStage(
-                name,
                 "$projectName-$jobName",
                 master,
-                parameters,
-                stageEnabled
+                parameters
         )
     }
 
@@ -370,7 +346,7 @@ class CloudPipelineExampleTest  {
         return "$env-env-$testName"
     }
 
-    val model = Pipeline().with {
+    val model = Pipeline().addStage {
         limitConcurrent = true
         triggers = listOf(
                 JenkinsTrigger(
@@ -379,88 +355,82 @@ class CloudPipelineExampleTest  {
                         "trigger.properties"
                 )
         )
-        stages = StageGraph().with(
-                jenkinsStageFor(
-                        "Prepare test environment",
-                        "test-prepare"
-                )
+        stages = StageGraph().addStage(
+                jenkinsStageFor("test-prepare"),
+                BaseStage("Prepare test environment")
         ).andThen(
                 DeployStage(
-                        "Deploy to test",
                         clusterFor("sc-pipelines-test-github-webhook",
                                 "^github-webhook.*VERSION.jar${'$'}",
                                 "sc-pipelines-test-github-webhook.test.foo.com")
-                )
+                ),
+                BaseStage("Deploy to test")
         ).andThen(
-                jenkinsStageFor(
-                        "Run tests on test",
-                        jenkinsTestJobName("test", "test")
-                )
+                jenkinsStageFor(jenkinsTestJobName("test", "test")),
+                BaseStage("Run tests on test")
         ).andThen(
                 DeployStage(
-                        "Deploy to test latest prod version",
                         clusterFor("sc-pipelines-test-github-webhook",
                                 "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
-                                "sc-pipelines-test-github-webhook.test.foo.com"),
-                        ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
+                                "sc-pipelines-test-github-webhook.test.foo.com")
+                ),
+                BaseStage("Deploy to test latest prod version",
+                        stageEnabled = ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
                 )
         ).andThen(
                 jenkinsStageFor(
-                        "Run rollback tests on test",
                         jenkinsTestJobName("test", "rollback-test"),
                         mapOf(
                                 "PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}",
                                 "PASSED_LATEST_PROD_TAG" to "$\\{trigger.properties['PASSED_LATEST_PROD_TAG']}"
-                        ),
-                        ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}")
-                )
+                        )
+                ),
+                BaseStage("Run rollback tests on test",
+                        stageEnabled = ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}"))
         ).andThen(
                 ManualJudgmentStage("Wait for stage env")
         ).andThen(
-                jenkinsStageFor(
-                        "Prepare stage environment",
-                        "stage-prepare"
-                )
+                jenkinsStageFor("stage-prepare"),
+                BaseStage("Prepare stage environment")
         ).andThen(
                 DeployStage(
-                        "Deploy to stage",
                         clusterFor("sc-pipelines-stage",
                                 "^github-webhook.*VERSION.jar${'$'}",
                                 "github-webhook-sc-pipelines-stage.stage.foo.com")
-                )
+                ),
+                BaseStage("Deploy to stage")
         ).andThen(
                 ManualJudgmentStage("Prepare for end to end tests")
         ).andThen(
-                jenkinsStageFor(
-                        "End to end tests on stage",
-                        jenkinsTestJobName("stage", "test")
-                )
+                jenkinsStageFor(jenkinsTestJobName("stage", "test")),
+                BaseStage("End to end tests on stage")
         ).andThen(
                 ManualJudgmentStage("Approve production")
         ).andThen(
                 DeployStage(
-                        "Deploy to prod",
                         clusterFor("sc-pipelines-prod",
                                 "^github-webhook.*VERSION.jar${'$'}",
                                 "github-webhook.prod.foo.com")
-                )
+                ),
+                BaseStage("Deploy to prod")
         ).parallel(
-                StageGraph().with(jenkinsStageFor(
-                        "Push prod tag",
-                        "prod-tag-repo"
-                )),
-                StageGraph().with(ManualJudgmentStage("Approve rollback"))
+                StageGraph().addStage(
+                        jenkinsStageFor("prod-tag-repo"),
+                        BaseStage("Push prod tag")
+                ),
+                StageGraph().addStage(ManualJudgmentStage("Approve rollback"))
                         .andThen(
                                 DeployStage(
-                                        "Rollback",
                                         clusterFor("sc-pipelines-prod",
                                                 "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
                                                 "github-webhook.prod.foo.com")
-                                )
+                                ),
+                                BaseStage("Rollback")
                         ).andThen(
-                                jenkinsStageFor(
-                                        "Remove prod tag",
-                                        jenkinsTestJobName("prod", "remove-tag")
+                                jenkinsStageFor(jenkinsTestJobName("prod", "remove-tag")),
+                                BaseStage("Remove prod tag",
+                                        failPipeline = true,
+                                        continuePipeline = false
                                 )
                         )
         )

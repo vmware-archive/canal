@@ -107,9 +107,9 @@ data class Metadata(
         val name: String,
         val description: String,
         val owner: String,
-        val scopes: List<Scope> = listOf(Scope.GLOBAL)
+        val scopes: List<Scope> = listOf(Scope.Global)
 )
 
 enum class Scope() {
-    @Json(name = "global") GLOBAL
+    @Json(name = "global") Global
 }

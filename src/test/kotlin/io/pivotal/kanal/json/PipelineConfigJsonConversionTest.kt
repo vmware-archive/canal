@@ -1,6 +1,6 @@
 package io.pivotal.kanal.json
 
-import io.pivotal.kanal.extensions.with
+import io.pivotal.kanal.extensions.addStage
 import io.pivotal.kanal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions
@@ -43,22 +43,18 @@ class PipelineConfigJsonConversionTest  {
         "stages": [
             {
                 "refId": "wait2",
-                "name": "",
                 "requisiteStageRefIds": ["wait1"],
                 "type": "wait",
-                "waitTime": "67",
-                "comments": ""
+                "waitTime": "67"
             },
             {
                 "refId": "wait0",
-                "name": "",
                 "inject": {
                     "type": "first",
                     "first": true
                 },
                 "type": "wait",
                 "waitTime": "2",
-                "comments": "",
                 "requisiteStageRefIds": []
             }
         ]
@@ -73,7 +69,7 @@ class PipelineConfigJsonConversionTest  {
                         TemplateSource("spinnaker://newSpelTemplate"),
                         mapOf("waitTime" to 6)
                 ),
-                Pipeline().with {
+                Pipeline().addStage {
                     triggers = listOf(
                             PubSubTrigger(
                                     "google",
@@ -81,14 +77,18 @@ class PipelineConfigJsonConversionTest  {
                                     "jack"
                             )
                     )
-                    stages = StageGraph().with(
+                    stages = StageGraph().addStage(
                             WaitStage(67),
-                            refId = "wait2",
-                            requisiteStageRefIds = listOf("wait1")
-                    ).with(
+                            execution = StageExecution(
+                                refId = "wait2",
+                                requisiteStageRefIds = listOf("wait1")
+                            )
+                    ).addStage(
                             WaitStage(2),
-                            refId = "wait0",
-                            inject = Inject.First()
+                            execution = StageExecution(
+                                refId = "wait0",
+                                inject = Inject.First()
+                            )
                     )
                 }
         )

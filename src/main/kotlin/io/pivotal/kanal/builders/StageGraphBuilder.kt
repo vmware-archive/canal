@@ -16,45 +16,38 @@
 
 package io.pivotal.kanal.builders
 
-import io.pivotal.kanal.model.Inject
-import io.pivotal.kanal.model.Stage
-import io.pivotal.kanal.model.StageGraph
-
 import io.pivotal.kanal.extensions.*
+import io.pivotal.kanal.model.*
 
 open class StageGraphBuilder(
         var stageGraph: StageGraph = StageGraph()
 ) {
     companion object Factory {
         @JvmStatic @JvmOverloads fun of(stage: Stage,
-               inject: Inject? = null,
-               refId: String? = null,
-               requisiteStageRefIds: List<String> = emptyList()
+                                        base: BaseStage? = null,
+                                        execution: StageExecution = StageExecution()
         ): StageGraphBuilder {
-            return StageGraphBuilder(StageGraph().with(
+            return StageGraphBuilder(StageGraph().addStage(
                     stage,
-                    inject,
-                    refId,
-                    requisiteStageRefIds
+                    base,
+                    execution
             ))
         }
     }
 
     @JvmOverloads fun with(stage: Stage,
-            inject: Inject? = null,
-            refId: String? = null,
-            requisiteStageRefIds: List<String> = emptyList()
+                           base: BaseStage? = null,
+                           execution: StageExecution = StageExecution()
     ): StageGraphBuilder {
-        stageGraph = stageGraph.with(stage, inject, refId, requisiteStageRefIds)
+        stageGraph = stageGraph.addStage(stage, base, execution)
         return this
     }
 
     @JvmOverloads fun andThen(stage: Stage,
-                inject: Inject? = null,
-                refId: String? = null,
-                requisiteStageRefIds: List<String> = emptyList()
+                              base: BaseStage? = null,
+                              execution: StageExecution = StageExecution()
     ): StageGraphBuilder {
-        stageGraph = stageGraph.andThen(stage, inject, refId, requisiteStageRefIds)
+        stageGraph = stageGraph.andThen(stage, base, execution)
         return this
     }
 
