@@ -17,6 +17,7 @@
 package io.pivotal.kanal.evaluation
 
 import io.pivotal.kanal.extensions.*
+import io.pivotal.kanal.extensions.fluentstages.addStage
 import io.pivotal.kanal.model.*
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -37,7 +38,7 @@ class PipelineTemplateExpressionEvaluatorTest {
                             42
                     )
             ),
-            Pipeline().addStage {
+            Pipeline().with {
                 stages = StageGraph().addStage(WaitStage(
                         "\${ templateVariables.waitTime }"
                 ))
@@ -89,7 +90,7 @@ class PipelineTemplateExpressionEvaluatorTest {
                                 42
                         )
                 ),
-                Pipeline().addStage {
+                Pipeline().with {
                     stages = StageGraph().addStage(WaitStage(
                             "4"
                     ))

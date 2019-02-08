@@ -17,6 +17,8 @@
 package io.pivotal.kanal.evaluation
 
 import io.pivotal.kanal.extensions.*
+import io.pivotal.kanal.extensions.fluentstages.addStage
+import io.pivotal.kanal.extensions.fluentstages.parallel
 import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCloudProvider
 import org.assertj.core.api.Assertions.*
@@ -34,7 +36,7 @@ class PipelineExpressionEvaluatorTest {
                 )
         )
         val evaluator = ExpressionEvaluator(pipelineExecution)
-        val pipeline = Pipeline().addStage {
+        val pipeline = Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
                     CheckPreconditionsStage(
@@ -46,7 +48,7 @@ class PipelineExpressionEvaluatorTest {
 
         val result = evaluator.evaluate(pipeline)
 
-        assertThat(result).isEqualTo(Pipeline().addStage {
+        assertThat(result).isEqualTo(Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
                     CheckPreconditionsStage(
@@ -61,7 +63,7 @@ class PipelineExpressionEvaluatorTest {
     fun `evaluate pipeline expression with error`() {
         val pipelineExecution = PipelineExecution()
         val evaluator = ExpressionEvaluator(pipelineExecution)
-        val pipeline = Pipeline().addStage {
+        val pipeline = Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
                     CheckPreconditionsStage(
@@ -96,7 +98,7 @@ class PipelineExpressionEvaluatorTest {
         )
         val evaluator = ExpressionEvaluator(pipelineExecution)
 
-        val pipeline = Pipeline().addStage {
+        val pipeline = Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
                     CheckPreconditionsStage(

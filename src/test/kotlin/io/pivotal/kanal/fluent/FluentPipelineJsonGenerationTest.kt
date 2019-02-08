@@ -16,7 +16,9 @@
 
 package io.pivotal.kanal.fluent
 
-import io.pivotal.kanal.extensions.*
+import io.pivotal.kanal.extensions.fluentstages.addStage
+import io.pivotal.kanal.extensions.fluentstages.andThen
+import io.pivotal.kanal.extensions.fluentstages.parallel
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCloudProvider
@@ -55,7 +57,7 @@ class FluentPipelineJsonGenerationTest {
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
             "name": "Destroy Service 1 Before",
-            "refId": "destroyService1_3",
+            "refId": "destroyService3",
             "region": "dev > dev",
             "requisiteStageRefIds": ["wait2"],
             "serviceName": "serviceName1",
@@ -72,9 +74,9 @@ class FluentPipelineJsonGenerationTest {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 1",
-            "refId": "deployService2_4",
+            "refId": "deployService4",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService1_3"],
+            "requisiteStageRefIds": ["destroyService3"],
             "manifest": {
               "service": "serviceType1",
               "serviceName": "serviceName1",
@@ -95,7 +97,7 @@ class FluentPipelineJsonGenerationTest {
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
             "name": "Destroy Service 2 Before",
-            "refId": "destroyService1_5",
+            "refId": "destroyService5",
             "region": "dev > dev",
             "requisiteStageRefIds": ["wait2"],
             "serviceName": "serviceName2",
@@ -112,9 +114,9 @@ class FluentPipelineJsonGenerationTest {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 2",
-            "refId": "deployService2_6",
+            "refId": "deployService6",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService1_5"],
+            "requisiteStageRefIds": ["destroyService5"],
             "manifest": {
               "service": "serviceType2",
               "serviceName": "serviceName2",
@@ -135,7 +137,7 @@ class FluentPipelineJsonGenerationTest {
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
             "name": "Destroy Service 3 Before",
-            "refId": "destroyService1_7",
+            "refId": "destroyService7",
             "region": "dev > dev",
             "requisiteStageRefIds": ["wait2"],
             "serviceName": "serviceName3",
@@ -152,9 +154,9 @@ class FluentPipelineJsonGenerationTest {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 3",
-            "refId": "deployService2_8",
+            "refId": "deployService8",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService1_7"],
+            "requisiteStageRefIds": ["destroyService7"],
             "manifest": {
               "service": "serviceType3",
               "serviceName": "serviceName3",
@@ -174,9 +176,9 @@ class FluentPipelineJsonGenerationTest {
             "judgmentInputs": [],
             "refId": "manualJudgment9",
             "requisiteStageRefIds": [
-                "deployService2_4",
-                "deployService2_6",
-                "deployService2_8"
+                "deployService4",
+                "deployService6",
+                "deployService8"
             ],
             "type": "manualJudgment"
         }

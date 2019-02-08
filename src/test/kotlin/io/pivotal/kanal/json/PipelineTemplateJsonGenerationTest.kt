@@ -1,6 +1,7 @@
 package io.pivotal.kanal.json
 
-import io.pivotal.kanal.extensions.addStage
+import io.pivotal.kanal.extensions.fluentstages.addStage
+import io.pivotal.kanal.extensions.with
 import io.pivotal.kanal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions
@@ -73,7 +74,7 @@ class PipelineTemplateJsonGenerationTest {
                                 42
                         )
                 ),
-                Pipeline().addStage {
+                Pipeline().with {
                     stages = StageGraph().addStage(WaitStage(
                             "$\\{ templateVariables.waitTime }"
                     ))

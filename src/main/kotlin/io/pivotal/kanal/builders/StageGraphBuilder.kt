@@ -16,7 +16,10 @@
 
 package io.pivotal.kanal.builders
 
-import io.pivotal.kanal.extensions.*
+import io.pivotal.kanal.extensions.fluentstages.addStage
+import io.pivotal.kanal.extensions.fluentstages.andThen
+import io.pivotal.kanal.extensions.fluentstages.parallel
+import io.pivotal.kanal.extensions.fluentstages.parallelStages
 import io.pivotal.kanal.model.*
 
 open class StageGraphBuilder(

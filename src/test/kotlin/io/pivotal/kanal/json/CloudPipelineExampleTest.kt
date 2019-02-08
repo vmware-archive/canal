@@ -1,6 +1,9 @@
 package io.pivotal.kanal.json
 
 import io.pivotal.kanal.extensions.*
+import io.pivotal.kanal.extensions.fluentstages.addStage
+import io.pivotal.kanal.extensions.fluentstages.andThen
+import io.pivotal.kanal.extensions.fluentstages.parallel
 import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -239,7 +242,7 @@ class CloudPipelineExampleTest  {
     "type" : "deploy"
   }, {
     "name" : "Push prod tag",
-    "refId" : "jenkins1_13",
+    "refId" : "jenkins13",
     "requisiteStageRefIds" : [ "deploy12" ],
     "type" : "jenkins",
     "waitForCompletion" : true,
@@ -250,7 +253,7 @@ class CloudPipelineExampleTest  {
     "job" : "spinnaker-github-webhook-pipeline-prod-tag-repo"
   }, {
     "instructions" : "Approve rollback",
-    "refId" : "manualJudgment1_14",
+    "refId" : "manualJudgment14",
     "requisiteStageRefIds" : [ "deploy12" ],
     "type" : "manualJudgment",
     "judgmentInputs" : [ ]
@@ -285,14 +288,14 @@ class CloudPipelineExampleTest  {
       "strategy" : "highlander"
     } ],
     "name" : "Rollback",
-    "refId" : "deploy2_15",
-    "requisiteStageRefIds" : [ "manualJudgment1_14" ],
+    "refId" : "deploy15",
+    "requisiteStageRefIds" : [ "manualJudgment14" ],
     "type" : "deploy"
   }, {
     "failPipeline" : true,
     "name" : "Remove prod tag",
-    "refId" : "jenkins3_16",
-    "requisiteStageRefIds" : [ "deploy2_15" ],
+    "refId" : "jenkins16",
+    "requisiteStageRefIds" : [ "deploy15" ],
     "type" : "jenkins",
     "waitForCompletion" : true,
     "parameters" : {
@@ -346,7 +349,7 @@ class CloudPipelineExampleTest  {
         return "$env-env-$testName"
     }
 
-    val model = Pipeline().addStage {
+    val model = Pipeline().with {
         limitConcurrent = true
         triggers = listOf(
                 JenkinsTrigger(

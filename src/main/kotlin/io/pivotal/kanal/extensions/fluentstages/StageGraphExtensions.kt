@@ -1,4 +1,4 @@
-package io.pivotal.kanal.extensions
+package io.pivotal.kanal.extensions.fluentstages
 
 import io.pivotal.kanal.model.*
 import java.lang.IllegalStateException
@@ -83,7 +83,7 @@ fun StageGraph.parallel(stageGraphs: List<StageGraph>): StageGraph {
         var subStageGraphStageRequirements = currentStageGraph.stageRequirements
         it.stages.forEach {
             val oldRefId = it.refId
-            val newRefId = "${oldRefId}_${++currentStageCount}"
+            val newRefId = "${oldRefId.subSequence(0, oldRefId.length-1)}${++currentStageCount}"
             val pStage = it.copy(refId = newRefId)
             newStages += pStage
             if (initialStages.contains(it)) {
