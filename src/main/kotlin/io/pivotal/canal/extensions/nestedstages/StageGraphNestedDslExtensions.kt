@@ -34,6 +34,13 @@ private val StageGraph.terminalStages: List<PipelineStage> get() {
 
 class MutableRefStageGraph(var stageGraph: StageGraph)
 
+class StageFlags(
+        val completeOtherBranchesThenFail: Boolean? = null,
+        val continuePipeline: Boolean? = null,
+        val failPipeline: Boolean? = null,
+        val failOnFailedExpressions: Boolean? = null
+)
+
 class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<String>? = null ) {
 
     val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
@@ -43,10 +50,7 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
               comments: String? = null,
               stageEnabled: Condition? = null,
               notifications: List<Notification>? = null,
-              completeOtherBranchesThenFail: Boolean? = null,
-              continuePipeline: Boolean? = null,
-              failPipeline: Boolean? = null,
-              failOnFailedExpressions: Boolean? = null,
+              stageFlags: StageFlags = StageFlags(),
               restrictedExecutionWindow: RestrictedExecutionWindow? = null,
               execution: StageExecution = StageExecution()): SingleStage {
         val newStageRequirements = execution.requisiteStageRefIds + currentTerminalIds
@@ -56,10 +60,10 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
                         comments,
                         stageEnabled,
                         notifications,
-                        completeOtherBranchesThenFail,
-                        continuePipeline,
-                        failPipeline,
-                        failOnFailedExpressions,
+                        stageFlags.completeOtherBranchesThenFail,
+                        stageFlags.continuePipeline,
+                        stageFlags.failPipeline,
+                        stageFlags.failOnFailedExpressions,
                         restrictedExecutionWindow
                 ),
                 execution.refId,

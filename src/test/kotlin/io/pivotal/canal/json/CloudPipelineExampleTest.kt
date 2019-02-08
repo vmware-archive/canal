@@ -17,6 +17,7 @@
 package io.pivotal.canal.json
 
 import io.pivotal.canal.extensions.*
+import io.pivotal.canal.extensions.nestedstages.StageFlags
 import io.pivotal.canal.extensions.nestedstages.stages
 import io.pivotal.canal.model.*
 import io.pivotal.canal.model.cloudfoundry.*
@@ -459,8 +460,10 @@ class CloudPipelineExampleTest  {
                             stage(
                                     jenkinsConfig(jenkinsTestJobName("prod", "remove-tag")),
                                     name = "Remove prod tag",
-                                    failPipeline = true,
-                                    continuePipeline = false
+                                    stageFlags = StageFlags(
+                                            failPipeline = true,
+                                            continuePipeline = false
+                                    )
                             )
                         }
                     }
