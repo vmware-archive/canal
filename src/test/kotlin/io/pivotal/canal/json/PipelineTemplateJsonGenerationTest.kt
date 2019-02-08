@@ -1,7 +1,7 @@
 package io.pivotal.canal.json
 
 import io.pivotal.canal.extensions.nestedstages.stages
-import io.pivotal.canal.extensions.with
+import io.pivotal.canal.extensions.pipeline
 import io.pivotal.canal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions
@@ -74,7 +74,7 @@ class PipelineTemplateJsonGenerationTest {
                                 42
                         )
                 ),
-                Pipeline().with {
+                pipeline {
                     stages = stages { stage(Wait("$\\{ templateVariables.waitTime }")) }
                 }
         )

@@ -16,7 +16,7 @@
 
 package io.pivotal.canal.json
 
-import io.pivotal.canal.extensions.with
+import io.pivotal.canal.extensions.pipeline
 import io.pivotal.canal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
 import org.assertj.core.api.Assertions.assertThat
@@ -94,7 +94,7 @@ class BasicPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = Pipeline().with {
+    val model = pipeline {
         description = "desc1"
         triggers(
                 GitTrigger(

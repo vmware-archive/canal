@@ -347,7 +347,7 @@ class CloudPipelineExampleTest  {
         return "$env-env-$testName"
     }
 
-    val model = Pipeline().with {
+    val model = pipeline {
         limitConcurrent = true
         triggers = listOf(
                 JenkinsTrigger(

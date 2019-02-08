@@ -1,6 +1,6 @@
 package io.pivotal.canal.json
 
-import io.pivotal.canal.extensions.with
+import io.pivotal.canal.extensions.pipeline
 import io.pivotal.canal.model.*
 import io.pivotal.canal.model.cloudfoundry.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -319,7 +319,7 @@ class FanOutPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = Pipeline().with {
+    val model = pipeline {
         description = "desc1"
         parameters(
                 Parameter(

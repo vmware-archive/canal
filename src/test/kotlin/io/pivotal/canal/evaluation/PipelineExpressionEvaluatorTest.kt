@@ -35,7 +35,7 @@ class PipelineExpressionEvaluatorTest {
                 )
         )
         val evaluator = ExpressionEvaluator(pipelineExecution)
-        val pipeline = Pipeline().with {
+        val pipeline = pipeline {
             description = "desc1"
             stages = stages {
                 stage(
@@ -47,7 +47,7 @@ class PipelineExpressionEvaluatorTest {
 
         val result = evaluator.evaluate(pipeline)
 
-        assertThat(result).isEqualTo(Pipeline().with {
+        assertThat(result).isEqualTo(pipeline {
             description = "desc1"
             stages = stages {
                 stage(
@@ -62,7 +62,7 @@ class PipelineExpressionEvaluatorTest {
     fun `evaluate pipeline expression with error`() {
         val pipelineExecution = PipelineExecution()
         val evaluator = ExpressionEvaluator(pipelineExecution)
-        val pipeline = Pipeline().with {
+        val pipeline = pipeline {
             description = "desc1"
             stages = stages {
                 stage(
@@ -97,7 +97,7 @@ class PipelineExpressionEvaluatorTest {
         )
         val evaluator = ExpressionEvaluator(pipelineExecution)
 
-        val pipeline = Pipeline().with {
+        val pipeline = pipeline {
             description = "desc1"
             stages = stages {
                     stage(
