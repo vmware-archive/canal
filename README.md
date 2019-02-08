@@ -1,1 +1,1 @@
-# Kanal Spinnaker Pipeline DSL
+# Canal Spinnaker Pipeline DSL
