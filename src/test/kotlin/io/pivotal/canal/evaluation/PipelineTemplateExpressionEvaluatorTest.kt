@@ -17,7 +17,7 @@
 package io.pivotal.canal.evaluation
 
 import io.pivotal.canal.extensions.*
-import io.pivotal.canal.extensions.fluentstages.addStage
+import io.pivotal.canal.extensions.nestedstages.stages
 import io.pivotal.canal.model.*
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -39,9 +39,9 @@ class PipelineTemplateExpressionEvaluatorTest {
                     )
             ),
             Pipeline().with {
-                stages = StageGraph().addStage(Wait(
-                        "\${ templateVariables.waitTime }"
-                ))
+                stages = stages {
+                    stage(Wait("\${ templateVariables.waitTime }"))
+                }
             }
     )
 
@@ -91,9 +91,7 @@ class PipelineTemplateExpressionEvaluatorTest {
                         )
                 ),
                 Pipeline().with {
-                    stages = StageGraph().addStage(Wait(
-                            "4"
-                    ))
+                    stages = stages { stage(Wait("4")) }
                 }
         ))
     }

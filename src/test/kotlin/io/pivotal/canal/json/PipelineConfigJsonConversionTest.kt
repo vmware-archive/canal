@@ -1,6 +1,6 @@
 package io.pivotal.canal.json
 
-import io.pivotal.canal.extensions.fluentstages.addStage
+import io.pivotal.canal.extensions.nestedstages.stages
 import io.pivotal.canal.extensions.with
 import io.pivotal.canal.model.*
 import net.javacrumbs.jsonunit.assertj.JsonAssertions
@@ -78,19 +78,22 @@ class PipelineConfigJsonConversionTest  {
                                     "jack"
                             )
                     )
-                    stages = StageGraph().addStage(
-                            Wait(67),
-                            execution = StageExecution(
-                                refId = "wait2",
-                                requisiteStageRefIds = listOf("wait1")
-                            )
-                    ).addStage(
-                            Wait(2),
-                            execution = StageExecution(
-                                refId = "wait0",
-                                inject = Inject.First()
-                            )
-                    )
+                    stages = stages {
+                        stage(
+                                Wait(67),
+                                execution = StageExecution(
+                                        refId = "wait2",
+                                        requisiteStageRefIds = listOf("wait1")
+                                )
+                        )
+                        stage(
+                                Wait(2),
+                                execution = StageExecution(
+                                        refId = "wait0",
+                                        inject = Inject.First()
+                                )
+                        )
+                    }
                 }
         )
     }

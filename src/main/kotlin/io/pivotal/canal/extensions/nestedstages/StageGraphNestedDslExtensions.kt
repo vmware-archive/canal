@@ -26,10 +26,26 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
               name: String? = null,
               comments: String? = null,
               stageEnabled: Condition? = null,
+              notifications: List<Notification>? = null,
+              completeOtherBranchesThenFail: Boolean? = null,
+              continuePipeline: Boolean? = null,
+              failPipeline: Boolean? = null,
+              failOnFailedExpressions: Boolean? = null,
+              restrictedExecutionWindow: RestrictedExecutionWindow? = null,
               execution: StageExecution = StageExecution()): SingleStage {
         val newStageRequirements = execution.requisiteStageRefIds + currentTerminalIds
         val newStage = current.stageGraph.newStage(stageConfig,
-                BaseStage(name, comments, stageEnabled),
+                BaseStage(
+                        name,
+                        comments,
+                        stageEnabled,
+                        notifications,
+                        completeOtherBranchesThenFail,
+                        continuePipeline,
+                        failPipeline,
+                        failOnFailedExpressions,
+                        restrictedExecutionWindow
+                ),
                 execution.refId,
                 execution.inject
         )

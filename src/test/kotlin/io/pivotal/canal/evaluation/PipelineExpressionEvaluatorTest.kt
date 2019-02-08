@@ -17,8 +17,7 @@
 package io.pivotal.canal.evaluation
 
 import io.pivotal.canal.extensions.*
-import io.pivotal.canal.extensions.fluentstages.addStage
-import io.pivotal.canal.extensions.fluentstages.parallel
+import io.pivotal.canal.extensions.nestedstages.stages
 import io.pivotal.canal.model.*
 import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider
 import org.assertj.core.api.Assertions.*
@@ -38,24 +37,24 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline().with {
             description = "desc1"
-            stages = StageGraph().addStage(
-                    CheckPreconditions(
-                            ExpressionPrecondition("hello \${#alphanumerical(trigger['parameters']['account'])}")
-                    ),
-                    BaseStage("Check Preconditions")
-            )
+            stages = stages {
+                stage(
+                        CheckPreconditions(ExpressionPrecondition(
+                                "hello \${#alphanumerical(trigger['parameters']['account'])}")),
+                        name = "Check Preconditions")
+            }
         }
 
         val result = evaluator.evaluate(pipeline)
 
         assertThat(result).isEqualTo(Pipeline().with {
             description = "desc1"
-            stages = StageGraph().addStage(
-                    CheckPreconditions(
-                            ExpressionPrecondition("hello account1")
-                    ),
-                    BaseStage("Check Preconditions")
-            )
+            stages = stages {
+                stage(
+                        CheckPreconditions(ExpressionPrecondition("hello account1")),
+                        name = "Check Preconditions"
+                )
+            }
         })
     }
 
@@ -65,12 +64,12 @@ class PipelineExpressionEvaluatorTest {
         val evaluator = ExpressionEvaluator(pipelineExecution)
         val pipeline = Pipeline().with {
             description = "desc1"
-            stages = StageGraph().addStage(
-                    CheckPreconditions(
-                            ExpressionPrecondition("\${#alphanumerical('missing paren'}")
-                    ),
-                    BaseStage("Check Preconditions")
-            )
+            stages = stages {
+                stage(
+                        CheckPreconditions(ExpressionPrecondition("\${#alphanumerical('missing paren'}")),
+                        name = "Check Preconditions"
+                )
+            }
         }
 
         val thrown = catchThrowable {
@@ -100,26 +99,27 @@ class PipelineExpressionEvaluatorTest {
 
         val pipeline = Pipeline().with {
             description = "desc1"
-            stages = StageGraph().addStage(
-                    CheckPreconditions(
-                            ExpressionPrecondition("\${true}"),
-                            ExpressionPrecondition("\${2 < 1}")
-                    ),
-                    BaseStage("Check Preconditions")
-            ).parallel(
-                    (1..3).map {
-                        StageGraph().addStage(
-                                DestroyService(
-                                        CloudFoundryCloudProvider("\${trigger['parameters']['account'] }"),
-                                        "\${trigger['parameters']['region'] }",
-                                        "\${trigger['parameters']['serviceName$it']}"
-                                ),
-                                BaseStage("Destroy Service $it Before",
+            stages = stages {
+                    stage(
+                            CheckPreconditions(
+                                    ExpressionPrecondition("\${true}"),
+                                    ExpressionPrecondition("\${2 < 1}")
+                            ),
+                            name = "Check Preconditions"
+                    ) then {
+                        (1..3).map {
+                            stage(
+                                    DestroyService(
+                                            CloudFoundryCloudProvider("\${trigger['parameters']['account'] }"),
+                                            "\${trigger['parameters']['region'] }",
+                                            "\${trigger['parameters']['serviceName$it']}"
+                                    ),
+                                    name = "Destroy Service $it Before",
                                     stageEnabled = ExpressionCondition("\${trigger['parameters']['destroyServicesBefore']=='true' && trigger['parameters']['serviceName$it']!='none' && trigger['parameters']['serviceName$it']!=\"\"}")
-                                )
-                        )
+                            )
+                        }
                     }
-            )
+            }
         }
 
             val evaluatedPipeline = evaluator.evaluate(pipeline)
@@ -127,44 +127,43 @@ class PipelineExpressionEvaluatorTest {
 
             assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                     description ="desc1",
-                    stages = StageGraph().addStage(
-                            CheckPreconditions(
-                                    ExpressionPrecondition("true"),
-                                    ExpressionPrecondition("false")
-                            ),
-                            BaseStage("Check Preconditions")
-                    ).parallel(
-                            StageGraph().addStage(
+                    stages = stages {
+                        stage(
+                                CheckPreconditions(
+                                        ExpressionPrecondition("true"),
+                                        ExpressionPrecondition("false")
+                                ),
+                                name = "Check Preconditions"
+                        ) then {
+                            stage(
                                     DestroyService(
                                             cloudProvider,
                                             "region-1",
                                             "One"
                                     ),
-                                    BaseStage("Destroy Service 1 Before",
-                                            stageEnabled = ExpressionCondition("true")
-                                    )
-                            ),
-                            StageGraph().addStage(
+                                    name = "Destroy Service 1 Before",
+                                    stageEnabled = ExpressionCondition("true")
+                            )
+                            stage(
                                     DestroyService(
                                             cloudProvider,
                                             "region-1",
                                             "Two"
                                     ),
-                                    BaseStage("Destroy Service 2 Before",
-                                            stageEnabled = ExpressionCondition("true")
-                                    )
-                            ),
-                            StageGraph().addStage(
+                                    name = "Destroy Service 2 Before",
+                                    stageEnabled = ExpressionCondition("true")
+                            )
+                            stage(
                                     DestroyService(
                                             cloudProvider,
                                             "region-1",
                                             ""
                                     ),
-                                    BaseStage("Destroy Service 3 Before",
-                                            stageEnabled = ExpressionCondition("false")
-                                    )
+                                    name = "Destroy Service 3 Before",
+                                    stageEnabled = ExpressionCondition("false")
                             )
-                    )
+                        }
+                    }
             ))
     }
 
