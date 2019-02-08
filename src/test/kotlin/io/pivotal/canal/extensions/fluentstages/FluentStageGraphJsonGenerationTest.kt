@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.intellij.lang.annotations.Language
 
-class FluentPipelineJsonGenerationTest {
+class FluentStageGraphJsonGenerationTest {
 
     companion object {
         @Language("JSON")

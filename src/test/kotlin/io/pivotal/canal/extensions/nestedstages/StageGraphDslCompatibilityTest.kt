@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package io.pivotal.canal.extensions
+package io.pivotal.canal.extensions.nestedstages
 
 import io.pivotal.canal.extensions.fluentstages.addStage
 import io.pivotal.canal.extensions.fluentstages.andThen
 import io.pivotal.canal.extensions.fluentstages.parallel
-import io.pivotal.canal.extensions.nestedstages.*
 import io.pivotal.canal.model.*
 import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider
 import io.pivotal.canal.model.cloudfoundry.ManifestSourceDirect
@@ -27,7 +26,7 @@ import org.junit.jupiter.api.Test
 
 import org.assertj.core.api.Assertions.assertThat
 
-class StageGraphExtensionJsonGenerationTest {
+class StageGraphDslCompatibilityTest {
 
     @Test
     fun `fluent stages DSL with fan out and fan in`() {

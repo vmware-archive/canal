@@ -68,7 +68,7 @@ class FluentPipelineJsonGenerationJavaTest {
         JsonAdapter<StageGraph> adapter =
                 new JsonAdapterFactory().jsonAdapterBuilder().build().adapter(StageGraph.class);
         String json = adapter.toJson(stages.getStageGraph());
-        assertThatJson(json).isEqualTo(FluentPipelineJsonGenerationTest.getJson());
+        assertThatJson(json).isEqualTo(FluentStageGraphJsonGenerationTest.getJson());
     }
 
 }
