@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package io.pivotal.kanal.fluent
+package io.pivotal.kanal.extensions.fluentstages
 
-import io.pivotal.kanal.extensions.fluentstages.addStage
-import io.pivotal.kanal.extensions.fluentstages.andThen
-import io.pivotal.kanal.extensions.fluentstages.parallel
 import io.pivotal.kanal.json.JsonAdapterFactory
 import io.pivotal.kanal.model.*
 import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCloudProvider
@@ -189,13 +186,13 @@ class FluentPipelineJsonGenerationTest {
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
         val cloudProvider = CloudFoundryCloudProvider("creds1")
-        val stages = StageGraph().addStage(CheckPreconditionsStage(
-        )).andThen(WaitStage(
+        val stages = StageGraph().addStage(CheckPreconditions(
+        )).andThen(Wait(
                 420
         )).parallel(
                 (1..3).map {
                     StageGraph().addStage(
-                            DestroyServiceStage(
+                            DestroyService(
                                     cloudProvider,
                                     "dev > dev",
                                     "serviceName$it"
@@ -204,7 +201,7 @@ class FluentPipelineJsonGenerationTest {
                                     stageEnabled = ExpressionCondition("exp1")
                             )
                     ).andThen(
-                            DeployServiceStage(
+                            DeployService(
                                     cloudProvider.copy(manifest = ManifestSourceDirect(
                                             "serviceType$it",
                                             "serviceName$it",
@@ -221,7 +218,7 @@ class FluentPipelineJsonGenerationTest {
                             )
                     )
                 }
-        ).andThen(ManualJudgmentStage(
+        ).andThen(ManualJudgment(
                 "Give a thumbs up if you like it."
         ))
 

@@ -2,8 +2,8 @@ package io.pivotal.kanal.extensions.nestedstages
 
 import io.pivotal.kanal.model.*
 
-infix fun StageGraph.with(stageDefOperation: StageDef.() -> Unit): StageGraph {
-    val currentStageGraph = MutableRefStageGraph(this)
+fun stages (stageDefOperation: StageDef.() -> Unit): StageGraph {
+    val currentStageGraph = MutableRefStageGraph(StageGraph())
     val nsg = StageDef(currentStageGraph, emptyList())
     nsg.stageDefOperation()
     return currentStageGraph.stageGraph
@@ -22,13 +22,13 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
 
     val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
 
-    fun stage(stage: Stage,
+    fun stage(stageConfig: StageConfig,
               name: String? = null,
               comments: String? = null,
               stageEnabled: Condition? = null,
               execution: StageExecution = StageExecution()): SingleStage {
         val newStageRequirements = execution.requisiteStageRefIds + currentTerminalIds
-        val newStage = current.stageGraph.newStage(stage,
+        val newStage = current.stageGraph.newStage(stageConfig,
                 BaseStage(name, comments, stageEnabled),
                 execution.refId,
                 execution.inject
@@ -39,15 +39,15 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
         return SingleStage(current, newStage.refId)
     }
 
-    private fun StageGraph.newStage(stage: Stage,
+    private fun StageGraph.newStage(stageConfig: StageConfig,
                                     base: BaseStage?,
                                     refId: String?,
                                     inject: Inject?
 
     ): PipelineStage {
         val nextStageCount = stages.size + 1
-        val nextRefId = refId ?: stage.type + nextStageCount.toString()
-        return PipelineStage(nextRefId, stage, base, inject)
+        val nextRefId = refId ?: stageConfig.type + nextStageCount.toString()
+        return PipelineStage(nextRefId, stageConfig, base, inject)
     }
 
     private fun StageGraph.insertStage(stage: PipelineStage,

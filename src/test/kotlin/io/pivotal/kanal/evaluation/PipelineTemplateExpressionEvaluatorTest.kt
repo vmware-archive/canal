@@ -39,7 +39,7 @@ class PipelineTemplateExpressionEvaluatorTest {
                     )
             ),
             Pipeline().with {
-                stages = StageGraph().addStage(WaitStage(
+                stages = StageGraph().addStage(Wait(
                         "\${ templateVariables.waitTime }"
                 ))
             }
@@ -91,7 +91,7 @@ class PipelineTemplateExpressionEvaluatorTest {
                         )
                 ),
                 Pipeline().with {
-                    stages = StageGraph().addStage(WaitStage(
+                    stages = StageGraph().addStage(Wait(
                             "4"
                     ))
                 }

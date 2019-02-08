@@ -39,7 +39,7 @@ class PipelineExpressionEvaluatorTest {
         val pipeline = Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
-                    CheckPreconditionsStage(
+                    CheckPreconditions(
                             ExpressionPrecondition("hello \${#alphanumerical(trigger['parameters']['account'])}")
                     ),
                     BaseStage("Check Preconditions")
@@ -51,7 +51,7 @@ class PipelineExpressionEvaluatorTest {
         assertThat(result).isEqualTo(Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
-                    CheckPreconditionsStage(
+                    CheckPreconditions(
                             ExpressionPrecondition("hello account1")
                     ),
                     BaseStage("Check Preconditions")
@@ -66,7 +66,7 @@ class PipelineExpressionEvaluatorTest {
         val pipeline = Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
-                    CheckPreconditionsStage(
+                    CheckPreconditions(
                             ExpressionPrecondition("\${#alphanumerical('missing paren'}")
                     ),
                     BaseStage("Check Preconditions")
@@ -101,7 +101,7 @@ class PipelineExpressionEvaluatorTest {
         val pipeline = Pipeline().with {
             description = "desc1"
             stages = StageGraph().addStage(
-                    CheckPreconditionsStage(
+                    CheckPreconditions(
                             ExpressionPrecondition("\${true}"),
                             ExpressionPrecondition("\${2 < 1}")
                     ),
@@ -109,7 +109,7 @@ class PipelineExpressionEvaluatorTest {
             ).parallel(
                     (1..3).map {
                         StageGraph().addStage(
-                                DestroyServiceStage(
+                                DestroyService(
                                         CloudFoundryCloudProvider("\${trigger['parameters']['account'] }"),
                                         "\${trigger['parameters']['region'] }",
                                         "\${trigger['parameters']['serviceName$it']}"
@@ -128,14 +128,14 @@ class PipelineExpressionEvaluatorTest {
             assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                     description ="desc1",
                     stages = StageGraph().addStage(
-                            CheckPreconditionsStage(
+                            CheckPreconditions(
                                     ExpressionPrecondition("true"),
                                     ExpressionPrecondition("false")
                             ),
                             BaseStage("Check Preconditions")
                     ).parallel(
                             StageGraph().addStage(
-                                    DestroyServiceStage(
+                                    DestroyService(
                                             cloudProvider,
                                             "region-1",
                                             "One"
@@ -145,7 +145,7 @@ class PipelineExpressionEvaluatorTest {
                                     )
                             ),
                             StageGraph().addStage(
-                                    DestroyServiceStage(
+                                    DestroyService(
                                             cloudProvider,
                                             "region-1",
                                             "Two"
@@ -155,7 +155,7 @@ class PipelineExpressionEvaluatorTest {
                                     )
                             ),
                             StageGraph().addStage(
-                                    DestroyServiceStage(
+                                    DestroyService(
                                             cloudProvider,
                                             "region-1",
                                             ""

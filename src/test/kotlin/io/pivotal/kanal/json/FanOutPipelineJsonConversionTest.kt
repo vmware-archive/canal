@@ -348,12 +348,12 @@ class FanOutPipelineJsonConversionTest {
         stages = StageGraph(
                 listOf(
                         PipelineStage(1,
-                                CheckPreconditionsStage(
+                                CheckPreconditions(
                                         ExpressionPrecondition("2 > 1")
                                 )
                         ),
                         PipelineStage(2,
-                                DestroyServerGroupStage(
+                                DestroyServerGroup(
                                         cloudProvider,
                                         listOf("dev > dev"),
                                         "cluster1",
@@ -364,13 +364,13 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(3,
-                                WaitStage(420)
+                                Wait(420)
                         ),
                         PipelineStage(4,
-                                WaitStage(7)
+                                Wait(7)
                         ),
                         PipelineStage(5,
-                                DestroyServiceStage(
+                                DestroyService(
                                         cloudProvider,
                                         "dev > dev",
                                         "serviceName1"
@@ -380,7 +380,7 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(6,
-                                DestroyServiceStage(
+                                DestroyService(
                                         cloudProvider,
                                         "dev > dev",
                                         "serviceName2"
@@ -390,7 +390,7 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(7,
-                                DestroyServiceStage(
+                                DestroyService(
                                         cloudProvider,
                                         "dev > dev",
                                         "serviceName3"
@@ -400,7 +400,7 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(8,
-                                DeployServiceStage(
+                                DeployService(
                                         cloudProvider.copy(manifest = ManifestSourceDirect(
                                                 "serviceType1",
                                                 "serviceName1",
@@ -416,7 +416,7 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(9,
-                                DeployServiceStage(
+                                DeployService(
                                         cloudProvider.copy(manifest = ManifestSourceDirect(
                                                 "serviceType2",
                                                 "serviceName2",
@@ -432,7 +432,7 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(10,
-                                DeployServiceStage(
+                                DeployService(
                                         cloudProvider.copy(manifest = ManifestSourceDirect(
                                                 "serviceType3",
                                                 "serviceName3",
@@ -448,7 +448,7 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(11,
-                                DeployStage(
+                                Deploy(
                                         CloudFoundryCluster(
                                                 "app1",
                                                 "account1",
@@ -474,19 +474,19 @@ class FanOutPipelineJsonConversionTest {
                                 )
                         ),
                         PipelineStage(12,
-                                ManualJudgmentStage(
+                                ManualJudgment(
                                         "Give a thumbs up if you like it."
                                 )
                         ),
                         PipelineStage(13,
-                                WebhookStage(
+                                Webhook(
                                         "POST",
                                         "https://github.com/spinnaker/clouddriver",
                                         "cmccoy@pivotal.io"
                                 )
                         ),
                         PipelineStage(14,
-                                CanaryStage(
+                                Canary(
                                         "realTimeAutomatic",
                                         CanaryConfig(
                                                 "PT1H0M",

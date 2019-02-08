@@ -21,13 +21,13 @@ val StageGraph.stageCount: Int get() {
     return this.stages.size
 }
 
-private fun StageGraph.insertStage(stage: Stage,
+private fun StageGraph.insertStage(stageConfig: StageConfig,
                                    base: BaseStage? = BaseStage(),
                                    execution: StageExecution = StageExecution()
 ): StageGraph {
     val nextStageCount = stageCount + 1
-    val nextRefId = execution.refId ?: stage.type + nextStageCount.toString()
-    val nextStage = listOf(PipelineStage(nextRefId, stage, base, execution.inject))
+    val nextRefId = execution.refId ?: stageConfig.type + nextStageCount.toString()
+    val nextStage = listOf(PipelineStage(nextRefId, stageConfig, base, execution.inject))
     val allStages = this.stages + nextStage
     val allStageRequirements = if (execution.requisiteStageRefIds.isEmpty()) {
         this.stageRequirements
@@ -37,34 +37,34 @@ private fun StageGraph.insertStage(stage: Stage,
     return StageGraph(allStages, allStageRequirements)
 }
 
-fun StageGraph.addStage(stage: Stage,
+fun StageGraph.addStage(stageConfig: StageConfig,
                         base: BaseStage? = BaseStage(),
                         execution: StageExecution = StageExecution()
 ): StageGraph {
     return insertStage(
-            stage,
+            stageConfig,
             base,
             execution
     )
 }
 
-fun StageGraph.andThen(stage: Stage,
+fun StageGraph.andThen(stageConfig: StageConfig,
                        base: BaseStage? = BaseStage(),
                        execution: StageExecution = StageExecution()
 ): StageGraph {
     return insertStage(
-            stage,
+            stageConfig,
             base,
             execution.copy(requisiteStageRefIds = execution.requisiteStageRefIds  + lastStages.map(PipelineStage::refId))
     )
 }
 
-fun StageGraph.parallelStages(vararg stages: Stage): StageGraph {
-    return parallelStages(stages.toList())
+fun StageGraph.parallelStages(vararg stageConfigs: StageConfig): StageGraph {
+    return parallelStages(stageConfigs.toList())
 }
 
-fun StageGraph.parallelStages(stages: List<Stage>): StageGraph {
-    val stageGroups: List<StageGraph> = stages.map { StageGraph().insertStage(it) }
+fun StageGraph.parallelStages(stageConfigs: List<StageConfig>): StageGraph {
+    val stageGroups: List<StageGraph> = stageConfigs.map { StageGraph().insertStage(it) }
     return parallel(stageGroups)
 }
 

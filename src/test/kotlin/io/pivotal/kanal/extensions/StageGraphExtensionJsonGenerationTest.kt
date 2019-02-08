@@ -33,12 +33,12 @@ class StageGraphExtensionJsonGenerationTest {
     fun `fluent stages DSL with fan out and fan in`() {
         val cloudProvider = CloudFoundryCloudProvider("creds1")
 
-        val nestedStages = StageGraph() with {
-            stage(CheckPreconditionsStage()) then {
-                stage(WaitStage(420)) then {
+        val nestedStages = stages {
+            stage(CheckPreconditions()) then {
+                stage(Wait(420)) then {
                     (1..3).map {
                         stage(
-                                DestroyServiceStage(
+                                DestroyService(
                                         cloudProvider,
                                         "dev > dev",
                                         "serviceName$it"
@@ -47,7 +47,7 @@ class StageGraphExtensionJsonGenerationTest {
                                 stageEnabled = ExpressionCondition("exp1")
                         ) then {
                             stage(
-                                    DeployServiceStage(
+                                    DeployService(
                                             cloudProvider.copy(manifest = ManifestSourceDirect(
                                                     "serviceType$it",
                                                     "serviceName$it",
@@ -64,18 +64,18 @@ class StageGraphExtensionJsonGenerationTest {
                         }
                     }
                 } then {
-                    stage(ManualJudgmentStage("Give a thumbs up if you like it."))
+                    stage(ManualJudgment("Give a thumbs up if you like it."))
                 }
             }
         }
 
-        val fluentStages = StageGraph().addStage(CheckPreconditionsStage(
-        )).andThen(WaitStage(
+        val fluentStages = StageGraph().addStage(CheckPreconditions(
+        )).andThen(Wait(
                 420
         )).parallel(
                 (1..3).map {
                     StageGraph().addStage(
-                            DestroyServiceStage(
+                            DestroyService(
                                     cloudProvider,
                                     "dev > dev",
                                     "serviceName$it"
@@ -84,7 +84,7 @@ class StageGraphExtensionJsonGenerationTest {
                                     stageEnabled = ExpressionCondition("exp1")
                             )
                     ).andThen(
-                            DeployServiceStage(
+                            DeployService(
                                     cloudProvider.copy(manifest = ManifestSourceDirect(
                                             "serviceType$it",
                                             "serviceName$it",
@@ -101,7 +101,7 @@ class StageGraphExtensionJsonGenerationTest {
                             )
                     )
                 }
-        ).andThen(ManualJudgmentStage(
+        ).andThen(ManualJudgment(
                 "Give a thumbs up if you like it."
         ))
 

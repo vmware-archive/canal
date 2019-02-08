@@ -26,40 +26,40 @@ open class StageGraphBuilder(
         var stageGraph: StageGraph = StageGraph()
 ) {
     companion object Factory {
-        @JvmStatic @JvmOverloads fun of(stage: Stage,
+        @JvmStatic @JvmOverloads fun of(stageConfig: StageConfig,
                                         base: BaseStage? = null,
                                         execution: StageExecution = StageExecution()
         ): StageGraphBuilder {
             return StageGraphBuilder(StageGraph().addStage(
-                    stage,
+                    stageConfig,
                     base,
                     execution
             ))
         }
     }
 
-    @JvmOverloads fun with(stage: Stage,
+    @JvmOverloads fun with(stageConfig: StageConfig,
                            base: BaseStage? = null,
                            execution: StageExecution = StageExecution()
     ): StageGraphBuilder {
-        stageGraph = stageGraph.addStage(stage, base, execution)
+        stageGraph = stageGraph.addStage(stageConfig, base, execution)
         return this
     }
 
-    @JvmOverloads fun andThen(stage: Stage,
+    @JvmOverloads fun andThen(stageConfig: StageConfig,
                               base: BaseStage? = null,
                               execution: StageExecution = StageExecution()
     ): StageGraphBuilder {
-        stageGraph = stageGraph.andThen(stage, base, execution)
+        stageGraph = stageGraph.andThen(stageConfig, base, execution)
         return this
     }
 
-    @JvmOverloads fun parallelStages(vararg stages: Stage): StageGraphBuilder {
-        return parallelStages(stages.toList())
+    @JvmOverloads fun parallelStages(vararg stageConfigs: StageConfig): StageGraphBuilder {
+        return parallelStages(stageConfigs.toList())
     }
 
-    @JvmOverloads fun parallelStages(stages: List<Stage>): StageGraphBuilder {
-        stageGraph = stageGraph.parallelStages(stages)
+    @JvmOverloads fun parallelStages(stageConfigs: List<StageConfig>): StageGraphBuilder {
+        stageGraph = stageGraph.parallelStages(stageConfigs)
         return this
     }
 

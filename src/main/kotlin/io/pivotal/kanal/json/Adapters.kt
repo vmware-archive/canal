@@ -18,11 +18,7 @@ package io.pivotal.kanal.json
 
 import com.squareup.moshi.*
 import io.pivotal.kanal.model.*
-import io.pivotal.kanal.model.cloudfoundry.CloudFoundryCloudProvider
 import java.lang.reflect.Type
-import java.util.ArrayList
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 
 class PipelineTemplateInstanceAdapter {
@@ -56,7 +52,7 @@ class PipelineTemplateInstanceAdapter {
 
 class StageGraphAdapter {
     val stageAdapter by lazy {
-        JsonAdapterFactory().createAdapter<Stage>()
+        JsonAdapterFactory().createAdapter<StageConfig>()
     }
     val executionDetailsAdapter by lazy {
         JsonAdapterFactory().createAdapter<StageExecution>()
@@ -74,7 +70,7 @@ class StageGraphAdapter {
             writer.beginObject()
             val token = writer.beginFlatten()
             executionDetailsAdapter.toJson(writer, execution)
-            stageAdapter.toJson(writer, it.stage)
+            stageAdapter.toJson(writer, it.stageConfig)
             if (it.common != null) {
                 commonStageAttributesAdapter.toJson(writer, it.common)
             }
@@ -107,16 +103,16 @@ class CloudSpecificToJsonAdapter {
         JsonAdapterFactory().createAdapter<CloudProvider>()
     }
     val stageAdapter by lazy {
-        JsonAdapterFactory().createNonCloudSpecificAdapter<Stage>()
+        JsonAdapterFactory().createNonCloudSpecificAdapter<StageConfig>()
     }
     val providerPropertyName = "provider"
 
     @ToJson
-    fun toJson(stage: Stage): Map<String, Any?> {
-        val stageClass = stage.javaClass.kotlin
+    fun toJson(stageConfig: StageConfig): Map<String, Any?> {
+        val stageClass = stageConfig.javaClass.kotlin
         val properties = stageClass.memberProperties
-        val propertiesMap = properties.map { it.name to it.get(stage) }.toMap()
-        return when (stage) {
+        val propertiesMap = properties.map { it.name to it.get(stageConfig) }.toMap()
+        return when (stageConfig) {
             is CloudSpecific -> {
                 val provider = propertiesMap.get(providerPropertyName) as CloudProvider
                 val providerProperties = provider.javaClass.kotlin.memberProperties
@@ -128,7 +124,7 @@ class CloudSpecificToJsonAdapter {
     }
 
     @FromJson
-    fun fromJson(stageJson: Map<String, @JvmSuppressWildcards Any>): Stage {
+    fun fromJson(stageJson: Map<String, @JvmSuppressWildcards Any>): StageConfig {
         val stageMap = try {
             val cloudProvider = cloudProviderAdapter.fromJsonValue(stageJson)!!
             val cloudProviderPropertyNames = cloudProvider.javaClass.kotlin.memberProperties.map { it.name }

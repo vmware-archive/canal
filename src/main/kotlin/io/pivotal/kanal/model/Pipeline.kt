@@ -31,12 +31,12 @@ data class Pipeline(
 
 data class PipelineStage(
         val refId: String,
-        val stage: Stage,
+        val stageConfig: StageConfig,
         val common: BaseStage? = null,
         val inject: Inject? = null
 ) {
     constructor(refId: Int,
-                attrs: Stage,
+                attrs: StageConfig,
                 common: BaseStage? = BaseStage(),
                 inject: Inject? = null) : this(refId.toString(), attrs, common, inject)
 }

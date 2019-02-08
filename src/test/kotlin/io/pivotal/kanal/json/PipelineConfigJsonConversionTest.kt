@@ -79,13 +79,13 @@ class PipelineConfigJsonConversionTest  {
                             )
                     )
                     stages = StageGraph().addStage(
-                            WaitStage(67),
+                            Wait(67),
                             execution = StageExecution(
                                 refId = "wait2",
                                 requisiteStageRefIds = listOf("wait1")
                             )
                     ).addStage(
-                            WaitStage(2),
+                            Wait(2),
                             execution = StageExecution(
                                 refId = "wait0",
                                 inject = Inject.First()

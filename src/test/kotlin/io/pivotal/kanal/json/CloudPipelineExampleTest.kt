@@ -337,8 +337,8 @@ class CloudPipelineExampleTest  {
     }
 
     fun jenkinsStageFor(jobName: String,
-                        parameters: Map<String, String> = mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")) : JenkinsStage {
-        return JenkinsStage(
+                        parameters: Map<String, String> = mapOf("PIPELINE_VERSION" to "$\\{trigger.properties['PIPELINE_VERSION']}")) : Jenkins {
+        return Jenkins(
                 "$projectName-$jobName",
                 master,
                 parameters
@@ -362,7 +362,7 @@ class CloudPipelineExampleTest  {
                 jenkinsStageFor("test-prepare"),
                 BaseStage("Prepare test environment")
         ).andThen(
-                DeployStage(
+                Deploy(
                         clusterFor("sc-pipelines-test-github-webhook",
                                 "^github-webhook.*VERSION.jar${'$'}",
                                 "sc-pipelines-test-github-webhook.test.foo.com")
@@ -372,7 +372,7 @@ class CloudPipelineExampleTest  {
                 jenkinsStageFor(jenkinsTestJobName("test", "test")),
                 BaseStage("Run tests on test")
         ).andThen(
-                DeployStage(
+                Deploy(
                         clusterFor("sc-pipelines-test-github-webhook",
                                 "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
                                 "sc-pipelines-test-github-webhook.test.foo.com")
@@ -391,26 +391,26 @@ class CloudPipelineExampleTest  {
                 BaseStage("Run rollback tests on test",
                         stageEnabled = ExpressionCondition("$\\{trigger.properties['LATEST_PROD_VERSION']}"))
         ).andThen(
-                ManualJudgmentStage("Wait for stage env")
+                ManualJudgment("Wait for stage env")
         ).andThen(
                 jenkinsStageFor("stage-prepare"),
                 BaseStage("Prepare stage environment")
         ).andThen(
-                DeployStage(
+                Deploy(
                         clusterFor("sc-pipelines-stage",
                                 "^github-webhook.*VERSION.jar${'$'}",
                                 "github-webhook-sc-pipelines-stage.stage.foo.com")
                 ),
                 BaseStage("Deploy to stage")
         ).andThen(
-                ManualJudgmentStage("Prepare for end to end tests")
+                ManualJudgment("Prepare for end to end tests")
         ).andThen(
                 jenkinsStageFor(jenkinsTestJobName("stage", "test")),
                 BaseStage("End to end tests on stage")
         ).andThen(
-                ManualJudgmentStage("Approve production")
+                ManualJudgment("Approve production")
         ).andThen(
-                DeployStage(
+                Deploy(
                         clusterFor("sc-pipelines-prod",
                                 "^github-webhook.*VERSION.jar${'$'}",
                                 "github-webhook.prod.foo.com")
@@ -421,9 +421,9 @@ class CloudPipelineExampleTest  {
                         jenkinsStageFor("prod-tag-repo"),
                         BaseStage("Push prod tag")
                 ),
-                StageGraph().addStage(ManualJudgmentStage("Approve rollback"))
+                StageGraph().addStage(ManualJudgment("Approve rollback"))
                         .andThen(
-                                DeployStage(
+                                Deploy(
                                         clusterFor("sc-pipelines-prod",
                                                 "^github-webhook.*VERSION-latestprodversion.jar${'$'}",
                                                 "github-webhook.prod.foo.com")

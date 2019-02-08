@@ -1,4 +1,4 @@
-package io.pivotal.kanal.fluent;
+package io.pivotal.kanal.extensions.fluentstages;
 
 import com.squareup.moshi.JsonAdapter;
 import io.pivotal.kanal.builders.StageGraphBuilder;
@@ -20,16 +20,16 @@ class FluentPipelineJsonGenerationJavaTest {
     @Test
     void fluentStagesDslWithFanOutAndFanIn() {
         StageGraphBuilder stages = new StageGraphBuilder() {{
-            with(new CheckPreconditionsStage(
+            with(new CheckPreconditions(
                     Arrays.asList(new ExpressionPrecondition(true))
                     ),
                     new BaseStage("Check Preconditions")
             );
-            andThen(new WaitStage(420));
+            andThen(new Wait(420));
             parallel(
                     range(1, 4).mapToObj( it -> new StageGraphBuilder() {{
                             with(
-                                    new DestroyServiceStage(
+                                    new DestroyService(
                                             new CloudFoundryCloudProvider("creds1"),
                                             "dev > dev",
                                             "serviceName" + it
@@ -40,7 +40,7 @@ class FluentPipelineJsonGenerationJavaTest {
                                     )
                             );
                             andThen(
-                                    new DeployServiceStage(
+                                    new DeployService(
                                             new CloudFoundryCloudProvider(
                                                     "creds1",
                                                     new ManifestSourceDirect(
@@ -60,7 +60,7 @@ class FluentPipelineJsonGenerationJavaTest {
                         }}
                     ).collect(Collectors.toList())
             );
-            andThen(new ManualJudgmentStage(
+            andThen(new ManualJudgment(
                     "Give a thumbs up if you like it."
             ));
         }};

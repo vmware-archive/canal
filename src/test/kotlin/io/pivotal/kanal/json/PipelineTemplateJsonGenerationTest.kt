@@ -75,7 +75,7 @@ class PipelineTemplateJsonGenerationTest {
                         )
                 ),
                 Pipeline().with {
-                    stages = StageGraph().addStage(WaitStage(
+                    stages = StageGraph().addStage(Wait(
                             "$\\{ templateVariables.waitTime }"
                     ))
                 }

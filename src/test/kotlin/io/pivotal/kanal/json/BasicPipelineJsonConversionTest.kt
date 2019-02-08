@@ -112,18 +112,18 @@ class BasicPipelineJsonConversionTest {
         stages = StageGraph(
                 listOf(
                         PipelineStage(1,
-                                CheckPreconditionsStage()
+                                CheckPreconditions()
                         ),
                         PipelineStage(2,
-                                WaitStage(420)
+                                Wait(420)
                         ),
                         PipelineStage(3,
-                                ManualJudgmentStage(
+                                ManualJudgment(
                                         "Give a thumbs up if you like it."
                                 )
                         ),
                         PipelineStage(4,
-                                WebhookStage(
+                                Webhook(
                                         "POST",
                                         "https://github.com/spinnaker/clouddriver",
                                         "cmccoy@pivotal.io"
