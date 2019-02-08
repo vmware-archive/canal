@@ -34,8 +34,8 @@ class StageGraphExtensionJsonGenerationTest {
         val cloudProvider = CloudFoundryCloudProvider("creds1")
 
         val nestedStages = StageGraph() with {
-            stage(CheckPreconditionsStage()) {
-                stage(WaitStage(420)) {
+            stage(CheckPreconditionsStage()) then {
+                stage(WaitStage(420)) then {
                     (1..3).map {
                         stage(
                                 DestroyServiceStage(
@@ -45,7 +45,7 @@ class StageGraphExtensionJsonGenerationTest {
                                 ),
                                 name = "Destroy Service $it Before",
                                 stageEnabled = ExpressionCondition("exp1")
-                        ) {
+                        ) then {
                             stage(
                                     DeployServiceStage(
                                             cloudProvider.copy(manifest = ManifestSourceDirect(

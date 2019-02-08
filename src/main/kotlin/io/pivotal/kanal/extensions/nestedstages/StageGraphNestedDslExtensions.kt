@@ -2,51 +2,41 @@ package io.pivotal.kanal.extensions.nestedstages
 
 import io.pivotal.kanal.model.*
 
-infix fun StageGraph.with(
-        nestedStageGraph: NestedStageGraph.() -> Unit): StageGraph {
-    val nsg = NestedStageGraph(this, emptyList())
-    nsg.nestedStageGraph()
-    return nsg.currentStageGraph
+infix fun StageGraph.with(stageDefOperation: StageDef.() -> Unit): StageGraph {
+    val currentStageGraph = MutableRefStageGraph(this)
+    val nsg = StageDef(currentStageGraph, emptyList())
+    nsg.stageDefOperation()
+    return currentStageGraph.stageGraph
 }
 
+private val StageGraph.terminalStages: List<PipelineStage> get() {
+    val stagesThatAreRequiredByStages = this.stageRequirements.values.flatten().distinct()
+    return this.stages.filter {
+        !(stagesThatAreRequiredByStages.contains(it.refId))
+    }
+}
 
-class NestedStageGraph(val initialStageGraph: StageGraph, val terminalIds : List<String>) {
+class MutableRefStageGraph(var stageGraph: StageGraph)
 
-    var currentStageGraph = initialStageGraph
+class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<String>? = null ) {
+
+    val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
 
     fun stage(stage: Stage,
               name: String? = null,
               comments: String? = null,
               stageEnabled: Condition? = null,
-              execution: StageExecution = StageExecution(),
-              nestedStageGraph: NestedStageGraph.() -> Unit = {}): NestedStageGraph {
-        val newStageTerminalIds = execution.requisiteStageRefIds + terminalIds
-        val newStage = currentStageGraph.newStage(stage,
+              execution: StageExecution = StageExecution()): SingleStage {
+        val newStageRequirements = execution.requisiteStageRefIds + currentTerminalIds
+        val newStage = current.stageGraph.newStage(stage,
                 BaseStage(name, comments, stageEnabled),
                 execution.refId,
                 execution.inject
         )
-        currentStageGraph = currentStageGraph.insertStage(
+        current.stageGraph = current.stageGraph.insertStage(
                 newStage,
-                newStageTerminalIds)
-        val nsg = NestedStageGraph(currentStageGraph, listOf(newStage.refId))
-        nsg.nestedStageGraph()
-        currentStageGraph = nsg.currentStageGraph
-        return this
-    }
-
-    infix fun then(nestedStageGraph: NestedStageGraph.() -> Unit): NestedStageGraph {
-        val nsg = NestedStageGraph(currentStageGraph, currentStageGraph.terminalStages.map{ it.refId })
-        nsg.nestedStageGraph()
-        currentStageGraph = nsg.currentStageGraph
-        return this
-    }
-
-    val StageGraph.terminalStages: List<PipelineStage> get() {
-        val stagesThatAreRequiredByStages = this.stageRequirements.values.flatten().distinct()
-        return this.stages.filter {
-            !(stagesThatAreRequiredByStages.contains(it.refId))
-        }
+                newStageRequirements)
+        return SingleStage(current, newStage.refId)
     }
 
     private fun StageGraph.newStage(stage: Stage,
@@ -70,6 +60,31 @@ class NestedStageGraph(val initialStageGraph: StageGraph, val terminalIds : List
             this.stageRequirements + mapOf(stage.refId to requisiteStageRefIds)
         }
         return StageGraph(allStages, allStageRequirements)
+    }
+}
+
+interface StageDefInvoker {
+    infix fun then(stageDef: StageDef.() -> Unit): ParallelStages
+}
+
+class ParallelStages(val current: MutableRefStageGraph, specifiedTerminalIds : List<String>? = null) : StageDefInvoker {
+
+    val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
+
+    override infix fun then(stageDefOperation: StageDef.() -> Unit): ParallelStages {
+        val nsg = StageDef(current, currentTerminalIds)
+        nsg.stageDefOperation()
+        return ParallelStages(current)
+    }
+
+}
+
+class SingleStage(val current: MutableRefStageGraph, val terminalId: String) : StageDefInvoker {
+
+    override infix fun then(stageDefOperation: StageDef.() -> Unit): ParallelStages {
+        val nsg = StageDef(current, listOf(terminalId))
+        nsg.stageDefOperation()
+        return ParallelStages(current)
     }
 
 }
