@@ -54,8 +54,11 @@ class PipelineConfigJsonConversionTest  {
                 "payloadConstraints": {}
             }
         ],
-        "parameters": [],
+        "parameterConfig": [],
         "notifications": [],
+        "keepWaitingPipelines": false,
+        "limitConcurrent": true,
+        "expectedArtifacts": [],
         "description": "",
         "stages": [
             {
@@ -86,7 +89,7 @@ class PipelineConfigJsonConversionTest  {
                         TemplateSource("spinnaker://newSpelTemplate"),
                         mapOf("waitTime" to 6)
                 ),
-                pipeline {
+                pipeline("My First SpEL Pipeline") {
                     triggers = listOf(
                             PubSubTrigger(
                                     "google",
@@ -122,8 +125,8 @@ class PipelineConfigJsonConversionTest  {
 
     @Test
     fun `generate pipeline template JSON`() {
-        val json = JsonAdapterFactory().createAdapter<PipelineTemplateInstance>().toJson(model)
-        JsonAssertions.assertThatJson(json).isEqualTo(json)
+        val pipelineTemplateInstance = JsonAdapterFactory().createAdapter<PipelineTemplateInstance>().toJson(model)
+        JsonAssertions.assertThatJson(pipelineTemplateInstance).isEqualTo(json)
     }
 
 }

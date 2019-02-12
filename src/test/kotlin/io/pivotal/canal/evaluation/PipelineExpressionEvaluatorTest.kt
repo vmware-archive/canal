@@ -35,7 +35,7 @@ class PipelineExpressionEvaluatorTest {
                 )
         )
         val evaluator = ExpressionEvaluator(pipelineExecution)
-        val pipeline = pipeline {
+        val pipeline = pipeline("test") {
             description = "desc1"
             stages = stages {
                 stage(
@@ -47,7 +47,7 @@ class PipelineExpressionEvaluatorTest {
 
         val result = evaluator.evaluate(pipeline)
 
-        assertThat(result).isEqualTo(pipeline {
+        assertThat(result).isEqualTo(pipeline("test") {
             description = "desc1"
             stages = stages {
                 stage(
@@ -62,7 +62,7 @@ class PipelineExpressionEvaluatorTest {
     fun `evaluate pipeline expression with error`() {
         val pipelineExecution = PipelineExecution()
         val evaluator = ExpressionEvaluator(pipelineExecution)
-        val pipeline = pipeline {
+        val pipeline = pipeline("test") {
             description = "desc1"
             stages = stages {
                 stage(
@@ -97,7 +97,7 @@ class PipelineExpressionEvaluatorTest {
         )
         val evaluator = ExpressionEvaluator(pipelineExecution)
 
-        val pipeline = pipeline {
+        val pipeline = pipeline("test") {
             description = "desc1"
             stages = stages {
                     stage(
@@ -126,6 +126,7 @@ class PipelineExpressionEvaluatorTest {
             val cloudProvider = CloudFoundryCloudProvider("account-1")
 
             assertThat(evaluatedPipeline).isEqualTo(Pipeline(
+                    name = "test",
                     description ="desc1",
                     stages = stages {
                         stage(

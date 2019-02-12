@@ -28,15 +28,13 @@ class BasicPipelineJsonConversionTest {
     @Language("JSON")
     val json = """
         {
-            "appConfig": {},
+            "name": "test",
             "description": "desc1",
             "expectedArtifacts": [],
             "keepWaitingPipelines": false,
-            "lastModifiedBy": "anonymous",
             "limitConcurrent": true,
             "notifications": [],
             "parameterConfig": [],
-            "updateTs" : "0",
             "triggers": [
                 {
                     "branch": "master",
@@ -94,7 +92,7 @@ class BasicPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = pipeline {
+    val model = pipeline("test") {
         description = "desc1"
         triggers(
                 GitTrigger(
@@ -140,8 +138,8 @@ class BasicPipelineJsonConversionTest {
 
     @Test
     fun `pipeline model should convert to JSON with execution details placed in stage`() {
-        val json = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
-        JsonAssertions.assertThatJson(json).isEqualTo(json)
+        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
+        JsonAssertions.assertThatJson(pipeline).isEqualTo(json)
     }
 
     @Test

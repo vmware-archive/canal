@@ -19,8 +19,8 @@ package io.pivotal.canal.extensions
 import io.pivotal.canal.builders.PipelineBuilder
 import io.pivotal.canal.model.Pipeline
 
-fun pipeline(withinPipeline: PipelineBuilder.() -> Unit): Pipeline {
-    val pw = PipelineBuilder(Pipeline())
+fun pipeline(name: String, withinPipeline: PipelineBuilder.() -> Unit): Pipeline {
+    val pw = PipelineBuilder(Pipeline(name))
     pw.withinPipeline()
     return pw.pipeline
 }

@@ -19,6 +19,7 @@ package io.pivotal.canal.model
 import com.squareup.moshi.Json
 
 data class Pipeline(
+        val name: String,
         val description: String = "",
         @Json(name = "parameterConfig") val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),

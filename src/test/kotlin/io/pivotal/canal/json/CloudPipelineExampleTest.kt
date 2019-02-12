@@ -31,6 +31,7 @@ class CloudPipelineExampleTest  {
     @Language("JSON")
     val json = """
 {
+  "name": "test",
   "keepWaitingPipelines" : false,
   "limitConcurrent" : true,
   "description":"",
@@ -364,7 +365,7 @@ class CloudPipelineExampleTest  {
         return "$env-env-$testName"
     }
 
-    val model = pipeline {
+    val model = pipeline("test") {
         limitConcurrent = true
         triggers = listOf(
                 JenkinsTrigger(

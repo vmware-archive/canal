@@ -29,14 +29,12 @@ class FanOutPipelineJsonConversionTest {
     @Language("JSON")
     val json = """
         {
-          "appConfig": {},
+          "name": "test",
           "description": "desc1",
           "expectedArtifacts": [],
           "keepWaitingPipelines": false,
-          "lastModifiedBy": "anonymous",
           "limitConcurrent": true,
           "notifications": [],
-          "updateTs" : "0",
           "parameterConfig": [
             {
               "default": "1",
@@ -335,7 +333,7 @@ class FanOutPipelineJsonConversionTest {
         }
         """.trimMargin()
 
-    val model = pipeline {
+    val model = pipeline("test") {
         description = "desc1"
         parameters(
                 Parameter(
@@ -539,8 +537,8 @@ class FanOutPipelineJsonConversionTest {
 
     @Test
     fun `generate pipeline JSON with stages that fan out and back in`() {
-        val json = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
-        JsonAssertions.assertThatJson(json).isEqualTo(json)
+        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
+        JsonAssertions.assertThatJson(pipeline).isEqualTo(json)
     }
 
 }

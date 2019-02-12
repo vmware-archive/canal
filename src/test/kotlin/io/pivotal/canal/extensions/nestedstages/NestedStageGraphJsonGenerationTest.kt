@@ -187,7 +187,9 @@ class NestedStageGraphJsonGenerationTest {
     fun `fluent stages DSL with fan out and fan in`() {
         val cloudProvider = CloudFoundryCloudProvider("creds1")
         val stages = stages {
-            stage(CheckPreconditions()) then {
+            stage(CheckPreconditions(ExpressionPrecondition(true)),
+                    name = "Check Preconditions"
+            ) then {
                 stage(Wait(420)) then {
                     (1..3).map {
                         stage(
@@ -222,8 +224,8 @@ class NestedStageGraphJsonGenerationTest {
             }
         }
 
-        val json = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages)
-        assertThatJson(json).isEqualTo(json)
+        val stagesJson = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages)
+        assertThatJson(stagesJson).isEqualTo(json)
     }
 
 }

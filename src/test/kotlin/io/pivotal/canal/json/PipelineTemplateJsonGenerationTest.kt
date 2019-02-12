@@ -53,8 +53,7 @@ class PipelineTemplateJsonGenerationTest {
             "scopes" : ["global"]
         },
         "pipeline": {
-            "lastModifiedBy" : "anonymous",
-            "updateTs" : "0",
+            "name" : "test",
             "parameterConfig" : [],
             "limitConcurrent": true,
             "keepWaitingPipelines": false,
@@ -69,8 +68,7 @@ class PipelineTemplateJsonGenerationTest {
                     "requisiteStageRefIds": []
                 }
             ],
-            "expectedArtifacts": [],
-            "appConfig": {}
+            "expectedArtifacts": []
         }
     }
         """.trimMargin()
@@ -90,7 +88,7 @@ class PipelineTemplateJsonGenerationTest {
                                 42
                         )
                 ),
-                pipeline {
+                pipeline("test") {
                     stages = stages { stage(Wait("$\\{ templateVariables.waitTime }")) }
                 }
         )
@@ -98,8 +96,8 @@ class PipelineTemplateJsonGenerationTest {
 
     @Test
     fun `generate pipeline template JSON`() {
-        val json = JsonAdapterFactory().createAdapter<PipelineTemplate>().toJson(model)
-        JsonAssertions.assertThatJson(json).isEqualTo(json)
+        val pipelineTemplate = JsonAdapterFactory().createAdapter<PipelineTemplate>().toJson(model)
+        JsonAssertions.assertThatJson(pipelineTemplate).isEqualTo(json)
     }
 
     @Test

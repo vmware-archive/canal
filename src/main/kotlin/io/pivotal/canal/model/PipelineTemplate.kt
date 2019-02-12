@@ -20,7 +20,7 @@ import com.squareup.moshi.Json
 
 data class PipelineTemplateInstance(
         val config: PipelineConfiguration,
-        val pipeline: Pipeline = Pipeline()
+        val pipeline: Pipeline? = null
 )
 
 data class PipelineConfiguration(
