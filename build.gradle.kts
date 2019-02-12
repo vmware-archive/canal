@@ -19,6 +19,7 @@ buildscript {
 }
 
 plugins {
+    application
     kotlin("jvm") version "1.2.51"
     id("io.spring.release") version "0.20.1"
 //    id("io.spring.license")
@@ -50,4 +51,8 @@ dependencies {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+application {
+    mainClassName = "io.pivotal.canal.BuildPipelineJson"
 }
