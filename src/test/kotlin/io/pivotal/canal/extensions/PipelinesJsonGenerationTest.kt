@@ -93,32 +93,32 @@ class PipelinesJsonGenerationTest {
     @Test
     fun `create pipelines for apps`() {
 
-        val pipelines = Pipelines(mapOf(
-                "app1" to listOf(
-                    pipeline("just waiting") {
-                        stages = stages {
-                            stage(Wait(420))
+        val pipelines = pipelines {
+            app("app1") {
+                pipeline("just waiting") {
+                    stages = stages {
+                        stage(Wait(420))
+                    }
+                }
+            }
+            app("app2") {
+                pipeline("just judging") {
+                    stages = stages {
+                        stage(ManualJudgment("Judge me."))
+                    }
+                }
+                pipeline("waiting then judging") {
+                    stages = stages {
+                        stage(
+                                Wait(420),
+                                comments = "Wait before judging me."
+                        ) then {
+                            stage(ManualJudgment("Okay, Judge me now."))
                         }
                     }
-                ),
-                "app2" to listOf(
-                        pipeline("just judging") {
-                            stages = stages {
-                                stage(ManualJudgment("Judge me."))
-                            }
-                        },
-                        pipeline("waiting then judging") {
-                            stages = stages {
-                                stage(
-                                        Wait(420),
-                                        comments = "Wait before judging me."
-                                ) then {
-                                    stage(ManualJudgment("Okay, Judge me now."))
-                                }
-                            }
-                        }
-                )
-        ))
+                }
+            }
+        }
 
         assertThatJson(pipelines.toJson()).isEqualTo(json)
     }
