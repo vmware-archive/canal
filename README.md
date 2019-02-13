@@ -18,9 +18,9 @@ Canal allows you to actually write your pipeline description as code.
 ![Image of Canal in Idea](images/canal_ide.png)
 
 If you have ever modified the pipeline JSON directly you will immediately notice how much simpler the pipeline definition below is over the [equivalent JSON](https://github.com/canal-pipelines/canal/blob/04d8a02675bf72e5c872f86143f7f07b07d4955f/src/test/kotlin/io/pivotal/canal/CanalExample.kt#L19).
-* No longer maintain the tedious 'refId' and 'requisiteStageRefIds' relationships as you modify the stage graph.
-* Know what attributes are available and which of those are required while avoiding duplicate or unnecessary ones.
-* Use String interpolation or any language feature of [Kotlin](https://kotlinlang.org/) when writing your pipelines.
+* No longer required to maintain the tedious 'refId' and 'requisiteStageRefIds' relationships. Instead, build the stage graph implicitly with 'then' blocks.
+* Based on class and method definitions, gain an understanding of what attributes are available and which of those are required. The duplicate and unnecessary attributes are hidden from you.
+* Use String interpolation and any language feature of [Kotlin](https://kotlinlang.org/) when writing your pipelines.
 
 ```kotlin
 pipeline("Canal Example") {
@@ -53,7 +53,7 @@ pipeline("Canal Example") {
 }
 ```
 
-You can use [Spring Expression Language (SpEL)](https://docs.spring.io/spring/docs/4.3.10.RELEASE/spring-framework-reference/html/expressions.html) in your pipeline to dynamically evaluate certain values. It can, howeer, be difficult to understand the results of more complicated expressions or even confirm they are valid. With Canal you can unit test the structure of your resulting pipeline including expression evaluations given a specific pipeline execution context.
+You can already use [Spring Expression Language (SpEL)](https://docs.spring.io/spring/docs/4.3.10.RELEASE/spring-framework-reference/html/expressions.html) in your pipeline to dynamically evaluate certain values. It can, however, be difficult to understand the results of more complicated expressions or even confirm they are valid. With Canal you can unit test the structure of your resulting pipeline including expression evaluations given a specific pipeline execution context.
 
 ```kotlin
 val pipelineExecution = PipelineExecution(
