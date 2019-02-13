@@ -17,7 +17,7 @@ Canal allows you to actually write your pipeline description as code.
 
 ![Image of Canal in Idea](images/canal_ide.png)
 
-If you have ever modified the pipeline JSON directly you will immediately notice some differences.
+If you have ever modified the pipeline JSON directly you will immediately notice how much simpler the pipeline definition below is over the [equivalent JSON](https://github.com/canal-pipelines/canal/blob/04d8a02675bf72e5c872f86143f7f07b07d4955f/src/test/kotlin/io/pivotal/canal/CanalExample.kt#L19).
 * No longer maintain the tedious 'refId' and 'requisiteStageRefIds' relationships as you modify the stage graph.
 * Know what attributes are available and which of those are required while avoiding duplicate or unnecessary ones.
 * Use String interpolation or any language feature of [Kotlin](https://kotlinlang.org/) when writing your pipelines.
