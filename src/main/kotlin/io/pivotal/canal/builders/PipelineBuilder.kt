@@ -36,7 +36,7 @@ open class PipelineBuilder @JvmOverloads constructor(var pipeline: Pipeline) {
 
     var stages: StageGraph = StageGraph()
         set(value) {
-            this.pipeline = this.pipeline.copy(stages = value)
+            this.pipeline = this.pipeline.copy(stageGraph = value)
         }
 
     var parameters: List<Parameter> = emptyList()

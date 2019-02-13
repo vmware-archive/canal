@@ -95,12 +95,11 @@ class BasicPipelineJsonConversionTest {
     val model = pipeline("test") {
         description = "desc1"
         triggers(
-                GitTrigger(
-                        "master",
+                GitHubTrigger(
                         "project1",
-                        "secret1",
                         "slug1",
-                        "github"
+                        "master",
+                        "secret1"
                 ),
                 JenkinsTrigger(
                         "does-nothing",

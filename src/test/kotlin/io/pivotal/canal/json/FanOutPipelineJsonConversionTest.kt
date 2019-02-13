@@ -338,20 +338,19 @@ class FanOutPipelineJsonConversionTest {
         parameters(
                 Parameter(
                         "param1",
-                        "Parameter One",
                         true,
+                        "Parameter One",
                         "a description of the parameter",
-                        listOf("1", "2"),
+                        listOf(Value("1"), Value("2")),
                         "1"
                 )
         )
         triggers(
-                GitTrigger(
-                        "master",
+                GitHubTrigger(
                         "project1",
-                        "secret1",
                         "slug1",
-                        "github"
+                        "master",
+                        "secret1"
                 ),
                 JenkinsTrigger(
                         "does-nothing",

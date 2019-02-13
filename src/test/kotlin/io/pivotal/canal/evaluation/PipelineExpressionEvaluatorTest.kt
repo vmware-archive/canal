@@ -128,7 +128,7 @@ class PipelineExpressionEvaluatorTest {
             assertThat(evaluatedPipeline).isEqualTo(Pipeline(
                     name = "test",
                     description ="desc1",
-                    stages = stages {
+                    stageGraph = stages {
                         stage(
                                 CheckPreconditions(
                                         ExpressionPrecondition("true"),

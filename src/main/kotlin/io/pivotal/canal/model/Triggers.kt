@@ -16,6 +16,8 @@
 
 package io.pivotal.canal.model
 
+import com.squareup.moshi.Json
+
 interface Trigger : Typed {
     val enabled: Boolean
 }
@@ -29,15 +31,19 @@ data class JenkinsTrigger(
     override val type = "jenkins"
 }
 
-data class GitTrigger(
-        val branch: String,
-        val project: String,
-        val secret: String,
-        val slug: String,
-        val source: String,
+interface GitTrigger : Trigger {
+    val source: String
+}
+
+data class GitHubTrigger(
+        @Json(name = "project") val org: String,
+        @Json(name = "slug") val repo: String,
+        val branch: String? = null,
+        val secret: String? = null,
         override val enabled: Boolean = true
-) : Trigger {
+) : GitTrigger {
     override val type = "git"
+    override var source = "github"
 }
 
 data class PubSubTrigger(

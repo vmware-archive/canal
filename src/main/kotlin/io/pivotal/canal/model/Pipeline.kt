@@ -24,7 +24,7 @@ data class Pipeline(
         @Json(name = "parameterConfig") val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
         val triggers: List<Trigger> = emptyList(),
-        val stages: StageGraph = StageGraph(),
+        @Json(name = "stages") val stageGraph: StageGraph = StageGraph(),
         val expectedArtifacts: List<ExpectedArtifact> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
         val limitConcurrent: Boolean = true
@@ -97,18 +97,12 @@ data class StageGraph (
 data class Parameter(
         val name: String,
         val required: Boolean = true,
-        val label: String = "",
-        val description: String = "",
-        val options: List<Value> = emptyList(),
+        val label: String? = null,
+        val description: String? = null,
+        val options: List<Value>? = null,
         val default: String? = null
 ) {
-    constructor(name: String,
-                label: String,
-                required: Boolean,
-                description: String,
-                options: List<String> = emptyList(),
-                default: String? = null) : this(name, required, label, description, options.map { Value(it) }, default)
-    var hasOptions = options.isNotEmpty()
+    var hasOptions = options?.isNotEmpty()
 }
 
 data class Value (val value: String)

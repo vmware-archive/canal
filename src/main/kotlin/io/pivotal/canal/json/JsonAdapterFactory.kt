@@ -40,7 +40,7 @@ class JsonAdapterFactory {
                 .add(jsonNumberAdapter)
                 .add(PolymorphicJsonAdapterFactory.of(Trigger::class.java, "type")
                         .withSubtype(JenkinsTrigger::class.java, "jenkins")
-                        .withSubtype(GitTrigger::class.java, "git")
+                        .withSubtype(GitHubTrigger::class.java, "git")
                         .withSubtype(PubSubTrigger::class.java, "pubsub")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Condition::class.java, "type")
