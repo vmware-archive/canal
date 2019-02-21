@@ -19,6 +19,7 @@ buildscript {
 }
 
 plugins {
+    maven
     kotlin("jvm") version "1.2.51"
     id("io.spring.release") version "0.20.1"
 //    id("io.spring.license")
