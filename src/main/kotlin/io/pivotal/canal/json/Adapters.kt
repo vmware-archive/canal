@@ -150,6 +150,7 @@ class ExpressionConditionAdapter {
 }
 
 class ExpressionPreconditionAdapter {
+    @Suppress("UNCHECKED_CAST")
     @FromJson
     fun fromJson(map: Map<String, @JvmSuppressWildcards Any>): ExpressionPrecondition {
         val context = map["context"]

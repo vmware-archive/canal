@@ -107,9 +107,9 @@ class ParallelStages(val current: MutableRefStageGraph, specifiedTerminalIds : L
 
     val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
 
-    override infix fun then(stageDefOperation: StageDef.() -> Unit): ParallelStages {
+    override infix fun then(stageDef: StageDef.() -> Unit): ParallelStages {
         val nsg = StageDef(current, currentTerminalIds)
-        nsg.stageDefOperation()
+        nsg.stageDef()
         return ParallelStages(current)
     }
 
@@ -117,9 +117,9 @@ class ParallelStages(val current: MutableRefStageGraph, specifiedTerminalIds : L
 
 class SingleStage(val current: MutableRefStageGraph, val terminalId: String) : StageDefInvoker {
 
-    override infix fun then(stageDefOperation: StageDef.() -> Unit): ParallelStages {
+    override infix fun then(stageDef: StageDef.() -> Unit): ParallelStages {
         val nsg = StageDef(current, listOf(terminalId))
-        nsg.stageDefOperation()
+        nsg.stageDef()
         return ParallelStages(current)
     }
 
