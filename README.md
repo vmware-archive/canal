@@ -1,5 +1,7 @@
 # Canal Spinnaker Pipeline DSL
 
+[![Build Status](https://circleci.com/gh/canal-pipelines/canal.svg?style=shield)](https://circleci.com/gh/canal-pipelines/canal)
+
 > **Canal** - *an artificial waterway constructed to allow the passage of boats or ships out to sea*
 
 Spinnaker pipelines are a great way to deploy your services to the cloud. There is already a beautiful UI for creating them and watching them execute.
