@@ -1,9 +1,11 @@
-import java.util.Calendar
+import io.spring.gradle.bintray.SpringBintrayExtension
+import nebula.plugin.contacts.Contact
+import nebula.plugin.contacts.ContactsExtension
 import nl.javadude.gradle.plugins.license.LicenseExtension
-import nl.javadude.gradle.plugins.license.LicensePlugin
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.*
 
 group = "io.pivotal"
+description = "Software-defined delivery model for generating Spinnaker pipelines"
 
 plugins {
     maven
@@ -12,6 +14,7 @@ plugins {
 }
 
 apply(plugin = "io.spring.license")
+apply(plugin = "io.spring.publishing")
 
 tasks.test {
     useJUnitPlatform()
@@ -20,6 +23,17 @@ tasks.test {
 configure<LicenseExtension> {
     extra["year"] = Calendar.getInstance().get(Calendar.YEAR)
     skipExistingHeaders = true
+}
+
+configure<ContactsExtension> {
+    val contact = Contact("cmccoy@pivotal.io")
+    contact.moniker = "Clay McCoy"
+    contact.github = "cmccoy"
+    people["cmccoy@pivotal.io"] = contact
+}
+
+configure<SpringBintrayExtension> {
+    labels = listOf("canal", "spinnaker", "pipelines")
 }
 
 repositories {
