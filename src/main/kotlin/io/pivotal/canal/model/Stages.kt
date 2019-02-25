@@ -183,6 +183,6 @@ data class Capacity(
 ) {
     constructor(desired: Int,
                 max: Int,
-                min: Int) : this(desired.toString(), desired.toString(), desired.toString())
+                min: Int) : this(desired.toString(), max.toString(), min.toString())
     constructor(desired: Int) : this(desired, desired, desired)
 }

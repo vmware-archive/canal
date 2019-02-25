@@ -44,6 +44,7 @@ class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExe
                 executionWithPipelineConfigVariables)
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun <T>evaluateWithAdapter(m: T, adapter: JsonAdapter<T>, context: Any): T {
         val json = adapter.toJson(m)
         val moshi = Moshi.Builder().build()

@@ -54,22 +54,21 @@ open class StageGraphBuilder(
         return this
     }
 
-    @JvmOverloads fun parallelStages(vararg stageConfigs: StageConfig): StageGraphBuilder {
+    fun parallelStages(vararg stageConfigs: StageConfig): StageGraphBuilder {
         return parallelStages(stageConfigs.toList())
     }
 
-    @JvmOverloads fun parallelStages(stageConfigs: List<StageConfig>): StageGraphBuilder {
+    fun parallelStages(stageConfigs: List<StageConfig>): StageGraphBuilder {
         stageGraph = stageGraph.parallelStages(stageConfigs)
         return this
     }
 
-    @JvmOverloads fun parallel(vararg stageGraphs: StageGraphBuilder): StageGraphBuilder {
+    fun parallel(vararg stageGraphs: StageGraphBuilder): StageGraphBuilder {
         return parallel(stageGraphs.toList())
     }
 
-    @JvmOverloads fun parallel(stageGraphs: List<StageGraphBuilder>): StageGraphBuilder {
+    fun parallel(stageGraphs: List<StageGraphBuilder>): StageGraphBuilder {
         stageGraph = stageGraph.parallel(stageGraphs.map { it.stageGraph })
         return this
     }
-
 }
