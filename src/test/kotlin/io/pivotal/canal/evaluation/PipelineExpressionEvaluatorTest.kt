@@ -125,7 +125,7 @@ class PipelineExpressionEvaluatorTest {
             val evaluatedPipeline = evaluator.evaluate(pipeline)
             val cloudProvider = CloudFoundryCloudProvider("account-1")
 
-            assertThat(evaluatedPipeline).isEqualTo(Pipeline(
+            assertThat(evaluatedPipeline).isEqualTo(PipelineModel(
                     name = "test",
                     description ="desc1",
                     stageGraph = stages {

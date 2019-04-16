@@ -11,6 +11,7 @@ plugins {
     maven
     id("nebula.kotlin") version "1.3.21"
     id("io.spring.release") version "0.20.1"
+    kotlin("jvm") version "1.3.30"
 }
 
 apply(plugin = "io.spring.license")
@@ -52,8 +53,17 @@ dependencies {
     testImplementation("org.assertj:assertj-core:latest.release")
 
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:latest.release")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 dependencyLocking {
     lockAllConfigurations()
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }

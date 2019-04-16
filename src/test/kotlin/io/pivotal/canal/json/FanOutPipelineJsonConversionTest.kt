@@ -370,7 +370,7 @@ class FanOutPipelineJsonConversionTest {
                                         cloudProvider,
                                         listOf("dev > dev"),
                                         "cluster1",
-                                        "current_asg_dynamic"
+                                        TargetServerGroup.Newest
                                 ),
                                 BaseStage("Destroy Server Group Before",
                                         stageEnabled = ExpressionCondition("execution['trigger']['parameters']['destroyServerGroupBefore']=='true'")
@@ -494,8 +494,7 @@ class FanOutPipelineJsonConversionTest {
                         PipelineStage(13,
                                 Webhook(
                                         "POST",
-                                        "https://github.com/spinnaker/clouddriver",
-                                        "cmccoy@pivotal.io"
+                                        "https://github.com/spinnaker/clouddriver"
                                 )
                         ),
                         PipelineStage(14,
@@ -530,13 +529,13 @@ class FanOutPipelineJsonConversionTest {
 
     @Test
     fun `JSON pipeline with fan out and fan in should convert to Pipeline object`() {
-        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<PipelineModel>().fromJson(json)
         Assertions.assertThat(pipeline).isEqualTo(model)
     }
 
     @Test
     fun `generate pipeline JSON with stages that fan out and back in`() {
-        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
+        val pipeline = JsonAdapterFactory().createAdapter<PipelineModel>().toJson(model)
         JsonAssertions.assertThatJson(pipeline).isEqualTo(json)
     }
 

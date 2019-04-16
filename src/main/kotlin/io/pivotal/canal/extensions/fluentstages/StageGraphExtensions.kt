@@ -37,7 +37,7 @@ val StageGraph.stageCount: Int get() {
     return this.stages.size
 }
 
-private fun StageGraph.insertStage(stageConfig: StageConfig,
+private fun StageGraph.insertStage(stageConfig: SpecificStageConfig,
                                    base: BaseStage? = BaseStage(),
                                    execution: StageExecution = StageExecution()
 ): StageGraph {
@@ -53,7 +53,7 @@ private fun StageGraph.insertStage(stageConfig: StageConfig,
     return StageGraph(allStages, allStageRequirements)
 }
 
-fun StageGraph.addStage(stageConfig: StageConfig,
+fun StageGraph.addStage(stageConfig: SpecificStageConfig,
                         base: BaseStage? = BaseStage(),
                         execution: StageExecution = StageExecution()
 ): StageGraph {
@@ -64,7 +64,7 @@ fun StageGraph.addStage(stageConfig: StageConfig,
     )
 }
 
-fun StageGraph.andThen(stageConfig: StageConfig,
+fun StageGraph.andThen(stageConfig: SpecificStageConfig,
                        base: BaseStage? = BaseStage(),
                        execution: StageExecution = StageExecution()
 ): StageGraph {
@@ -75,11 +75,11 @@ fun StageGraph.andThen(stageConfig: StageConfig,
     )
 }
 
-fun StageGraph.parallelStages(vararg stageConfigs: StageConfig): StageGraph {
+fun StageGraph.parallelStages(vararg stageConfigs: SpecificStageConfig): StageGraph {
     return parallelStages(stageConfigs.toList())
 }
 
-fun StageGraph.parallelStages(stageConfigs: List<StageConfig>): StageGraph {
+fun StageGraph.parallelStages(stageConfigs: List<SpecificStageConfig>): StageGraph {
     val stageGroups: List<StageGraph> = stageConfigs.map { StageGraph().insertStage(it) }
     return parallel(stageGroups)
 }

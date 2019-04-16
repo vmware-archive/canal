@@ -16,44 +16,45 @@
 
 package io.pivotal.canal.model
 
-interface StageConfig : Typed
+import com.squareup.moshi.Json
+
+interface SpecificStageConfig : Typed
 
 data class CheckPreconditions(
         val preconditions: List<Precondition>
-) : StageConfig {
+) : SpecificStageConfig {
     constructor(vararg preconditions: Precondition) : this(preconditions.toList())
     override val type = "checkPreconditions"
 }
 
 data class Wait(
         val waitTime: String
-) : StageConfig {
+) : SpecificStageConfig {
     constructor(waitTime: Long) : this(waitTime.toString())
     override val type = "wait"
 }
 
-data class Jenkins @JvmOverloads constructor(
+data class Jenkins (
         val job: String,
         val master: String,
         val parameters: Map<String, String> = emptyMap(),
         val waitForCompletion: Boolean = true
-) : StageConfig {
+) : SpecificStageConfig {
     override val type = "jenkins"
 }
 
 data class ManualJudgment @JvmOverloads constructor(
         val instructions: String? = null,
         val judgmentInputs: List<String> = emptyList()
-) : StageConfig {
+) : SpecificStageConfig {
     override val type = "manualJudgment"
 }
 
-data class Webhook @JvmOverloads constructor(
+data class Webhook (
         val method: String,
         val url: String,
-        val user: String,
         val waitForCompletion: Boolean = true
-) : StageConfig {
+) : SpecificStageConfig {
     override val type = "webhook"
 }
 
@@ -61,7 +62,7 @@ data class Canary(
         val analysisType: String,
         val canaryConfig: CanaryConfig
 
-) : StageConfig {
+) : SpecificStageConfig {
     override val type = "kayentaCanary"
 }
 
@@ -102,25 +103,31 @@ data class DestroyServerGroup(
         override val provider: CloudProvider,
         override val regions: List<String>,
         val cluster: String,
-        val target: String
-) : StageConfig, CloudSpecific, MultiRegion {
+        val target: TargetServerGroup
+) : SpecificStageConfig, CloudSpecific, MultiRegion {
     override val type = "destroyServerGroup"
+}
+
+enum class TargetServerGroup {
+    @Json(name = "current_asg_dynamic") Newest,
+    @Json(name = "ancestor_asg_dynamic") Previous,
+    @Json(name = "oldest_asg_dynamic") Oldest
 }
 
 data class DeployService(
         override val provider: CloudProvider,
         override val region: String
-) : StageConfig, CloudSpecific, Region {
+) : SpecificStageConfig, CloudSpecific, Region {
     override val type = "deployService"
     var action = type
 }
 
-data class DestroyService @JvmOverloads constructor(
+data class DestroyService (
         override val provider: CloudProvider,
         override val region: String,
         val serviceName: String,
         val timeout: String? = null
-) : StageConfig, CloudSpecific, Region {
+) : SpecificStageConfig, CloudSpecific, Region {
     override val type = "destroyService"
     var action = type
 }
@@ -129,8 +136,8 @@ data class DisableServerGroup(
         override val provider: CloudProvider,
         override val regions: List<String>,
         val cluster: String,
-        val target: String
-) : StageConfig, CloudSpecific, MultiRegion {
+        val target: TargetServerGroup
+) : SpecificStageConfig, CloudSpecific, MultiRegion {
     override val type = "disableServerGroup"
 }
 
@@ -138,20 +145,20 @@ data class EnableServerGroup(
         override val provider: CloudProvider,
         override val regions: List<String>,
         val cluster: String,
-        val target: String
-) : StageConfig, CloudSpecific, MultiRegion {
+        val target: TargetServerGroup
+) : SpecificStageConfig, CloudSpecific, MultiRegion {
     override val type = "enableServerGroup"
 }
 
-data class ResizeServerGroup @JvmOverloads constructor(
+data class ResizeServerGroup (
         override val provider: CloudProvider,
         override val regions: List<String>,
         val cluster: String,
-        val target: String,
+        val target: TargetServerGroup,
         val resizeAction: ResizeAction,
         val memory: Int = 1024,
         val diskQuota: Int = 1024
-) : StageConfig, CloudSpecific, MultiRegion {
+) : SpecificStageConfig, CloudSpecific, MultiRegion {
     override val type = "resizeServerGroup"
 }
 
@@ -166,7 +173,7 @@ data class ScaleExactResizeAction(
 
 data class Deploy(
         val clusters: List<Cluster>
-) : StageConfig {
+) : SpecificStageConfig {
     constructor(cluster: Cluster) : this(listOf(cluster))
     override val type = "deploy"
 }
@@ -186,3 +193,19 @@ data class Capacity(
                 min: Int) : this(desired.toString(), max.toString(), min.toString())
     constructor(desired: Int) : this(desired, desired, desired)
 }
+
+data class Rollback(
+        override val provider: CloudProvider,
+        override val regions: List<String>,
+        val cluster: String,
+        val targetHealthyRollbackPercentage: Int
+) : SpecificStageConfig, CloudSpecific, MultiRegion {
+    override val type = "rollbackCluster"
+    val moniker = Moniker(cluster, cluster)
+}
+
+data class Moniker(
+        val app: String,
+        val cluster: String,
+        val sequence: String? = null
+)

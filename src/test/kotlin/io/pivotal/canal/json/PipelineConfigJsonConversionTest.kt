@@ -34,8 +34,8 @@ class PipelineConfigJsonConversionTest  {
     {
         "schema": "v2",
         "application": "waze",
-        "name": "My First SpEL Pipeline",
-        "template": {
+        "name": PipelineModel,
+PipelineModel"template": {
             "source": "spinnaker://newSpelTemplate"
         },
         "variables": {

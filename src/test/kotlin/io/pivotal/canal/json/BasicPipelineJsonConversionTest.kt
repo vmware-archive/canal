@@ -122,8 +122,7 @@ class BasicPipelineJsonConversionTest {
                         PipelineStage(4,
                                 Webhook(
                                         "POST",
-                                        "https://github.com/spinnaker/clouddriver",
-                                        "cmccoy@pivotal.io"
+                                        "https://github.com/spinnaker/clouddriver"
                                 )
                         )
                 ),
@@ -137,13 +136,13 @@ class BasicPipelineJsonConversionTest {
 
     @Test
     fun `pipeline model should convert to JSON with execution details placed in stage`() {
-        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().toJson(model)
+        val pipeline = JsonAdapterFactory().createAdapter<PipelineModel>().toJson(model)
         JsonAssertions.assertThatJson(pipeline).isEqualTo(json)
     }
 
     @Test
     fun `JSON pipeline should convert to Pipeline object`() {
-        val pipeline = JsonAdapterFactory().createAdapter<Pipeline>().fromJson(json)
+        val pipeline = JsonAdapterFactory().createAdapter<PipelineModel>().fromJson(json)
         assertThat(pipeline).isEqualTo(model)
     }
 

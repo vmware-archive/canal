@@ -48,7 +48,7 @@ class PipelineTemplateJsonGenerationTest {
         "protect" : false,
         "metadata" : {
             "name" : "Variable Wait",
-            "description" : "A demonstrative Wait Pipeline.",
+            "description" : PipelineModeldel.",
             "owner" : "example@example.com",
             "scopes" : ["global"]
         },
@@ -78,7 +78,7 @@ class PipelineTemplateJsonGenerationTest {
                 "newSpelTemplate",
                 Metadata(
                         "Variable Wait",
-                        "A demonstrative Wait Pipeline.",
+                        "A demonstrative Wait PipelineModel.",
                         "example@example.com"
                 ),
                 listOf(

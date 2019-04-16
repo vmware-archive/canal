@@ -28,7 +28,7 @@ class PipelineTemplateExpressionEvaluatorTest {
             "newSpelTemplate",
             Metadata(
                     "Variable Wait",
-                    "A demonstrative Wait Pipeline.",
+                    "A demonstrative Wait PipelineModel.",
                     "example@example.com"
             ),
             listOf(
@@ -80,7 +80,7 @@ class PipelineTemplateExpressionEvaluatorTest {
                 "newSpelTemplate",
                 Metadata(
                         "Variable Wait",
-                        "A demonstrative Wait Pipeline.",
+                        "A demonstrative Wait PipelineModel.",
                         "example@example.com"
                 ),
                 listOf(

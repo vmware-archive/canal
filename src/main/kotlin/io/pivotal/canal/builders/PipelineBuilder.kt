@@ -18,7 +18,7 @@ package io.pivotal.canal.builders
 
 import io.pivotal.canal.model.*
 
-open class PipelineBuilder constructor(var pipeline: Pipeline) {
+open class PipelineBuilder constructor(var pipeline: PipelineModel) {
     var description: String = ""
         set(value) {
             this.pipeline = this.pipeline.copy(description = value)

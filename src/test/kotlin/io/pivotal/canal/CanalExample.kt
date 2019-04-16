@@ -158,7 +158,7 @@ class CanalExample {
         assertThat(evaluatedPipeline.stageGraph.stages[0].stageConfig)
                 .isEqualTo(CheckPreconditions(ExpressionPrecondition(true)))
 
-        val pipelineJson = JsonAdapterFactory().createAdapter<Pipeline>().toJson(evaluatedPipeline)
+        val pipelineJson = JsonAdapterFactory().createAdapter<PipelineModel>().toJson(evaluatedPipeline)
         JsonAssertions.assertThatJson(pipelineJson).isEqualTo(json)
 
     }

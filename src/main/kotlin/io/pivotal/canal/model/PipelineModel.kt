@@ -18,7 +18,7 @@ package io.pivotal.canal.model
 
 import com.squareup.moshi.Json
 
-data class Pipeline(
+data class PipelineModel(
         val name: String,
         val description: String = "",
         @Json(name = "parameterConfig") val parameters: List<Parameter> = emptyList(),
@@ -32,12 +32,12 @@ data class Pipeline(
 
 data class PipelineStage(
         val refId: String,
-        val stageConfig: StageConfig,
+        val stageConfig: SpecificStageConfig,
         val common: BaseStage? = null,
         val inject: Inject? = null
 ) {
     constructor(refId: Int,
-                attrs: StageConfig,
+                attrs: SpecificStageConfig,
                 common: BaseStage? = BaseStage(),
                 inject: Inject? = null) : this(refId.toString(), attrs, common, inject)
 }

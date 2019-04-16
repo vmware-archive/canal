@@ -18,19 +18,19 @@ package io.pivotal.canal.model
 
 import io.pivotal.canal.json.JsonAdapterFactory
 
-class Pipelines(val pipelinesForApp: Map<String, List<Pipeline>> = mapOf()) {
+class Pipelines(val pipelinesForApp: Map<String, List<PipelineModel>> = mapOf()) {
 
-    fun withPipelinesForApp(application: String, vararg pipelineBuilders: Pipeline): Pipelines {
+    fun withPipelinesForApp(application: String, vararg pipelineBuilders: PipelineModel): Pipelines {
         return withPipelinesForApp(application, pipelineBuilders.asList())
     }
 
-    fun withPipelinesForApp(application: String, pipelineBuilders: List<Pipeline>): Pipelines {
+    fun withPipelinesForApp(application: String, pipelineBuilders: List<PipelineModel>): Pipelines {
         val existingPipelinesForApp = pipelinesForApp.get(application).orEmpty()
         return Pipelines(pipelinesForApp + (application to existingPipelinesForApp + pipelineBuilders))
     }
 
     fun toJson(): String {
-        return JsonAdapterFactory().createAdapter<Map<String, List<Pipeline>>>().toJson(pipelinesForApp)
+        return JsonAdapterFactory().createAdapter<Map<String, List<PipelineModel>>>().toJson(pipelinesForApp)
     }
 
 }

@@ -45,7 +45,7 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
 
     val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
 
-    fun stage(stageConfig: StageConfig,
+    fun stage(stageConfig: SpecificStageConfig,
               name: String? = null,
               comments: String? = null,
               stageEnabled: Condition? = null,
@@ -75,7 +75,7 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
         return SingleStage(current, newStage.refId)
     }
 
-    private fun StageGraph.newStage(stageConfig: StageConfig,
+    private fun StageGraph.newStage(stageConfig: SpecificStageConfig,
                                     base: BaseStage?,
                                     refId: String?,
                                     inject: Inject?

@@ -63,7 +63,7 @@ class JsonAdapterFactory {
                         .withSubtype(DirectManifest::class.java, "direct")
                         .withSubtype(ArtifactManifest::class.java, "artifact")
                 )
-                .add(PolymorphicJsonAdapterFactory.of(StageConfig::class.java, "type")
+                .add(PolymorphicJsonAdapterFactory.of(SpecificStageConfig::class.java, "type")
                         .withSubtype(DestroyServerGroup::class.java, "destroyServerGroup")
                         .withSubtype(DeployService::class.java, "deployService")
                         .withSubtype(DestroyService::class.java, "destroyService")

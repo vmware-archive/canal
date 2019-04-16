@@ -24,6 +24,8 @@ data class CloudFoundryCloudProvider @JvmOverloads constructor(
 ) : CloudProvider {
     override var cloudProvider = "cloudfoundry"
     override var cloudProviderType = cloudProvider
+
+    fun manifest(manifest: ManifestSource) = this.copy(manifest = manifest)
 }
 
 data class CloudFoundryCluster @JvmOverloads constructor(

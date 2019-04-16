@@ -27,7 +27,7 @@ class PipelineTemplateInstanceAdapter {
         JsonAdapterFactory().createAdapter<PipelineConfiguration>()
     }
     val pipelineAdapter by lazy {
-        JsonAdapterFactory().createAdapter<Pipeline>()
+        JsonAdapterFactory().createAdapter<PipelineModel>()
     }
 
     @ToJson
@@ -52,7 +52,7 @@ class PipelineTemplateInstanceAdapter {
 
 class StageGraphAdapter {
     val stageAdapter by lazy {
-        JsonAdapterFactory().createAdapter<StageConfig>()
+        JsonAdapterFactory().createAdapter<SpecificStageConfig>()
     }
     val executionDetailsAdapter by lazy {
         JsonAdapterFactory().createAdapter<StageExecution>()
@@ -103,12 +103,12 @@ class CloudSpecificToJsonAdapter {
         JsonAdapterFactory().createAdapter<CloudProvider>()
     }
     val stageAdapter by lazy {
-        JsonAdapterFactory().createNonCloudSpecificAdapter<StageConfig>()
+        JsonAdapterFactory().createNonCloudSpecificAdapter<SpecificStageConfig>()
     }
     val providerPropertyName = "provider"
 
     @ToJson
-    fun toJson(stageConfig: StageConfig): Map<String, Any?> {
+    fun toJson(stageConfig: SpecificStageConfig): Map<String, Any?> {
         val stageClass = stageConfig.javaClass.kotlin
         val properties = stageClass.memberProperties
         val propertiesMap = properties.map { it.name to it.get(stageConfig) }.toMap()
@@ -124,7 +124,7 @@ class CloudSpecificToJsonAdapter {
     }
 
     @FromJson
-    fun fromJson(stageJson: Map<String, @JvmSuppressWildcards Any>): StageConfig {
+    fun fromJson(stageJson: Map<String, @JvmSuppressWildcards Any>): SpecificStageConfig {
         val stageMap = try {
             val cloudProvider = cloudProviderAdapter.fromJsonValue(stageJson)!!
             val cloudProviderPropertyNames = cloudProvider.javaClass.kotlin.memberProperties.map { it.name }

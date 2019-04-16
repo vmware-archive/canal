@@ -18,12 +18,13 @@ package io.pivotal.canal.evaluation
 
 import com.netflix.spinnaker.orca.config.UserConfiguredUrlRestrictions
 import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionEvaluationSummary
+import com.netflix.spinnaker.orca.pipeline.expressions.ExpressionFunctionProvider
 import com.netflix.spinnaker.orca.pipeline.expressions.PipelineExpressionEvaluator
 import com.netflix.spinnaker.orca.pipeline.util.ContextFunctionConfiguration
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import io.pivotal.canal.json.JsonAdapterFactory
-import io.pivotal.canal.model.Pipeline
+import io.pivotal.canal.model.PipelineModel
 import io.pivotal.canal.model.PipelineTemplateInstance
 import io.pivotal.canal.model.PipelineExecution
 import io.pivotal.canal.model.PipelineTemplate
@@ -31,9 +32,13 @@ import io.pivotal.canal.model.PipelineTemplate
 class ExpressionEvaluator(val pipelineExecution: PipelineExecution = PipelineExecution()) {
 
     val expressionEvaluator = PipelineExpressionEvaluator(
-            ContextFunctionConfiguration(UserConfiguredUrlRestrictions.Builder().build()))
+            ContextFunctionConfiguration(
+                    UserConfiguredUrlRestrictions.Builder().build(),
+                    emptyList()
+            )
+    )
 
-    fun evaluate(pipeline: Pipeline): Pipeline {
+    fun evaluate(pipeline: PipelineModel): PipelineModel {
         return evaluateWithAdapter(pipeline, JsonAdapterFactory().createAdapter(), pipelineExecution)
     }
 

@@ -16,7 +16,7 @@
 package io.pivotal.canal.extensions
 
 import io.pivotal.canal.builders.PipelineBuilder
-import io.pivotal.canal.model.Pipeline
+import io.pivotal.canal.model.PipelineModel
 import io.pivotal.canal.model.Pipelines
 
 
@@ -37,10 +37,10 @@ class AppPipelineAppender(var pipelines: Pipelines) {
 
 }
 
-class PipelineAppender(var pipelines: List<Pipeline> = emptyList()) {
+class PipelineAppender(var pipelines: List<PipelineModel> = emptyList()) {
 
     fun pipeline(name: String, withinPipeline: PipelineBuilder.() -> Unit) {
-        val pb = PipelineBuilder(Pipeline(name))
+        val pb = PipelineBuilder(PipelineModel(name))
         pb.withinPipeline()
         pipelines += pb.pipeline
     }
