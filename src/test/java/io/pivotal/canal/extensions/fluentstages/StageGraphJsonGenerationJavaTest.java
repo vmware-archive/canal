@@ -18,6 +18,7 @@ package io.pivotal.canal.extensions.fluentstages;
 
 import io.pivotal.canal.extensions.builder.Defaults;
 import io.pivotal.canal.extensions.builder.Pipeline;
+import io.pivotal.canal.extensions.builder.StageGrapher;
 import io.pivotal.canal.json.StageGraphJson;
 import io.pivotal.canal.model.*;
 import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider;
@@ -41,20 +42,14 @@ class StageGraphJsonGenerationJavaTest {
                         .region("dev > dev")
         ) {
             @Override
-            public StageGraph stages() {
-                return stageGraph().then(
-                        stage().wait(Duration.ofMinutes(1))
-                ).then(
-                        stage("mongo").deployService(),
-                        stage("rabbit").deployService(),
-                        stage("mysql").deployService()
-                ).then(
-                        stage("deploy to dev").deploy()
-                ).then(
-                        stage("cool off").wait("1+1")
-                ).then(
-                        stage().rollback("metricsdemo")
-                ).graph();
+            public StageGrapher stages() {
+                return stage.wait(Duration.ofMinutes(1))
+                        .then(stage.deployService(it -> it.name("mongo")),
+                                stage.deployService(it -> it.name("rabbit")),
+                                stage.deployService(it -> it.name("mysql")))
+                        .then(stage.deploy(it -> it.name("mysql")))
+                        .then(stage.wait("1+1", it -> it.name("cool off")))
+                        .then(stage.rollback("metricsdemo"));
             }
         };
 
@@ -69,25 +64,16 @@ class StageGraphJsonGenerationJavaTest {
                         .region("dev > dev")
         ) {
             @Override
-            public StageGraph stages() {
-                return stageGraph().then(
-                        stage().wait(Duration.ofMinutes(1))
-                ).then(
-                        stageGraph(
-                                stage().destroyService("service1")
-                        ).then(
-                                stage("deploy service 1").deployService()
-                        ),
-                        stageGraph(
-                                stage().destroyService("service2")
-                        ).then(
-                                stage("destroy service 2").deployService()
-                        ),
-                        stage("cool off").wait(Duration.ofMinutes(1))
-                ).then(
-                        stage().manualJudgment()
-                                .instructions("Approve?")
-                ).graph();
+            public StageGrapher stages() {
+                return stage.wait(Duration.ofMinutes(1))
+                        .then(
+                                stage.destroyService("service1")
+                                        .then(stage.deployService(it -> it.name("deploy service 1"))),
+                                stage.destroyService("service2")
+                                        .then(stage.deployService(it -> it.name("deploy service 2"))),
+                                stage.wait("60", it -> it.name("cool off"))
+                        )
+                        .then(stage.manualJudgment(it -> it.instructions("Approve?")));
             }
         };
 
@@ -103,37 +89,30 @@ class StageGraphJsonGenerationJavaTest {
                         .region("dev > dev")
         ) {
             @Override
-            public StageGraph stages() {
-                return stageGraph().then(
-                        stage("Check Preconditions").checkPreconditions(new ExpressionPrecondition(true))
-                ).then(
-                        stage().wait("420")
-                ).then(
-                        range(1, 4).mapToObj(it -> stageGraph(
-                                    stage(stageConfig()
-                                                    .name("Destroy Service " + it + " Before")
-                                                    .stageEnabled(new ExpressionCondition("exp1"))
-                                    ).destroyService("serviceName1")
-                                ).then(
-                                    stage(stageConfig()
-                                                    .name("Deploy Service " + it)
-                                                    .comments("deploy comment")
-                                                    .stageEnabled(new ExpressionCondition("exp2"))
-                                    ).deployService()
-                                            .provider(cfProvider.manifest(
-                                                    new ManifestSourceDirect(
-                                                        "serviceType" + it,
-                                                        "serviceName" + it,
-                                                        "servicePlan" + it,
-                                                        Arrays.asList("serviceTags" + it),
-                                                        "serviceParam" + it
-                                                )
-                                            ))
-                                )
-                        ).collect(Collectors.toList())
-                ).then(
-                        stage().manualJudgment().instructions("Give a thumbs up if you like it.")
-                ).graph();
+            public StageGrapher stages() {
+                return stage.checkPreconditions(it -> it.preconditions(new ExpressionPrecondition(true)))
+                        .then(stage.wait("420"))
+                        .then(
+                                range(1, 4).mapToObj(i ->
+                                        stage.destroyService("serviceName1", it -> it
+                                                .name("Destroy Service " + i + " Before")
+                                                .stageEnabled(new ExpressionCondition("exp1")))
+                                                .then(stage.deployService(it -> it
+                                                        .name("Deploy Service " + i)
+                                                        .comments("deploy comment")
+                                                        .stageEnabled(new ExpressionCondition("exp2"))
+                                                        .provider(cfProvider.manifest(
+                                                                new ManifestSourceDirect(
+                                                                        "serviceType" + i,
+                                                                        "serviceName" + i,
+                                                                        "servicePlan" + i,
+                                                                        Arrays.asList("serviceTags" + i),
+                                                                        "serviceParam" + i
+                                                                )
+                                                        ))
+                                                ))
+                                ).collect(Collectors.toList())
+                        ).then(stage.manualJudgment(it -> it.instructions("Give a thumbs up if you like it.")));
             }
         };
 
