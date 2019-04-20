@@ -47,7 +47,6 @@ class StageGraphJsonGenerationJavaTest {
                         .then(stage.deployService(it -> it.name("mongo")),
                                 stage.deployService(it -> it.name("rabbit")),
                                 stage.deployService(it -> it.name("mysql")))
-                        .then(stage.deploy(it -> it.name("mysql")))
                         .then(stage.wait("1+1", it -> it.name("cool off")))
                         .then(stage.rollback("metricsdemo"));
             }
