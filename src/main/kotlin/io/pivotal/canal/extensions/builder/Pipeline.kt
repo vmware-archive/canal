@@ -1,38 +1,44 @@
 package io.pivotal.canal.extensions.builder
 
 import io.pivotal.canal.model.*
+import io.pivotal.canal.model.extensions.concat
+import io.pivotal.canal.model.extensions.stageGraphFor
 
 data class Defaults(var delegate: PipelineDefaults = PipelineDefaults()) {
     fun region(region: String) = apply { this.delegate = delegate.copy(region = region) }
     fun account(account: String) = apply { this.delegate = delegate.copy(account = account) }
     fun cloudProvider(cloudProvider: CloudProvider) = apply { this.delegate = delegate.copy(cloudProvider = cloudProvider) }
+
+    fun forStages(stagesDef: (StageCatalog) -> StageGrapher) : StageGrapher {
+        return stagesDef(StageCatalog(this.delegate))
+    }
+
+    fun forStages(stagesDef: (Defaults, StageCatalog) -> StageGrapher) : StageGrapher {
+        return stagesDef(this, StageCatalog(this.delegate))
+    }
 }
 
 data class PipelineDefaults(val region: String? = null,
                             val account: String? = null,
                             val cloudProvider: CloudProvider? = null)
 
-interface NextStageGraphObject
+class StageGrapher(var currentStageGraph: StageGraph = StageGraph()) {
+    constructor(initialStage: SpecificStage) : this(stageGraphFor(initialStage))
 
-class StageGrapher : NextStageGraphObject {
-
-    private var stageGraph = StageGraph()
-
-    fun then(vararg nextStageGraphObjects: NextStageGraphObject) : StageGrapher {
-        return then(nextStageGraphObjects.toList())
+    fun then(vararg nextStageGraphers: StageGrapher) : StageGrapher {
+        return then(nextStageGraphers.toList())
     }
 
-    fun then(nextStageGraphObjects: List<NextStageGraphObject>) : StageGrapher {
-
-        return this
+    fun then(nextStageGraphers: List<StageGrapher>) : StageGrapher {
+        return StageGrapher(currentStageGraph.concat(nextStageGraphers.map { it.graph() }))
     }
 
     fun graph() : StageGraph {
-        return stageGraph
+        return currentStageGraph
     }
 }
 
-open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificStageBuilder<T, U>>(val defaults: PipelineDefaults) : NextStageGraphObject {
+open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificStageBuilder<T, U>>(val defaults: PipelineDefaults) {
     abstract fun specificStageConfig(): T
     var common: BaseStage = BaseStage()
     var execution: StageExecution = StageExecution()
@@ -49,8 +55,8 @@ open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificSt
 
     fun execution(execution: StageExecution): U = apply { this.execution = execution } as U
 
-    fun build(): CompleteStage {
-        return CompleteStage(
+    fun build(): SpecificStage {
+        return SpecificStage(
                 specificStageConfig(),
                 common,
                 execution
@@ -58,7 +64,7 @@ open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificSt
     }
 }
 
-data class CompleteStage(
+data class SpecificStage(
         val stageConfig: SpecificStageConfig,
         val base: BaseStage,
         val execution: StageExecution

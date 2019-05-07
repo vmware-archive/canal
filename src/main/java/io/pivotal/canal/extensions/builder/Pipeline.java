@@ -8,14 +8,12 @@ import static java.util.Collections.emptyList;
 
 public class Pipeline {
     private final String name;
-    private final PipelineDefaults defaults;
 
     protected final StageCatalog stage;
 
-    public Pipeline(String name, Defaults defaults) {
+    public Pipeline(String name) {
         this.name = name;
-        this.defaults = defaults.getDelegate();
-        stage = new StageCatalog(this.defaults, new StageGrapher());
+        stage = new StageCatalog();
     }
 
     public StageGrapher stages() {

@@ -21,8 +21,7 @@ import io.pivotal.canal.extensions.builder.Pipeline;
 import io.pivotal.canal.extensions.builder.StageGrapher;
 import io.pivotal.canal.json.StageGraphJson;
 import io.pivotal.canal.model.*;
-import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider;
-import io.pivotal.canal.model.cloudfoundry.ManifestSourceDirect;
+import io.pivotal.canal.model.cloudfoundry.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -35,20 +34,28 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 class StageGraphJsonGenerationJavaTest {
 
     @Test
-    void stagesWithDefaults() {
-        Pipeline pipeline = new Pipeline("test",
-                new Defaults()
-                        .cloudProvider(new CloudFoundryCloudProvider("creds1"))
-                        .region("dev > dev")
-        ) {
+    void stageGraphConstruction() {
+        Pipeline pipeline = new Pipeline("test") {
             @Override
             public StageGrapher stages() {
                 return stage.wait(Duration.ofMinutes(1))
-                        .then(stage.deployService(it -> it.name("mongo")),
-                                stage.deployService(it -> it.name("rabbit")),
-                                stage.deployService(it -> it.name("mysql")))
+                        .then(stage.deployService(it -> it.name("Deploy Mongo")),
+                                stage.deployService(it -> it.name("Deploy Rabbit")),
+                                stage.deployService(it -> it.name("Deploy MySQL")))
+                        .then(stage.deploy(it -> it
+                                .name("Deploy to Dev")
+                                .clusters(
+                                        new CloudFoundryCluster(
+                                                "app1",
+                                                "montclair",
+                                                "dev > dev",
+                                                new TriggerArtifact("montclair", ".*"),
+                                                new ArtifactManifest("montclair", ".*")
+                                        )
+                                )
+                        ))
                         .then(stage.wait("1+1", it -> it.name("cool off")))
-                        .then(stage.rollback("metricsdemo"));
+                        .then(stage.rollback("cluster1", it -> it.name("Rollback")));
             }
         };
 
@@ -56,12 +63,82 @@ class StageGraphJsonGenerationJavaTest {
     }
 
     @Test
+    void stagesWithDefaults() {
+        Pipeline pipeline = new Pipeline("test") {
+            @Override
+            public StageGrapher stages() {
+                return new Defaults()
+                  .cloudProvider(new CloudFoundryCloudProvider("creds1"))
+                  .account("montclair")
+                  .region("dev > dev")
+                  .forStages(sc -> sc.wait(Duration.ofMinutes(1))
+                        .then(
+                          sc.deployService(it -> it.name("Deploy Mongo")),
+                          sc.deployService(it -> it.name("Deploy Rabbit")),
+                          sc.deployService(it -> it.name("Deploy MySQL"))
+                        )
+                        .then(
+                          sc.deploy(it -> it
+                            .name("Deploy to Dev")
+                            .clusters(
+                              new CloudFoundryCluster(
+                                "app1",
+                                "montclair",
+                                "dev > dev",
+                                new TriggerArtifact("montclair", ".*"),
+                                new ArtifactManifest("montclair", ".*")
+                              )
+                            )
+                          ))
+                        .then(sc.wait("1+1", it -> it.name("cool off")))
+                        .then(sc.rollback("cluster1", it -> it.name("Rollback")))
+                );
+            }
+        };
+
+        assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithFanOutAndFanIn());
+    }
+
+    @Test
+    void stagesWithNestedDefaults() {
+        Pipeline pipeline = new Pipeline("test") {
+            @Override
+            public StageGrapher stages() {
+                return new Defaults()
+                  .cloudProvider(new CloudFoundryCloudProvider("creds1"))
+                  .account("montclair")
+                  .region("dev > dev")
+                  .forStages((d1, sc) -> sc.wait(Duration.ofMinutes(1))
+                    .then(
+                      d1.region("dev1 > dev").forStages(sc1 -> sc1.deployService(it -> it.name("Deploy Mongo"))),
+                      d1.region("dev2 > dev").forStages(sc1 -> sc1.deployService(it -> it.name("Deploy Rabbit"))),
+                      d1.region("dev3 > dev").forStages(sc1 -> sc1.deployService(it -> it.name("Deploy MySQL")))
+                    )
+                    .then(
+                      sc.deploy(it -> it
+                        .name("Deploy to Dev")
+                        .clusters(
+                          new CloudFoundryCluster(
+                            "app1",
+                            "montclair",
+                            "dev > dev",
+                            new TriggerArtifact("montclair", ".*"),
+                            new ArtifactManifest("montclair", ".*")
+                          )
+                        )
+                      ))
+                    .then(sc.wait("1+1", it -> it.name("cool off")))
+                    .then(sc.rollback("cluster1", it -> it.name("Rollback")))
+                  );
+            }
+        };
+
+        assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithNestedDefaults());
+    }
+
+    @Test
     void nestedStageGraph() {
-        Pipeline pipeline = new Pipeline("test",
-                new Defaults()
-                        .cloudProvider(new CloudFoundryCloudProvider("creds1"))
-                        .region("dev > dev")
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
             @Override
             public StageGrapher stages() {
                 return stage.wait(Duration.ofMinutes(1))
@@ -82,11 +159,7 @@ class StageGraphJsonGenerationJavaTest {
     @Test
     void stagesDslWithGeneratedFanOutAndFanIn() {
         CloudFoundryCloudProvider cfProvider = new CloudFoundryCloudProvider("creds1");
-        Pipeline pipeline = new Pipeline("test",
-                new Defaults()
-                        .cloudProvider(cfProvider)
-                        .region("dev > dev")
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
             @Override
             public StageGrapher stages() {
                 return stage.checkPreconditions(it -> it.preconditions(new ExpressionPrecondition(true)))

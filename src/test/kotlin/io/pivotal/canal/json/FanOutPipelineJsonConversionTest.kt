@@ -466,16 +466,16 @@ class FanOutPipelineJsonConversionTest {
                                                 "app1",
                                                 "account1",
                                                 "dev > dev",
-                                                DeploymentStrategy.RedBlack,
                                                 ReferencedArtifact(
                                                         "account2",
                                                         "s3://bucket1"
                                                 ),
-                                                Capacity(1),
                                                 ArtifactManifest(
                                                         "account3",
                                                         "s3://bucket2"
                                                 ),
+                                                DeploymentStrategy.RedBlack,
+                                                Capacity(1),
                                                 "stack1",
                                                 "ffd"
                                         )

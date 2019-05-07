@@ -32,10 +32,10 @@ data class CloudFoundryCluster @JvmOverloads constructor(
         val application: String,
         val account: String,
         val region: String,
-        val strategy: DeploymentStrategy,
         val artifact: Artifact,
-        override val capacity: Capacity,
         val manifest: Manifest,
+        val strategy: DeploymentStrategy = DeploymentStrategy.None,
+        override val capacity: Capacity = Capacity(1, 1, 1),
         val stack: String = "",
         val detail: String = "",
         val startApplication: Boolean? = null

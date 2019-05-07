@@ -339,16 +339,16 @@ class CloudPipelineExampleTest  {
                 "githubwebhook",
                 "calabasasaccount",
                 "scpipelines > ${region}",
-                DeploymentStrategy.Highlander,
                 TriggerArtifact(
                         "jenkins",
                         artifact
                 ),
-                Capacity(1),
                 DirectManifest(
                         listOf("github-rabbitmq", "github-eureka"),
                         listOf(route)
-                )
+                ),
+                DeploymentStrategy.Highlander,
+                Capacity(1)
         )
     }
 
