@@ -19,7 +19,8 @@ package io.pivotal.canal.evaluation
 import io.pivotal.canal.extensions.*
 import io.pivotal.canal.extensions.nestedstages.stages
 import io.pivotal.canal.model.*
-import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider
+import io.pivotal.canal.model.cloudfoundry.DestroyService
+import io.pivotal.canal.model.cloudfoundry.cloudFoundryCloudProvider
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -110,7 +111,7 @@ class PipelineExpressionEvaluatorTest {
                         (1..3).map {
                             stage(
                                     DestroyService(
-                                            CloudFoundryCloudProvider("\${trigger['parameters']['account'] }"),
+                                            cloudFoundryCloudProvider("\${trigger['parameters']['account'] }"),
                                             "\${trigger['parameters']['region'] }",
                                             "\${trigger['parameters']['serviceName$it']}"
                                     ),
@@ -123,7 +124,7 @@ class PipelineExpressionEvaluatorTest {
         }
 
             val evaluatedPipeline = evaluator.evaluate(pipeline)
-            val cloudProvider = CloudFoundryCloudProvider("account-1")
+            val cloudProvider = cloudFoundryCloudProvider("account-1")
 
             assertThat(evaluatedPipeline).isEqualTo(PipelineModel(
                     name = "test",

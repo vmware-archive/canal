@@ -4,6 +4,9 @@ import com.squareup.moshi.JsonAdapter;
 import io.pivotal.canal.json.JsonAdapterFactory;
 import io.pivotal.canal.model.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static java.util.Collections.emptyList;
 
 public class Pipeline {
@@ -18,6 +21,13 @@ public class Pipeline {
 
     public StageGrapher stages() {
         return new StageGrapher();
+    }
+
+    public StageGrapher parallel(StageGrapher... stageGraphers) {
+        return parallel(Arrays.asList(stageGraphers));
+    }
+    public StageGrapher parallel(List<StageGrapher> stageGraphers) {
+        return new StageGrapher().union(stageGraphers);
     }
 
     public String toJson() {

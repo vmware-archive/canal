@@ -93,10 +93,11 @@ interface CloudSpecific {
     val provider: CloudProvider
 }
 
-interface CloudProvider {
-    val cloudProvider: String
-    val cloudProviderType: String
-    val credentials: String
+data class CloudProvider constructor(
+        val credentials: String,
+        val cloudProvider: String
+) {
+    var cloudProviderType = cloudProvider
 }
 
 data class DestroyServerGroup(
@@ -112,24 +113,6 @@ enum class TargetServerGroup {
     @Json(name = "current_asg_dynamic") Newest,
     @Json(name = "ancestor_asg_dynamic") Previous,
     @Json(name = "oldest_asg_dynamic") Oldest
-}
-
-data class DeployService(
-        override val provider: CloudProvider,
-        override val region: String
-) : SpecificStageConfig, CloudSpecific, Region {
-    override val type = "deployService"
-    var action = type
-}
-
-data class DestroyService (
-        override val provider: CloudProvider,
-        override val region: String,
-        val serviceName: String,
-        val timeout: String? = null
-) : SpecificStageConfig, CloudSpecific, Region {
-    override val type = "destroyService"
-    var action = type
 }
 
 data class DisableServerGroup(
@@ -179,8 +162,15 @@ data class Deploy(
 }
 
 interface Cluster {
+    val application: String
+    val account: String
+    val region: String
+    val stack: String
+    val detail: String
+    val startApplication: Boolean?
     val capacity: Capacity
     val cloudProvider: String
+    val strategy: DeploymentStrategy
 }
 
 data class Capacity(

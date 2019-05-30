@@ -81,3 +81,35 @@ fun StageGraph.concat(stageGraphs: List<StageGraph>): StageGraph {
     val allStageRequirements = this.stageRequirements + newStageRequirements
     return StageGraph(allStages, allStageRequirements)
 }
+
+fun StageGraph.union(stageGraphs: List<StageGraph>): StageGraph {
+    var currentStageCount = this.stages.size
+    var newStages: List<PipelineStage> = emptyList()
+    var newStageRequirements: Map<String, List<String>> = mapOf()
+    stageGraphs.forEach {
+        val currentStageGraph = it
+        var subStageGraphStageRequirements = currentStageGraph.stageRequirements
+        it.stages.forEach {
+            val oldRefId = it.refId
+            val oldRefIdWithoutStageCountSuffix = oldRefId.substring(0, oldRefId.lastIndexOf("_"))
+            val newRefId = "${oldRefIdWithoutStageCountSuffix}_${++currentStageCount}"
+            val pStage = it.copy(refId = newRefId)
+            newStages += pStage
+            if (currentStageGraph.stageRequirements.containsKey(newRefId)) {
+                throw IllegalStateException("New RefId '$newRefId' is already used as a key in stage graph: $currentStageGraph")
+            }
+            if (currentStageGraph.stageRequirements.values.flatten().contains(newRefId)) {
+                throw IllegalStateException("New RefId '$newRefId' is already used as a value in stage graph: $currentStageGraph")
+            }
+            subStageGraphStageRequirements = subStageGraphStageRequirements.entries.associate {
+                val key = if (it.key == oldRefId) newRefId else it.key
+                val value = it.value.map { if (it == oldRefId) newRefId else it}
+                key to value
+            }
+        }
+        newStageRequirements += subStageGraphStageRequirements
+    }
+    val allStages = this.stages + newStages
+    val allStageRequirements = this.stageRequirements + newStageRequirements
+    return StageGraph(allStages, allStageRequirements)
+}

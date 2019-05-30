@@ -3,24 +3,40 @@ package io.pivotal.canal.extensions.builder
 import io.pivotal.canal.model.*
 import io.pivotal.canal.model.extensions.concat
 import io.pivotal.canal.model.extensions.stageGraphFor
+import java.util.*
 
 data class Defaults(var delegate: PipelineDefaults = PipelineDefaults()) {
+    fun application(application: String) = apply { this.delegate = delegate.copy(application = application) }
     fun region(region: String) = apply { this.delegate = delegate.copy(region = region) }
     fun account(account: String) = apply { this.delegate = delegate.copy(account = account) }
-    fun cloudProvider(cloudProvider: CloudProvider) = apply { this.delegate = delegate.copy(cloudProvider = cloudProvider) }
-
-    fun forStages(stagesDef: (StageCatalog) -> StageGrapher) : StageGrapher {
-        return stagesDef(StageCatalog(this.delegate))
-    }
-
-    fun forStages(stagesDef: (Defaults, StageCatalog) -> StageGrapher) : StageGrapher {
-        return stagesDef(this, StageCatalog(this.delegate))
-    }
 }
 
-data class PipelineDefaults(val region: String? = null,
-                            val account: String? = null,
-                            val cloudProvider: CloudProvider? = null)
+class DefaultsForStages(val cloudStageCatalog: CloudStageCatalog) {
+
+    var currentDefaults: PipelineDefaults = cloudStageCatalog.defaults
+    val scopes: Stack<PipelineDefaults> = Stack()
+    init {
+        scopes.push(currentDefaults)
+    }
+
+    fun application(application: String) = apply { currentDefaults = currentDefaults.copy(application = application) }
+    fun region(region: String) = apply { currentDefaults = currentDefaults.copy(region = region) }
+    fun account(account: String) = apply { currentDefaults = currentDefaults.copy(account = account) }
+
+    fun forStages(stagesDef: () -> StageGrapher) : StageGrapher {
+        scopes.push(currentDefaults)
+        cloudStageCatalog.defaults = currentDefaults
+        val stageGrapher = stagesDef()
+        scopes.pop()
+        cloudStageCatalog.defaults = scopes.peek()
+        return stageGrapher
+    }
+
+}
+
+data class PipelineDefaults(val application: String? = null,
+                            val region: String? = null,
+                            val account: String? = null)
 
 class StageGrapher(var currentStageGraph: StageGraph = StageGraph()) {
     constructor(initialStage: SpecificStage) : this(stageGraphFor(initialStage))
@@ -33,12 +49,16 @@ class StageGrapher(var currentStageGraph: StageGraph = StageGraph()) {
         return StageGrapher(currentStageGraph.concat(nextStageGraphers.map { it.graph() }))
     }
 
+    fun union(nextStageGraphers: List<StageGrapher>) : StageGrapher {
+        return StageGrapher(currentStageGraph.concat(nextStageGraphers.map { it.graph() }))
+    }
+
     fun graph() : StageGraph {
         return currentStageGraph
     }
 }
 
-open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificStageBuilder<T, U>>(val defaults: PipelineDefaults) {
+open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificStageBuilder<T, U>> {
     abstract fun specificStageConfig(): T
     var common: BaseStage = BaseStage()
     var execution: StageExecution = StageExecution()

@@ -18,8 +18,10 @@ package io.pivotal.canal.extensions.nestedstages
 
 import io.pivotal.canal.json.JsonAdapterFactory
 import io.pivotal.canal.model.*
-import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider
+import io.pivotal.canal.model.cloudfoundry.DeployService
+import io.pivotal.canal.model.cloudfoundry.DestroyService
 import io.pivotal.canal.model.cloudfoundry.ManifestSourceDirect
+import io.pivotal.canal.model.cloudfoundry.cloudFoundryCloudProvider
 import org.junit.jupiter.api.Test
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
@@ -185,7 +187,7 @@ class NestedStageGraphJsonGenerationTest {
 
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
-        val cloudProvider = CloudFoundryCloudProvider("creds1")
+        val cloudProvider = cloudFoundryCloudProvider("creds1")
         val stages = stages {
             stage(CheckPreconditions(ExpressionPrecondition(true)),
                     name = "Check Preconditions"
@@ -203,14 +205,15 @@ class NestedStageGraphJsonGenerationTest {
                         ) then {
                             stage(
                                     DeployService(
-                                            cloudProvider.copy(manifest = ManifestSourceDirect(
+                                            cloudProvider,
+                                            "dev > dev",
+                                            ManifestSourceDirect(
                                                     "serviceType$it",
                                                     "serviceName$it",
                                                     "servicePlan$it",
                                                     listOf("serviceTags$it"),
                                                     "serviceParam$it"
-                                            )),
-                                            "dev > dev"
+                                            )
                                     ),
                                     name = "Deploy Service $it",
                                     comments = "deploy comment",

@@ -16,13 +16,6 @@
 
 package io.pivotal.canal.json
 
-import io.pivotal.canal.json.JsonAdapterFactory
-import io.pivotal.canal.model.*
-import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider
-import io.pivotal.canal.model.cloudfoundry.ManifestSourceDirect
-import org.junit.jupiter.api.Test
-
-import net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson
 import org.intellij.lang.annotations.Language
 
 class StageGraphJson {
@@ -54,7 +47,12 @@ class StageGraphJson {
             "refId": "deployService_2",
             "region": "dev > dev",
             "requisiteStageRefIds": ["wait_1"],
-            "type": "deployService"
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mongo}",
+              "type": "artifact"
+            }
         },
         {
             "action": "deployService",
@@ -65,7 +63,12 @@ class StageGraphJson {
             "refId": "deployService_3",
             "region": "dev > dev",
             "requisiteStageRefIds": ["wait_1"],
-            "type": "deployService"
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_rabbit}",
+              "type": "artifact"
+            }
         },
         {
             "action": "deployService",
@@ -76,7 +79,12 @@ class StageGraphJson {
             "refId": "deployService_4",
             "region": "dev > dev",
             "requisiteStageRefIds": ["wait_1"],
-            "type": "deployService"
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mysql}",
+              "type": "artifact"
+            }
         },
         {
             "refId": "deploy_5",
@@ -153,7 +161,12 @@ class StageGraphJson {
             "refId": "deployService_2",
             "region": "dev1 > dev",
             "requisiteStageRefIds": ["wait_1"],
-            "type": "deployService"
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mongo}",
+              "type": "artifact"
+            }
         },
         {
             "action": "deployService",
@@ -164,7 +177,12 @@ class StageGraphJson {
             "refId": "deployService_3",
             "region": "dev2 > dev",
             "requisiteStageRefIds": ["wait_1"],
-            "type": "deployService"
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_rabbit}",
+              "type": "artifact"
+            }
         },
         {
             "action": "deployService",
@@ -175,7 +193,126 @@ class StageGraphJson {
             "refId": "deployService_4",
             "region": "dev3 > dev",
             "requisiteStageRefIds": ["wait_1"],
-            "type": "deployService"
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mysql}",
+              "type": "artifact"
+            }
+        },
+        {
+            "refId": "deploy_5",
+            "requisiteStageRefIds": ["deployService_2", "deployService_3", "deployService_4"],
+            "type": "deploy",
+            "name": "Deploy to Dev",
+            "clusters":[{
+                "account": "montclair",
+                "application": "app1",
+                "artifact": {"account": "montclair", "pattern": ".*", "type": "trigger"},
+                "capacity": {"desired": "1", "max": "1", "min": "1"},
+                "cloudProvider": "cloudfoundry",
+                "detail": "",
+                "manifest": {"account": "montclair", "reference": ".*", "type": "artifact"},
+                "provider": "cloudfoundry",
+                "region": "dev > dev",
+                "stack": "",
+                "strategy": ""
+            }]
+        },
+        {
+            "refId": "wait_6",
+            "requisiteStageRefIds": ["deploy_5"],
+            "type": "wait",
+            "waitTime": "1+1",
+            "name": "cool off"
+        },
+        {
+            "refId": "rollbackCluster_7",
+            "type": "rollbackCluster",
+            "name":"Rollback",
+            "requisiteStageRefIds": ["wait_6"],
+            "cluster": "cluster1",
+            "moniker": {
+                "app": "cluster1",
+                "cluster": "cluster1"
+            },
+            "regions": ["dev > dev"],
+            "targetHealthyRollbackPercentage": 100,
+            "credentials": "creds1",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry"
+        }
+    ],
+    "expectedArtifacts": [],
+    "keepWaitingPipelines": false,
+    "limitConcurrent": true
+}
+        """.trimMargin()
+
+
+        @Language("JSON")
+        @JvmStatic
+        val basicStagesWithMultiLevelNestedDefaults = """
+{
+    "name": "test",
+    "description":"",
+    "parameterConfig":[],
+    "notifications":[],
+    "triggers":[],
+    "stages": [
+        {
+            "refId": "wait_1",
+            "requisiteStageRefIds": [],
+            "type": "wait",
+            "waitTime": "60"
+        },
+        {
+            "action": "deployService",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry",
+            "credentials": "creds1",
+            "name": "Deploy Mongo",
+            "refId": "deployService_2",
+            "region": "dev1 > dev",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mongo}",
+              "type": "artifact"
+            }
+        },
+        {
+            "action": "deployService",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry",
+            "credentials": "creds1",
+            "name": "Deploy Rabbit",
+            "refId": "deployService_3",
+            "region": "dev2 > dev",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_rabbit}",
+              "type": "artifact"
+            }
+        },
+        {
+            "action": "deployService",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry",
+            "credentials": "creds1",
+            "name": "Deploy MySQL",
+            "refId": "deployService_4",
+            "region": "dev3 > dev",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mysql}",
+              "type": "artifact"
+            }
         },
         {
             "refId": "deploy_5",

@@ -16,29 +16,113 @@
 
 package io.pivotal.canal.model.cloudfoundry
 
+import io.pivotal.canal.extensions.builder.*
 import io.pivotal.canal.model.*
 
-data class CloudFoundryCloudProvider @JvmOverloads constructor(
-        override val credentials: String,
-        val manifest: ManifestSource? = null
-) : CloudProvider {
-    override var cloudProvider = "cloudfoundry"
-    override var cloudProviderType = cloudProvider
+class CloudFoundryStageCatalog @JvmOverloads constructor(credentials: String) : CloudStageCatalog() {
 
-    fun manifest(manifest: ManifestSource) = this.copy(manifest = manifest)
+    override var defaults: PipelineDefaults = PipelineDefaults()
+
+    fun withDefaults(defaults: Defaults) : CloudFoundryStageCatalog {
+        return this.apply { this.defaults = defaults.delegate }
+    }
+
+    override val cloudProvider = cloudFoundryCloudProvider(credentials)
+
+    fun deploy(assign: (CloudFoundryDeployStageBuilder) -> CloudFoundryDeployStageBuilder = { it }): StageGrapher {
+        return StageGrapher(assign(CloudFoundryDeployStageBuilder(defaults)).build())
+    }
+    fun deployService(assign: (DeployServiceStageBuilder) -> DeployServiceStageBuilder = { it }): StageGrapher {
+        return StageGrapher(assign(DeployServiceStageBuilder(defaults, cloudProvider)).build())
+    }
+    @JvmOverloads fun destroyService(serviceName: String, assign: (DestroyServiceStageBuilder) -> DestroyServiceStageBuilder = { it }): StageGrapher {
+        return StageGrapher(assign(DestroyServiceStageBuilder(defaults, cloudProvider, serviceName)).build())
+    }
+}
+
+fun cloudFoundryCloudProvider(credentials: String) : CloudProvider {
+    return CloudProvider(credentials, "cloudfoundry")
+}
+
+class DeployServiceStageBuilder(val defaults: PipelineDefaults,
+                                val provider: CloudProvider,
+                                var region: String? = null,
+                                var manifest: ManifestSource? = null) : SpecificStageBuilder<DeployService, DeployServiceStageBuilder>() {
+    override fun specificStageConfig() = DeployService(
+            provider,
+            region ?: defaults.region!!,
+            manifest!!)
+
+    fun manifest(manifest: ManifestSource) = apply { this.manifest = manifest }
+    fun region(region: String) = apply { this.region = region }
+}
+
+data class DeployService(
+        override val provider: CloudProvider,
+        override val region: String,
+        val manifest: ManifestSource
+) : SpecificStageConfig, CloudSpecific, Region {
+    override val type = "deployService"
+    var action = type
+}
+
+class DestroyServiceStageBuilder(val defaults: PipelineDefaults,
+                                 val provider: CloudProvider,
+                                 val serviceName: String,
+                                 var region: String? = null,
+                                 var timeout: String? = null) : SpecificStageBuilder<DestroyService, DestroyServiceStageBuilder>() {
+    override fun specificStageConfig() = DestroyService(
+            provider,
+            region ?: defaults.region!!,
+            serviceName,
+            timeout)
+
+    fun region(region: String) = apply { this.region = region }
+    fun timeout(timeout: String) = apply { this.timeout = timeout }
+}
+
+data class DestroyService (
+        override val provider: CloudProvider,
+        override val region: String,
+        val serviceName: String,
+        val timeout: String? = null
+) : SpecificStageConfig, CloudSpecific, Region {
+    override val type = "destroyService"
+    var action = type
+}
+
+class CloudFoundryDeployStageBuilder(val defaults: PipelineDefaults,
+                                     var artifact: Artifact? = null,
+                                     var manifest: Manifest? = null) : DeployStageBuilder<CloudFoundryDeployStageBuilder>() {
+
+    override fun specificStageConfig() = Deploy(listOf(CloudFoundryCluster(
+            application ?: defaults.application!!,
+            account ?: defaults.account!!,
+            region ?: defaults.region!!,
+            strategy,
+            capacity,
+            stack,
+            detail,
+            startApplication,
+            artifact!!,
+            manifest!!
+    )))
+
+    fun artifact(artifact: Artifact) = apply { this.artifact = artifact }
+    fun manifest(manifest: Manifest) = apply { this.manifest = manifest }
 }
 
 data class CloudFoundryCluster @JvmOverloads constructor(
-        val application: String,
-        val account: String,
-        val region: String,
+        override val application: String,
+        override val account: String,
+        override val region: String,
+        override val strategy: DeploymentStrategy,
+        override val capacity: Capacity,
+        override val stack: String,
+        override val detail: String,
+        override val startApplication: Boolean?,
         val artifact: Artifact,
-        val manifest: Manifest,
-        val strategy: DeploymentStrategy = DeploymentStrategy.None,
-        override val capacity: Capacity = Capacity(1, 1, 1),
-        val stack: String = "",
-        val detail: String = "",
-        val startApplication: Boolean? = null
+        val manifest: Manifest
 ) : Cluster {
     override var cloudProvider = "cloudfoundry"
     var provider = cloudProvider
@@ -54,7 +138,7 @@ data class ArtifactManifest(
 }
 
 data class DirectManifest @JvmOverloads constructor(
-        val services: List<String>,
+        val services: List<String> = emptyList(),
         val routes: List<String> = emptyList(),
         val diskQuota: String = "1024M",
         val memory: String = "1024M",

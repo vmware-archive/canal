@@ -20,8 +20,10 @@ import io.pivotal.canal.extensions.fluentstages.addStage
 import io.pivotal.canal.extensions.fluentstages.andThen
 import io.pivotal.canal.extensions.fluentstages.parallel
 import io.pivotal.canal.model.*
-import io.pivotal.canal.model.cloudfoundry.CloudFoundryCloudProvider
+import io.pivotal.canal.model.cloudfoundry.DeployService
+import io.pivotal.canal.model.cloudfoundry.DestroyService
 import io.pivotal.canal.model.cloudfoundry.ManifestSourceDirect
+import io.pivotal.canal.model.cloudfoundry.cloudFoundryCloudProvider
 import org.junit.jupiter.api.Test
 
 import org.assertj.core.api.Assertions.assertThat
@@ -30,7 +32,7 @@ class StageGraphDslCompatibilityTest {
 
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
-        val cloudProvider = CloudFoundryCloudProvider("creds1")
+        val cloudProvider = cloudFoundryCloudProvider("creds1")
 
         val nestedStages = stages {
             stage(CheckPreconditions()) then {
@@ -47,14 +49,15 @@ class StageGraphDslCompatibilityTest {
                         ) then {
                             stage(
                                     DeployService(
-                                            cloudProvider.copy(manifest = ManifestSourceDirect(
+                                            cloudProvider,
+                                            "dev > dev",
+                                            ManifestSourceDirect(
                                                     "serviceType$it",
                                                     "serviceName$it",
                                                     "servicePlan$it",
                                                     listOf("serviceTags$it"),
                                                     "serviceParam$it"
-                                            )),
-                                            "dev > dev"
+                                            )
                                     ),
                                     name = "Deploy Service $it",
                                     comments = "deploy comment",
@@ -84,14 +87,15 @@ class StageGraphDslCompatibilityTest {
                             )
                     ).andThen(
                             DeployService(
-                                    cloudProvider.copy(manifest = ManifestSourceDirect(
+                                    cloudProvider,
+                                    "dev > dev",
+                                    ManifestSourceDirect(
                                             "serviceType$it",
                                             "serviceName$it",
                                             "servicePlan$it",
                                             listOf("serviceTags$it"),
                                             "serviceParam$it"
-                                    )),
-                                    "dev > dev"
+                                    )
                             ),
                             BaseStage(
                                     "Deploy Service $it",

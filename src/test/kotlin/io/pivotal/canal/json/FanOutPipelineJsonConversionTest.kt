@@ -357,7 +357,7 @@ class FanOutPipelineJsonConversionTest {
                         "my-jenkins-master"
                 )
         )
-        val cloudProvider = CloudFoundryCloudProvider("creds1")
+        val cloudProvider = cloudFoundryCloudProvider("creds1")
         stages = StageGraph(
                 listOf(
                         PipelineStage(1,
@@ -414,14 +414,15 @@ class FanOutPipelineJsonConversionTest {
                         ),
                         PipelineStage(8,
                                 DeployService(
-                                        cloudProvider.copy(manifest = ManifestSourceDirect(
+                                        cloudProvider,
+                                        "dev > dev",
+                                        ManifestSourceDirect(
                                                 "serviceType1",
                                                 "serviceName1",
                                                 "servicePlan1",
                                                 listOf("serviceTags1"),
                                                 "serviceParam1"
-                                        )),
-                                        "dev > dev"
+                                        )
                                 ),
                                 BaseStage("Deploy Service 1",
                                         "deploy comment",
@@ -430,14 +431,15 @@ class FanOutPipelineJsonConversionTest {
                         ),
                         PipelineStage(9,
                                 DeployService(
-                                        cloudProvider.copy(manifest = ManifestSourceDirect(
+                                        cloudProvider,
+                                        "dev > dev",
+                                        ManifestSourceDirect(
                                                 "serviceType2",
                                                 "serviceName2",
                                                 "servicePlan2",
                                                 listOf("serviceTags2"),
                                                 "serviceParam2"
-                                        )),
-                                        "dev > dev"
+                                        )
                                 ),
                                 BaseStage("Deploy Service 2",
                                         "deploy comment",
@@ -446,14 +448,15 @@ class FanOutPipelineJsonConversionTest {
                         ),
                         PipelineStage(10,
                                 DeployService(
-                                        cloudProvider.copy(manifest = ManifestSourceDirect(
+                                        cloudProvider,
+                                        "dev > dev",
+                                        ManifestSourceDirect(
                                                 "serviceType3",
                                                 "serviceName3",
                                                 "servicePlan3",
                                                 listOf("serviceTags3"),
                                                 "serviceParam3"
-                                        )),
-                                        "dev > dev"
+                                        )
                                 ),
                                 BaseStage("Deploy Service 3",
                                         "deploy comment",
@@ -466,6 +469,11 @@ class FanOutPipelineJsonConversionTest {
                                                 "app1",
                                                 "account1",
                                                 "dev > dev",
+                                                DeploymentStrategy.RedBlack,
+                                                Capacity(1),
+                                                "stack1",
+                                                "ffd",
+                                                false,
                                                 ReferencedArtifact(
                                                         "account2",
                                                         "s3://bucket1"
@@ -473,11 +481,7 @@ class FanOutPipelineJsonConversionTest {
                                                 ArtifactManifest(
                                                         "account3",
                                                         "s3://bucket2"
-                                                ),
-                                                DeploymentStrategy.RedBlack,
-                                                Capacity(1),
-                                                "stack1",
-                                                "ffd"
+                                                )
                                         )
 
                                 ),

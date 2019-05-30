@@ -102,9 +102,6 @@ class JsonAdapterFactory {
                 .add(PolymorphicJsonAdapterFactory.of(ResizeAction::class.java, "action")
                         .withSubtype(ScaleExactResizeAction::class.java, "scale_exact")
                 )
-                .add(PolymorphicJsonAdapterFactory.of(CloudProvider::class.java, "cloudProvider")
-                        .withSubtype(CloudFoundryCloudProvider::class.java, "cloudfoundry")
-                )
                 .add(KotlinJsonAdapterFactory())
         return builder
     }

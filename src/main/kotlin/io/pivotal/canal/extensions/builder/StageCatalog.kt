@@ -3,10 +3,10 @@ package io.pivotal.canal.extensions.builder
 import io.pivotal.canal.model.*
 import java.time.Duration
 
-data class StageCatalog(val defaults: PipelineDefaults = PipelineDefaults()) {
+class StageCatalog {
 
     fun checkPreconditions(assign: (CheckPreconditionsStageBuilder) -> CheckPreconditionsStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(CheckPreconditionsStageBuilder(defaults)).build())
+        return StageGrapher(assign(CheckPreconditionsStageBuilder()).build())
     }
 
     @JvmOverloads fun wait(
@@ -18,261 +18,76 @@ data class StageCatalog(val defaults: PipelineDefaults = PipelineDefaults()) {
     @JvmOverloads fun wait(
             expression: String,
             assign: (WaitStageBuilder) -> WaitStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(WaitStageBuilder(defaults, expression)).build())
+        return StageGrapher(assign(WaitStageBuilder(expression)).build())
     }
 
     @JvmOverloads fun jenkins(
             job: String,
             master: String,
             assign: (JenkinsStageBuilder) -> JenkinsStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(JenkinsStageBuilder(defaults, job, master)).build())
+        return StageGrapher(assign(JenkinsStageBuilder(job, master)).build())
     }
 
     @JvmOverloads fun manualJudgment(
             assign: (ManualJudgmentStageBuilder) -> ManualJudgmentStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(ManualJudgmentStageBuilder(defaults)).build())
+        return StageGrapher(assign(ManualJudgmentStageBuilder()).build())
     }
 
     @JvmOverloads fun webhook(
             method: String, url: String,
             assign: (WebhookStageBuilder) -> WebhookStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(WebhookStageBuilder(defaults, method, url)).build())
+        return StageGrapher(assign(WebhookStageBuilder(method, url)).build())
     }
 
     @JvmOverloads fun canary(
             analysisType: String,
             canaryConfig: CanaryConfig,
             assign: (CanaryStageBuilder) -> CanaryStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(CanaryStageBuilder(defaults, analysisType, canaryConfig)).build())
-    }
-
-    @JvmOverloads fun destroyServerGroup(
-            clusterName: String,
-            target: TargetServerGroup,
-            assign: (DestroyServerGroupStageBuilder) -> DestroyServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DestroyServerGroupStageBuilder(defaults, clusterName, target)).build())
-    }
-
-    @JvmOverloads fun deployService(
-            assign: (DeployServiceStageBuilder) -> DeployServiceStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DeployServiceStageBuilder(defaults)).build())
-    }
-
-    @JvmOverloads fun destroyService(
-            serviceName: String,
-            assign: (DestroyServiceStageBuilder) -> DestroyServiceStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DestroyServiceStageBuilder(defaults, serviceName)).build())
-    }
-
-    @JvmOverloads fun disableServerGroup(
-            clusterName: String,
-            target: TargetServerGroup,
-            assign: (DisableServerGroupStageBuilder) -> DisableServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DisableServerGroupStageBuilder(defaults, clusterName, target)).build())
-    }
-
-    @JvmOverloads fun enableServerGroup(
-            clusterName: String,
-            target: TargetServerGroup,
-            assign: (EnableServerGroupStageBuilder) -> EnableServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(EnableServerGroupStageBuilder(defaults, clusterName, target)).build())
-    }
-
-    @JvmOverloads fun resizeServerGroup(
-            clusterName: String,
-            target: TargetServerGroup,
-            resizeAction: ResizeAction,
-            assign: (ResizeServerGroupStageBuilder) -> ResizeServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(ResizeServerGroupStageBuilder(defaults, clusterName, target, resizeAction)).build())
-    }
-
-    @JvmOverloads fun deploy(
-            assign: (DeployStageBuilder) -> DeployStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DeployStageBuilder(defaults)).build())
-    }
-
-    @JvmOverloads fun rollback(
-            clusterName: String,
-            assign: (RollbackStageBuilder) -> RollbackStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(RollbackStageBuilder(defaults, clusterName)).build())
+        return StageGrapher(assign(CanaryStageBuilder(analysisType, canaryConfig)).build())
     }
 
 }
 
 class CheckPreconditionsStageBuilder(
-        defaults: PipelineDefaults,
-        var preconditions: List<Precondition>? = null) : SpecificStageBuilder<CheckPreconditions, CheckPreconditionsStageBuilder>(defaults) {
+        var preconditions: List<Precondition>? = null) : SpecificStageBuilder<CheckPreconditions, CheckPreconditionsStageBuilder>() {
     override fun specificStageConfig() = CheckPreconditions(preconditions!!)
 
     fun preconditions(vararg preconditions: Precondition) = apply { this.preconditions = preconditions.toList() }
 }
 
-class WaitStageBuilder(defaults: PipelineDefaults, val expression: String) : SpecificStageBuilder<Wait, WaitStageBuilder>(defaults) {
+class WaitStageBuilder(val expression: String) : SpecificStageBuilder<Wait, WaitStageBuilder>() {
     override fun specificStageConfig() = Wait(expression)
 }
 
-class JenkinsStageBuilder (defaults: PipelineDefaults,
-                           val job: String,
+class JenkinsStageBuilder (val job: String,
                            val master: String,
                            var parameters: Map<String, String> = emptyMap(),
-                           var waitForCompletion: Boolean = true) : SpecificStageBuilder<Jenkins, JenkinsStageBuilder>(defaults) {
+                           var waitForCompletion: Boolean = true) : SpecificStageBuilder<Jenkins, JenkinsStageBuilder>() {
     override fun specificStageConfig() = Jenkins(job, master, parameters, waitForCompletion)
 
     fun parameters(parameters: Map<String, String>) = apply { this.parameters = parameters }
     fun waitForCompletion(b: Boolean) = apply { waitForCompletion = b }
 }
 
-class ManualJudgmentStageBuilder(defaults: PipelineDefaults,
-                                 var instructions: String? = null,
-                                 var judgmentInputs: List<String> = emptyList()) : SpecificStageBuilder<ManualJudgment, ManualJudgmentStageBuilder>(defaults) {
+class ManualJudgmentStageBuilder(var instructions: String? = null,
+                                 var judgmentInputs: List<String> = emptyList()) : SpecificStageBuilder<ManualJudgment, ManualJudgmentStageBuilder>() {
     override fun specificStageConfig() = ManualJudgment(instructions, judgmentInputs)
 
     fun instructions(instructions: String) = apply { this.instructions = instructions }
     fun judgmentInputs(judgmentInputs: List<String>) = apply { this.judgmentInputs = judgmentInputs }
 }
 
-class WebhookStageBuilder(defaults: PipelineDefaults,
-                          val method: String,
+class WebhookStageBuilder(val method: String,
                           val url: String,
-                          var waitForCompletion: Boolean = true) : SpecificStageBuilder<Webhook, WebhookStageBuilder>(defaults) {
+                          var waitForCompletion: Boolean = true) : SpecificStageBuilder<Webhook, WebhookStageBuilder>() {
     override fun specificStageConfig() = Webhook(method, url, waitForCompletion)
 
     fun waitForCompletion(b: Boolean) = apply { waitForCompletion = waitForCompletion }
 }
 
-class CanaryStageBuilder(defaults: PipelineDefaults,
-                         val analysisType: String,
-                         val canaryConfig: CanaryConfig) : SpecificStageBuilder<Canary, CanaryStageBuilder>(defaults) {
+class CanaryStageBuilder(val analysisType: String,
+                         val canaryConfig: CanaryConfig) : SpecificStageBuilder<Canary, CanaryStageBuilder>() {
     override fun specificStageConfig() = Canary(analysisType, canaryConfig)
-}
-
-class DestroyServerGroupStageBuilder(defaults: PipelineDefaults,
-                                     val clusterName: String,
-                                     val target: TargetServerGroup,
-                                     var provider: CloudProvider? = null,
-                                     var regions: List<String>? = null) : SpecificStageBuilder<DestroyServerGroup, DestroyServerGroupStageBuilder>(defaults) {
-
-    override fun specificStageConfig() = DestroyServerGroup(
-            provider ?: defaults.cloudProvider!!,
-            regions ?: listOf(defaults.region!!),
-            clusterName,
-            target
-    )
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun regions(regions: List<String>) = apply { this.regions = regions }
-}
-
-
-class DeployServiceStageBuilder(defaults: PipelineDefaults,
-                                var provider: CloudProvider? = null,
-                                var region: String? = null) : SpecificStageBuilder<DeployService, DeployServiceStageBuilder>(defaults) {
-    override fun specificStageConfig() = DeployService(
-            provider ?: defaults.cloudProvider!!,
-            region ?: defaults.region!!)
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun region(region: String) = apply { this.region = region }
-}
-
-class DestroyServiceStageBuilder(defaults: PipelineDefaults,
-                                 val serviceName: String,
-                                 var provider: CloudProvider? = null,
-                                 var region: String? = null,
-                                 var timeout: String? = null) : SpecificStageBuilder<DestroyService, DestroyServiceStageBuilder>(defaults) {
-    override fun specificStageConfig() = DestroyService(
-            provider ?: defaults.cloudProvider!!,
-            region ?: defaults.region!!,
-            serviceName,
-            timeout)
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun region(region: String) = apply { this.region = region }
-    fun timeout(timeout: String) = apply { this.timeout = timeout }
-}
-
-class DisableServerGroupStageBuilder(defaults: PipelineDefaults,
-                                     val clusterName: String,
-                                     val target: TargetServerGroup,
-                                     var provider: CloudProvider? = null,
-                                     var regions: List<String>? = null) : SpecificStageBuilder<DisableServerGroup, DisableServerGroupStageBuilder>(defaults) {
-
-    override fun specificStageConfig() = DisableServerGroup(
-            provider ?: defaults.cloudProvider!!,
-            regions ?: listOf(defaults.region!!),
-            clusterName,
-            target
-    )
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun regions(regions: List<String>) = apply { this.regions = regions }
-}
-
-class EnableServerGroupStageBuilder(defaults: PipelineDefaults,
-                                     val clusterName: String,
-                                     val target: TargetServerGroup,
-                                     var provider: CloudProvider? = null,
-                                     var regions: List<String>? = null) : SpecificStageBuilder<EnableServerGroup, EnableServerGroupStageBuilder>(defaults) {
-
-    override fun specificStageConfig() = EnableServerGroup(
-            provider ?: defaults.cloudProvider!!,
-            regions ?: listOf(defaults.region!!),
-            clusterName,
-            target
-    )
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun regions(regions: List<String>) = apply { this.regions = regions }
-}
-
-class ResizeServerGroupStageBuilder(defaults: PipelineDefaults,
-                                    val clusterName: String,
-                                    val target: TargetServerGroup,
-                                    val resizeAction: ResizeAction,
-                                    var provider: CloudProvider? = null,
-                                    var regions: List<String>? = null,
-                                    var memory: Int = 1024,
-                                    var diskQuota: Int = 1024) : SpecificStageBuilder<ResizeServerGroup, ResizeServerGroupStageBuilder>(defaults) {
-
-    override fun specificStageConfig() = ResizeServerGroup(
-            provider ?: defaults.cloudProvider!!,
-            regions ?: listOf(defaults.region!!),
-            clusterName,
-            target,
-            resizeAction,
-            memory,
-            diskQuota
-    )
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun regions(regions: List<String>) = apply { this.regions = regions }
-    fun memory(memory: Int) = apply { this.memory = memory }
-    fun diskQuota(diskQuota: Int) = apply { this.diskQuota = diskQuota }
-}
-
-class DeployStageBuilder(defaults: PipelineDefaults,
-                         var clusters: List<Cluster>? = null) : SpecificStageBuilder<Deploy, DeployStageBuilder>(defaults) {
-    override fun specificStageConfig() = Deploy(clusters!!)
-
-    fun clusters(vararg clusters: Cluster) = apply { this.clusters = clusters.asList() }
-    fun clusters(clusters: List<Cluster>) = apply { this.clusters = clusters }
-}
-
-class RollbackStageBuilder(defaults: PipelineDefaults,
-                                    val clusterName: String,
-                                    val targetHealthyRollbackPercentage: Int = 100,
-                                    var provider: CloudProvider? = null,
-                                    var regions: List<String>? = null) : SpecificStageBuilder<Rollback, RollbackStageBuilder>(defaults) {
-
-    override fun specificStageConfig() = Rollback(
-            provider ?: defaults.cloudProvider!!,
-            regions ?: listOf(defaults.region!!),
-            clusterName,
-            targetHealthyRollbackPercentage
-    )
-
-    fun provider(provider: CloudProvider) = apply { this.provider = provider }
-    fun regions(regions: List<String>) = apply { this.regions = regions }
 }
 
 class StageConfig(var config: BaseStage = BaseStage(),
