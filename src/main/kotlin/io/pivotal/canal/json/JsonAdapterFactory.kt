@@ -77,6 +77,7 @@ class JsonAdapterFactory {
                         .withSubtype(Deploy::class.java, "deploy")
                         .withSubtype(CheckPreconditions::class.java, "checkPreconditions")
                         .withSubtype(Jenkins::class.java, "jenkins")
+                        .withSubtype(Rollback::class.java, "rollbackCluster")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Variable::class.java, "type")
                         .withSubtype(IntegerVariable::class.java, "int")

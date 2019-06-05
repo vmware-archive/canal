@@ -13,21 +13,16 @@ public class Pipeline {
     private final String name;
 
     protected final StageCatalog stage;
+    protected final DefaultsForStages defaults;
 
     public Pipeline(String name) {
         this.name = name;
         stage = new StageCatalog();
+        this.defaults = new DefaultsForStages();
     }
 
     public StageGrapher stages() {
         return new StageGrapher();
-    }
-
-    public StageGrapher parallel(StageGrapher... stageGraphers) {
-        return parallel(Arrays.asList(stageGraphers));
-    }
-    public StageGrapher parallel(List<StageGrapher> stageGraphers) {
-        return new StageGrapher().union(stageGraphers);
     }
 
     public String toJson() {
@@ -44,5 +39,9 @@ public class Pipeline {
                 true
         );
         return adapter.toJson(model);
+    }
+
+    public void registerCatalog(CloudStageCatalog stageCatalog) {
+        defaults.registerCatalog(stageCatalog);
     }
 }

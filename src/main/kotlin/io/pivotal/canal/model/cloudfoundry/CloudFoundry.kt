@@ -19,7 +19,10 @@ package io.pivotal.canal.model.cloudfoundry
 import io.pivotal.canal.extensions.builder.*
 import io.pivotal.canal.model.*
 
-class CloudFoundryStageCatalog @JvmOverloads constructor(credentials: String) : CloudStageCatalog() {
+class CloudFoundryStageCatalog constructor(credentials: String, pipeline: Pipeline) : CloudStageCatalog() {
+    init {
+        pipeline.registerCatalog(this)
+    }
 
     override var defaults: PipelineDefaults = PipelineDefaults()
 
@@ -29,14 +32,14 @@ class CloudFoundryStageCatalog @JvmOverloads constructor(credentials: String) : 
 
     override val cloudProvider = cloudFoundryCloudProvider(credentials)
 
-    fun deploy(assign: (CloudFoundryDeployStageBuilder) -> CloudFoundryDeployStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(CloudFoundryDeployStageBuilder(defaults)).build())
+    fun deploy(): CloudFoundryDeployStageBuilder {
+        return CloudFoundryDeployStageBuilder(defaults)
     }
-    fun deployService(assign: (DeployServiceStageBuilder) -> DeployServiceStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DeployServiceStageBuilder(defaults, cloudProvider)).build())
+    fun deployService(): DeployServiceStageBuilder {
+        return DeployServiceStageBuilder(defaults, cloudProvider)
     }
-    @JvmOverloads fun destroyService(serviceName: String, assign: (DestroyServiceStageBuilder) -> DestroyServiceStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DestroyServiceStageBuilder(defaults, cloudProvider, serviceName)).build())
+    @JvmOverloads fun destroyService(serviceName: String): DestroyServiceStageBuilder {
+        return DestroyServiceStageBuilder(defaults, cloudProvider, serviceName)
     }
 }
 

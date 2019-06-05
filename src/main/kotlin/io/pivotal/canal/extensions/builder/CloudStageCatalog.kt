@@ -1,10 +1,6 @@
 package io.pivotal.canal.extensions.builder
 
 import io.pivotal.canal.model.*
-import io.pivotal.canal.model.cloudfoundry.Artifact
-import io.pivotal.canal.model.cloudfoundry.CloudFoundryStageCatalog
-import io.pivotal.canal.model.cloudfoundry.Manifest
-import java.time.Duration
 
 abstract class CloudStageCatalog {
     abstract val cloudProvider: CloudProvider
@@ -12,37 +8,31 @@ abstract class CloudStageCatalog {
 
     @JvmOverloads fun destroyServerGroup(
             clusterName: String,
-            target: TargetServerGroup,
-            assign: (DestroyServerGroupStageBuilder) -> DestroyServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DestroyServerGroupStageBuilder(defaults, cloudProvider, clusterName, target)).build())
+            target: TargetServerGroup): DestroyServerGroupStageBuilder {
+        return DestroyServerGroupStageBuilder(defaults, cloudProvider, clusterName, target)
     }
 
     @JvmOverloads fun disableServerGroup(
             clusterName: String,
-            target: TargetServerGroup,
-            assign: (DisableServerGroupStageBuilder) -> DisableServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(DisableServerGroupStageBuilder(defaults, cloudProvider, clusterName, target)).build())
+            target: TargetServerGroup): DisableServerGroupStageBuilder {
+        return DisableServerGroupStageBuilder(defaults, cloudProvider, clusterName, target)
     }
 
     @JvmOverloads fun enableServerGroup(
             clusterName: String,
-            target: TargetServerGroup,
-            assign: (EnableServerGroupStageBuilder) -> EnableServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(EnableServerGroupStageBuilder(defaults, cloudProvider, clusterName, target)).build())
+            target: TargetServerGroup): EnableServerGroupStageBuilder {
+        return EnableServerGroupStageBuilder(defaults, cloudProvider, clusterName, target)
     }
 
     @JvmOverloads fun resizeServerGroup(
             clusterName: String,
             target: TargetServerGroup,
-            resizeAction: ResizeAction,
-            assign: (ResizeServerGroupStageBuilder) -> ResizeServerGroupStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(ResizeServerGroupStageBuilder(defaults, cloudProvider, clusterName, target, resizeAction)).build())
+            resizeAction: ResizeAction): ResizeServerGroupStageBuilder {
+        return ResizeServerGroupStageBuilder(defaults, cloudProvider, clusterName, target, resizeAction)
     }
 
-    @JvmOverloads fun rollback(
-            clusterName: String,
-            assign: (RollbackStageBuilder) -> RollbackStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(RollbackStageBuilder(defaults, cloudProvider, clusterName)).build())
+    @JvmOverloads fun rollback(clusterName: String): RollbackStageBuilder {
+        return RollbackStageBuilder(defaults, cloudProvider, clusterName)
     }
 
 }

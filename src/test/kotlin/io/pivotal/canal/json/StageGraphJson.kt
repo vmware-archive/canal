@@ -289,7 +289,7 @@ class StageGraphJson {
             "credentials": "creds1",
             "name": "Deploy Rabbit",
             "refId": "deployService_3",
-            "region": "dev2 > dev",
+            "region": "dev0 > dev",
             "requisiteStageRefIds": ["wait_1"],
             "type": "deployService",
             "manifest": {
@@ -305,7 +305,7 @@ class StageGraphJson {
             "credentials": "creds1",
             "name": "Deploy MySQL",
             "refId": "deployService_4",
-            "region": "dev3 > dev",
+            "region": "dev0 > dev",
             "requisiteStageRefIds": ["wait_1"],
             "type": "deployService",
             "manifest": {
@@ -328,7 +328,7 @@ class StageGraphJson {
                 "detail": "",
                 "manifest": {"account": "montclair", "reference": ".*", "type": "artifact"},
                 "provider": "cloudfoundry",
-                "region": "dev > dev",
+                "region": "dev0 > dev",
                 "stack": "",
                 "strategy": ""
             }]
@@ -366,9 +366,15 @@ class StageGraphJson {
         @Language("JSON")
         @JvmStatic
         val nestedStageGraphs = """
-    [
+{
+    "name": "test",
+    "description":"",
+    "parameterConfig":[],
+    "notifications":[],
+    "triggers":[],
+    "stages": [
         {
-            "refId": "wait1",
+            "refId": "wait_1",
             "requisiteStageRefIds": [],
             "type": "wait",
             "waitTime": "60"
@@ -378,152 +384,84 @@ class StageGraphJson {
             "cloudProvider": "cloudfoundry",
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
-            "name": "Destroy Service 1 Before",
-            "refId": "destroyService3",
+            "refId": "destroyService_2",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["wait2"],
-            "serviceName": "serviceName1",
-            "stageEnabled": {
-              "expression": "exp1",
-              "type": "expression"
-            },
+            "requisiteStageRefIds": ["wait_1"],
+            "serviceName": "service1",
             "type": "destroyService"
         },
         {
-            "action": "deployService",
-            "cloudProvider": "cloudfoundry",
-            "cloudProviderType": "cloudfoundry",
-            "comments": "deploy comment",
-            "credentials": "creds1",
-            "name": "Deploy Service 1",
-            "refId": "deployService4",
-            "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService3"],
-            "manifest": {
-              "service": "serviceType1",
-              "serviceName": "serviceName1",
-              "servicePlan": "servicePlan1",
-              "parameters": "serviceParam1",
-              "tags": ["serviceTags1"],
-              "type": "direct"
-            },
-            "stageEnabled": {
-            "expression": "exp2",
-              "type": "expression"
-            },
-            "type": "deployService"
+            "refId": "wait_3",
+            "name": "deploy service 1",
+            "requisiteStageRefIds": ["destroyService_2"],
+            "type": "wait",
+            "waitTime": "1"
         },
         {
             "action": "destroyService",
             "cloudProvider": "cloudfoundry",
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
-            "name": "Destroy Service 2 Before",
-            "refId": "destroyService5",
+            "refId": "destroyService_4",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["wait2"],
-            "serviceName": "serviceName2",
-            "stageEnabled": {
-            "expression": "exp1",
-              "type": "expression"
-            },
+            "requisiteStageRefIds": ["wait_1"],
+            "serviceName": "service2",
             "type": "destroyService"
         },
         {
-            "action": "deployService",
-            "cloudProvider": "cloudfoundry",
-            "cloudProviderType": "cloudfoundry",
-            "comments": "deploy comment",
-            "credentials": "creds1",
-            "name": "Deploy Service 2",
-            "refId": "deployService6",
-            "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService5"],
-            "manifest": {
-              "service": "serviceType2",
-              "serviceName": "serviceName2",
-              "servicePlan": "servicePlan2",
-              "parameters": "serviceParam2",
-              "tags": ["serviceTags2"],
-              "type": "direct"
-            },
-            "stageEnabled": {
-              "expression": "exp2",
-              "type": "expression"
-            },
-            "type": "deployService"
+            "refId": "wait_5",
+            "name": "deploy service 2",
+            "requisiteStageRefIds": ["destroyService_4"],
+            "type": "wait",
+            "waitTime": "2"
         },
         {
-            "action": "destroyService",
-            "cloudProvider": "cloudfoundry",
-            "cloudProviderType": "cloudfoundry",
-            "credentials": "creds1",
-            "name": "Destroy Service 3 Before",
-            "refId": "destroyService7",
-            "region": "dev > dev",
-            "requisiteStageRefIds": ["wait2"],
-            "serviceName": "serviceName3",
-            "stageEnabled": {
-              "expression": "exp1",
-              "type": "expression"
-            },
-            "type": "destroyService"
+            "refId": "wait_6",
+            "name": "cool off",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "wait",
+            "waitTime": "60"
         },
         {
-            "action": "deployService",
-            "cloudProvider": "cloudfoundry",
-            "cloudProviderType": "cloudfoundry",
-            "comments": "deploy comment",
-            "credentials": "creds1",
-            "name": "Deploy Service 3",
-            "refId": "deployService8",
-            "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService7"],
-            "manifest": {
-              "service": "serviceType3",
-              "serviceName": "serviceName3",
-              "servicePlan": "servicePlan3",
-              "parameters": "serviceParam3",
-              "tags": ["serviceTags3"],
-              "type": "direct"
-            },
-            "stageEnabled": {
-              "expression": "exp2",
-              "type": "expression"
-            },
-            "type": "deployService"
-        },
-        {
-            "instructions": "Give a thumbs up if you like it.",
+            "instructions": "Approve?",
             "judgmentInputs": [],
-            "refId": "manualJudgment9",
+            "refId": "manualJudgment_7",
             "requisiteStageRefIds": [
-                "deployService4",
-                "deployService6",
-                "deployService8"
+                "wait_3",
+                "wait_5",
+                "wait_6"
             ],
             "type": "manualJudgment"
         }
-    ]
+    ],
+    "expectedArtifacts": [],
+    "keepWaitingPipelines": false,
+    "limitConcurrent": true
+}
         """.trimMargin()
 
         @Language("JSON")
         @JvmStatic
         val fanOutToMultipleDeployThenDestroys = """
-    [
+{
+    "name": "test",
+    "description":"",
+    "parameterConfig":[],
+    "notifications":[],
+    "triggers":[],
+    "stages": [
         {
-            "name": "Check Preconditions",
             "preconditions": [{
               "type":"expression",
               "context":{"expression":"true"}
             }],
-            "refId": "checkPreconditions1",
+            "refId": "checkPreconditions_1",
             "requisiteStageRefIds": [],
             "type": "checkPreconditions"
         },
         {
-            "refId": "wait2",
-            "requisiteStageRefIds": ["checkPreconditions1"],
+            "refId": "wait_2",
+            "requisiteStageRefIds": ["checkPreconditions_1"],
             "type": "wait",
             "waitTime": "420"
         },
@@ -533,9 +471,9 @@ class StageGraphJson {
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
             "name": "Destroy Service 1 Before",
-            "refId": "destroyService3",
+            "refId": "destroyService_3",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["wait2"],
+            "requisiteStageRefIds": ["wait_2"],
             "serviceName": "serviceName1",
             "stageEnabled": {
               "expression": "exp1",
@@ -550,9 +488,9 @@ class StageGraphJson {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 1",
-            "refId": "deployService4",
+            "refId": "deployService_4",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService3"],
+            "requisiteStageRefIds": ["destroyService_3"],
             "manifest": {
               "service": "serviceType1",
               "serviceName": "serviceName1",
@@ -573,9 +511,9 @@ class StageGraphJson {
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
             "name": "Destroy Service 2 Before",
-            "refId": "destroyService5",
+            "refId": "destroyService_5",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["wait2"],
+            "requisiteStageRefIds": ["wait_2"],
             "serviceName": "serviceName2",
             "stageEnabled": {
             "expression": "exp1",
@@ -590,9 +528,9 @@ class StageGraphJson {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 2",
-            "refId": "deployService6",
+            "refId": "deployService_6",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService5"],
+            "requisiteStageRefIds": ["destroyService_5"],
             "manifest": {
               "service": "serviceType2",
               "serviceName": "serviceName2",
@@ -613,9 +551,9 @@ class StageGraphJson {
             "cloudProviderType": "cloudfoundry",
             "credentials": "creds1",
             "name": "Destroy Service 3 Before",
-            "refId": "destroyService7",
+            "refId": "destroyService_7",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["wait2"],
+            "requisiteStageRefIds": ["wait_2"],
             "serviceName": "serviceName3",
             "stageEnabled": {
               "expression": "exp1",
@@ -630,9 +568,9 @@ class StageGraphJson {
             "comments": "deploy comment",
             "credentials": "creds1",
             "name": "Deploy Service 3",
-            "refId": "deployService8",
+            "refId": "deployService_8",
             "region": "dev > dev",
-            "requisiteStageRefIds": ["destroyService7"],
+            "requisiteStageRefIds": ["destroyService_7"],
             "manifest": {
               "service": "serviceType3",
               "serviceName": "serviceName3",
@@ -650,15 +588,19 @@ class StageGraphJson {
         {
             "instructions": "Give a thumbs up if you like it.",
             "judgmentInputs": [],
-            "refId": "manualJudgment9",
+            "refId": "manualJudgment_9",
             "requisiteStageRefIds": [
-                "deployService4",
-                "deployService6",
-                "deployService8"
+                "deployService_4",
+                "deployService_6",
+                "deployService_8"
             ],
             "type": "manualJudgment"
         }
-    ]
+    ],
+    "expectedArtifacts": [],
+    "keepWaitingPipelines": false,
+    "limitConcurrent": true
+}
         """.trimMargin()
 
     }

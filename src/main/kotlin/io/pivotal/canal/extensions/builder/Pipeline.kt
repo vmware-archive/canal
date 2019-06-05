@@ -1,8 +1,7 @@
 package io.pivotal.canal.extensions.builder
 
 import io.pivotal.canal.model.*
-import io.pivotal.canal.model.extensions.concat
-import io.pivotal.canal.model.extensions.stageGraphFor
+import io.pivotal.canal.model.extensions.*
 import java.util.*
 
 data class Defaults(var delegate: PipelineDefaults = PipelineDefaults()) {
@@ -11,9 +10,9 @@ data class Defaults(var delegate: PipelineDefaults = PipelineDefaults()) {
     fun account(account: String) = apply { this.delegate = delegate.copy(account = account) }
 }
 
-class DefaultsForStages(val cloudStageCatalog: CloudStageCatalog) {
-
-    var currentDefaults: PipelineDefaults = cloudStageCatalog.defaults
+class DefaultsForStages() {
+    var stageCatalogs = emptyList<CloudStageCatalog>()
+    var currentDefaults = PipelineDefaults()
     val scopes: Stack<PipelineDefaults> = Stack()
     init {
         scopes.push(currentDefaults)
@@ -23,13 +22,17 @@ class DefaultsForStages(val cloudStageCatalog: CloudStageCatalog) {
     fun region(region: String) = apply { currentDefaults = currentDefaults.copy(region = region) }
     fun account(account: String) = apply { currentDefaults = currentDefaults.copy(account = account) }
 
-    fun forStages(stagesDef: () -> StageGrapher) : StageGrapher {
+    fun forStages(stagesDef: () -> StageGraphable) : StageGrapher {
         scopes.push(currentDefaults)
-        cloudStageCatalog.defaults = currentDefaults
-        val stageGrapher = stagesDef()
+        stageCatalogs.forEach{ it.defaults = currentDefaults }
+        val stageGrapher = StageGrapher(stagesDef().toGraph().graph())
         scopes.pop()
-        cloudStageCatalog.defaults = scopes.peek()
+        stageCatalogs.forEach{ it.defaults = scopes.peek() }
         return stageGrapher
+    }
+
+    fun registerCatalog(stageCatalog: CloudStageCatalog) {
+        stageCatalogs = stageCatalogs + stageCatalog
     }
 
 }
@@ -38,27 +41,30 @@ data class PipelineDefaults(val application: String? = null,
                             val region: String? = null,
                             val account: String? = null)
 
-class StageGrapher(var currentStageGraph: StageGraph = StageGraph()) {
-    constructor(initialStage: SpecificStage) : this(stageGraphFor(initialStage))
+interface StageGraphable {
+    fun toGraph(): StageGrapher
+}
 
-    fun then(vararg nextStageGraphers: StageGrapher) : StageGrapher {
-        return then(nextStageGraphers.toList())
+class StageGrapher(var currentStageGraph: StageGraph = StageGraph()) : StageGraphable {
+
+    fun then(vararg stageGraphables: StageGraphable) : StageGrapher {
+        return then(stageGraphables.toList())
     }
 
-    fun then(nextStageGraphers: List<StageGrapher>) : StageGrapher {
-        return StageGrapher(currentStageGraph.concat(nextStageGraphers.map { it.graph() }))
-    }
-
-    fun union(nextStageGraphers: List<StageGrapher>) : StageGrapher {
-        return StageGrapher(currentStageGraph.concat(nextStageGraphers.map { it.graph() }))
+    fun then(stageGraphables: List<StageGraphable>) : StageGrapher {
+        return StageGrapher(currentStageGraph.concat(stageGraphables.map { it.toGraph().currentStageGraph }))
     }
 
     fun graph() : StageGraph {
         return currentStageGraph
     }
+
+    override fun toGraph(): StageGrapher {
+        return this
+    }
 }
 
-open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificStageBuilder<T, U>> {
+open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificStageBuilder<T, U>> : StageGraphable {
     abstract fun specificStageConfig(): T
     var common: BaseStage = BaseStage()
     var execution: StageExecution = StageExecution()
@@ -81,6 +87,10 @@ open abstract class SpecificStageBuilder<T : SpecificStageConfig, U : SpecificSt
                 common,
                 execution
         )
+    }
+
+    override fun toGraph(): StageGrapher {
+        return stageGraph(this)
     }
 }
 

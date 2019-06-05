@@ -5,45 +5,37 @@ import java.time.Duration
 
 class StageCatalog {
 
-    fun checkPreconditions(assign: (CheckPreconditionsStageBuilder) -> CheckPreconditionsStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(CheckPreconditionsStageBuilder()).build())
+    fun checkPreconditions(): CheckPreconditionsStageBuilder {
+        return CheckPreconditionsStageBuilder()
     }
 
     @JvmOverloads fun wait(
-            duration: Duration,
-            assign: (WaitStageBuilder) -> WaitStageBuilder = { it }): StageGrapher {
-        return wait(duration.seconds.toString(), assign)
+            duration: Duration): WaitStageBuilder {
+        return wait(duration.seconds.toString())
     }
 
-    @JvmOverloads fun wait(
-            expression: String,
-            assign: (WaitStageBuilder) -> WaitStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(WaitStageBuilder(expression)).build())
+    @JvmOverloads fun wait(expression: String): WaitStageBuilder {
+        return WaitStageBuilder(expression)
     }
 
     @JvmOverloads fun jenkins(
             job: String,
-            master: String,
-            assign: (JenkinsStageBuilder) -> JenkinsStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(JenkinsStageBuilder(job, master)).build())
+            master: String): JenkinsStageBuilder {
+        return JenkinsStageBuilder(job, master)
     }
 
-    @JvmOverloads fun manualJudgment(
-            assign: (ManualJudgmentStageBuilder) -> ManualJudgmentStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(ManualJudgmentStageBuilder()).build())
+    @JvmOverloads fun manualJudgment(): ManualJudgmentStageBuilder {
+        return ManualJudgmentStageBuilder()
     }
 
-    @JvmOverloads fun webhook(
-            method: String, url: String,
-            assign: (WebhookStageBuilder) -> WebhookStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(WebhookStageBuilder(method, url)).build())
+    @JvmOverloads fun webhook(method: String, url: String): WebhookStageBuilder {
+        return WebhookStageBuilder(method, url)
     }
 
     @JvmOverloads fun canary(
             analysisType: String,
-            canaryConfig: CanaryConfig,
-            assign: (CanaryStageBuilder) -> CanaryStageBuilder = { it }): StageGrapher {
-        return StageGrapher(assign(CanaryStageBuilder(analysisType, canaryConfig)).build())
+            canaryConfig: CanaryConfig): CanaryStageBuilder {
+        return CanaryStageBuilder(analysisType, canaryConfig)
     }
 
 }

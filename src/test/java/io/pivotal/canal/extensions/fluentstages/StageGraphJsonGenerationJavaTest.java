@@ -16,8 +16,7 @@
 
 package io.pivotal.canal.extensions.fluentstages;
 
-import io.pivotal.canal.extensions.builder.CloudPipeline;
-import io.pivotal.canal.extensions.builder.Defaults;
+import io.pivotal.canal.extensions.builder.Pipeline;
 import io.pivotal.canal.extensions.builder.StageGrapher;
 import io.pivotal.canal.json.StageGraphJson;
 import io.pivotal.canal.model.*;
@@ -26,53 +25,50 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.*;
 import static java.util.stream.IntStream.range;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
+import static io.pivotal.canal.model.extensions.StageGraphExtensions.*;
+
 class StageGraphJsonGenerationJavaTest {
 
     @Test
     void stageGraphConstruction() {
-        CloudPipeline<CloudFoundryStageCatalog> pipeline = new CloudPipeline<CloudFoundryStageCatalog>("test",
-          new CloudFoundryStageCatalog("creds1")
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
 
             @Override
             public StageGrapher stages() {
-                return stage.wait(Duration.ofMinutes(1))
+                return stageGraphFor(stage.wait(Duration.ofMinutes(1)))
                   .then(
-                    cloud.deployService(it -> it
+                    cf.deployService()
                       .name("Deploy Mongo")
                       .region("dev > dev")
-                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}"))
-                    ),
-                    cloud.deployService(it -> it
+                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}")),
+                    cf.deployService()
                       .name("Deploy Rabbit")
                       .region("dev > dev")
-                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}"))
-                    ),
-                    cloud.deployService(it -> it
+                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}")),
+                    cf.deployService()
                       .name("Deploy MySQL")
                       .region("dev > dev")
                       .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
-                    )
                   )
-                  .then(cloud.deploy(it -> it.
+                  .then(cf.deploy()
                     .name("Deploy to Dev")
                     .account("montclair")
                     .region("dev > dev")
                     .application("app1")
                     .artifact(new TriggerArtifact("montclair", ".*"))
                     .manifest(new ArtifactManifest("montclair", ".*"))
-                  ))
-                  .then(stage.wait("1+1", it -> it.name("cool off")))
-                  .then(cloud.rollback("cluster1",it -> it
+                  )
+                  .then(stage.wait("1+1").name("cool off"))
+                  .then(cf.rollback("cluster1")
                     .name("Rollback")
-                    .regions(singletonList("dev > dev"))));
+                    .regions(singletonList("dev > dev")));
             }
         };
 
@@ -81,37 +77,35 @@ class StageGraphJsonGenerationJavaTest {
 
     @Test
     void stagesWithDefaults() {
-        CloudPipeline pipeline = new CloudPipeline<CloudFoundryStageCatalog>("test",
-          new CloudFoundryStageCatalog("creds1").withDefaults(new Defaults()
-              .account("montclair")
-              .region("dev > dev")
-              .application("app1"))
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
 
             @Override
             public StageGrapher stages() {
-                return stage.wait(Duration.ofMinutes(1))
-                  .then(
-                    cloud.deployService(it -> it
-                      .name("Deploy Mongo")
-                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}"))
-                    ),
-                    cloud.deployService(it -> it
-                      .name("Deploy Rabbit")
-                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}"))
-                    ),
-                    cloud.deployService(it -> it
-                      .name("Deploy MySQL")
-                      .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
-                    )
-                  )
-                  .then(cloud.deploy(it -> it
-                      .name("Deploy to Dev")
-                      .artifact(new TriggerArtifact("montclair", ".*"))
-                      .manifest(new ArtifactManifest("montclair", ".*"))
-                  ))
-                  .then(stage.wait("1+1", it -> it.name("cool off")))
-                  .then(cloud.rollback("cluster1", it -> it.name("Rollback")));
+                return defaults
+                  .account("montclair")
+                  .region("dev > dev")
+                  .application("app1").forStages(() ->
+                    stage.wait(Duration.ofMinutes(1)).toGraph()
+                      .then(
+                        cf.deployService()
+                          .name("Deploy Mongo")
+                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}")),
+                        cf.deployService()
+                          .name("Deploy Rabbit")
+                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}")),
+                        cf.deployService()
+                          .name("Deploy MySQL")
+                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
+                      )
+                      .then(cf.deploy()
+                        .name("Deploy to Dev")
+                        .artifact(new TriggerArtifact("montclair", ".*"))
+                        .manifest(new ArtifactManifest("montclair", ".*"))
+                      )
+                      .then(stage.wait("1+1").name("cool off"))
+                      .then(cf.rollback("cluster1").name("Rollback"))
+                );
             }
         };
 
@@ -120,43 +114,41 @@ class StageGraphJsonGenerationJavaTest {
 
     @Test
     void stagesWithNestedDefaults() {
-        CloudPipeline pipeline = new CloudPipeline<CloudFoundryStageCatalog>("test",
-          new CloudFoundryStageCatalog("creds1").withDefaults(new Defaults()
-            .account("montclair")
-            .region("dev > dev")
-            .application("app1"))
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
 
             @Override
             public StageGrapher stages() {
-                return stage.wait(Duration.ofMinutes(1))
-                  .then(
-                    defaults.region("dev1 > dev").forStages(() ->
-                        cloud.deployService(it -> it
-                          .name("Deploy Mongo")
-                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}"))
+                return defaults
+                  .account("montclair")
+                  .region("dev > dev")
+                  .application("app1").forStages(() ->
+                    stage.wait(Duration.ofMinutes(1)).toGraph()
+                      .then(
+                        defaults.region("dev1 > dev").forStages(() ->
+                          cf.deployService()
+                            .name("Deploy Mongo")
+                            .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}"))
+                        ),
+                        defaults.region("dev2 > dev").forStages(() ->
+                          cf.deployService()
+                            .name("Deploy Rabbit")
+                            .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}"))
+                        ),
+                        defaults.region("dev3 > dev").forStages(() ->
+                          cf.deployService()
+                            .name("Deploy MySQL")
+                            .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
                         )
-                    ),
-                    defaults.region("dev2 > dev").forStages(() ->
-                        cloud.deployService(it -> it
-                          .name("Deploy Rabbit")
-                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}"))
-                        )
-                    ),
-                    defaults.region("dev3 > dev").forStages(() ->
-                        cloud.deployService(it -> it
-                          .name("Deploy MySQL")
-                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
-                        )
-                    )
-                  )
-                  .then(cloud.deploy(it -> it
-                    .name("Deploy to Dev")
-                    .artifact(new TriggerArtifact("montclair", ".*"))
-                    .manifest(new ArtifactManifest("montclair", ".*"))
-                  ))
-                  .then(stage.wait("1+1", it -> it.name("cool off")))
-                  .then(cloud.rollback("cluster1", it -> it.name("Rollback")));
+                      )
+                      .then(cf.deploy()
+                        .name("Deploy to Dev")
+                        .artifact(new TriggerArtifact("montclair", ".*"))
+                        .manifest(new ArtifactManifest("montclair", ".*"))
+                      )
+                      .then(stage.wait("1+1").name("cool off"))
+                      .then(cf.rollback("cluster1").name("Rollback"))
+                );
             }
         };
 
@@ -165,63 +157,63 @@ class StageGraphJsonGenerationJavaTest {
 
     @Test
     void stagesWithMultiLevelNestedDefaults() {
-        CloudPipeline pipeline = new CloudPipeline<CloudFoundryStageCatalog>("test",
-          new CloudFoundryStageCatalog("creds1").withDefaults(new Defaults()
-            .account("montclair")
-            .region("dev > dev")
-            .application("app1"))
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
 
             @Override
             public StageGrapher stages() {
-                return stage.wait(Duration.ofMinutes(1))
-                  .then(
-                    defaults.account("acc1").region("dev0 > dev").forStages(() -> parallel(
-                      defaults.region("dev1 > dev").forStages(() ->
-                        cloud.deployService(it -> it
-                          .name("Deploy Mongo")
-                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}"))
+                return defaults
+                  .account("montclair")
+                  .region("dev > dev")
+                  .application("app1").forStages(() ->
+                      stage.wait(Duration.ofMinutes(1)).toGraph()
+                        .then(
+                          defaults.region("dev0 > dev").forStages(() -> new StageGrapher().then(
+                            defaults.region("dev1 > dev").forStages(() ->
+                              cf.deployService()
+                                .name("Deploy Mongo")
+                                .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}"))
+                            ),
+                            cf.deployService()
+                              .name("Deploy Rabbit")
+                              .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}")),
+                            cf.deployService()
+                              .name("Deploy MySQL")
+                              .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
+                            )
+                              .then(cf.deploy().name("Deploy to Dev")
+                                .artifact(new TriggerArtifact("montclair", ".*"))
+                                .manifest(new ArtifactManifest("montclair", ".*"))
+                              )
+                          )
+                        .then(stage.wait("1+1").name("cool off"))
+                        .then(cf.rollback("cluster1").name("Rollback"))
                         )
-                      ),
-                      cloud.deployService(it -> it
-                        .name("Deploy Rabbit")
-                        .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}"))
-                      ),
-                      cloud.deployService(it -> it
-                        .name("Deploy MySQL")
-                        .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
-                      ))
-                      .then(cloud.deploy(it -> it
-                        .name("Deploy to Dev")
-                        .artifact(new TriggerArtifact("montclair", ".*"))
-                        .manifest(new ArtifactManifest("montclair", ".*"))
-                      ))
-                    )
-                  )
-                  .then(stage.wait("1+1", it -> it.name("cool off")))
-                  .then(cloud.rollback("cluster1", it -> it.name("Rollback")));
+                  );
             }
         };
 
-        assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithNestedDefaults());
+        assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithMultiLevelNestedDefaults());
     }
 
     @Test
     void nestedStageGraph() {
-        CloudPipeline pipeline = new CloudPipeline<CloudFoundryStageCatalog>("test",
-          new CloudFoundryStageCatalog("creds1")
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+
             @Override
             public StageGrapher stages() {
-                return stage.wait(Duration.ofMinutes(1))
-                  .then(
-                    cloud.destroyService("service1")
-                      .then(cloud.deployService(it -> it.name("deploy service 1"))),
-                    cloud.destroyService("service2")
-                      .then(cloud.deployService(it -> it.name("deploy service 2"))),
-                    stage.wait("60", it -> it.name("cool off"))
-                  )
-                  .then(stage.manualJudgment(it -> it.instructions("Approve?")));
+                return defaults.region("dev > dev")
+                  .forStages(() -> stage.wait(Duration.ofMinutes(1)).toGraph()
+                    .then(
+                      cf.destroyService("service1").toGraph()
+                        .then(stage.wait("1").name("deploy service 1")),
+                      cf.destroyService("service2").toGraph()
+                        .then(stage.wait("2").name("deploy service 2")),
+                      stage.wait("60").name("cool off")
+                    )
+                    .then(stage.manualJudgment().instructions("Approve?"))
+                  );
             }
         };
 
@@ -230,19 +222,19 @@ class StageGraphJsonGenerationJavaTest {
 
     @Test
     void stagesDslWithGeneratedFanOutAndFanIn() {
-        CloudPipeline pipeline = new CloudPipeline<CloudFoundryStageCatalog>("test",
-          new CloudFoundryStageCatalog("creds1")
-        ) {
+        Pipeline pipeline = new Pipeline("test") {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+
             @Override
             public StageGrapher stages() {
-                return stage.checkPreconditions(it -> it.preconditions(new ExpressionPrecondition(true)))
+                return defaults.region("dev > dev").forStages(() -> stage.checkPreconditions().preconditions(new ExpressionPrecondition(true)).toGraph()
                   .then(stage.wait("420"))
                   .then(
                     range(1, 4).mapToObj(i ->
-                      cloud.destroyService("serviceName1", it -> it
-                      .name("Destroy Service " + i + " Before")
-                      .stageEnabled(new ExpressionCondition("exp1")))
-                      .then(cloud.deployService(it -> it
+                      cf.destroyService("serviceName" + i)
+                        .name("Destroy Service " + i + " Before")
+                        .stageEnabled(new ExpressionCondition("exp1")).toGraph()
+                        .then(cf.deployService()
                           .name("Deploy Service " + i)
                           .comments("deploy comment")
                           .stageEnabled(new ExpressionCondition("exp2"))
@@ -256,9 +248,9 @@ class StageGraphJsonGenerationJavaTest {
                             )
                           )
                         )
-                      )
                     ).collect(Collectors.toList())
-                  ).then(stage.manualJudgment(it -> it.instructions("Give a thumbs up if you like it.")));
+                  ).then(stage.manualJudgment().instructions("Give a thumbs up if you like it."))
+                );
             }
         };
 
