@@ -19,9 +19,12 @@ package io.pivotal.canal.model.cloudfoundry
 import io.pivotal.canal.extensions.builder.*
 import io.pivotal.canal.model.*
 
-class CloudFoundryStageCatalog constructor(credentials: String, pipeline: Pipeline) : CloudStageCatalog() {
+import io.pivotal.canal.extensions.builder.Artifacts.ExpectedArtifact
+import io.pivotal.canal.extensions.builder.Artifacts.ArtifactRefId
+
+class CloudFoundryStageCatalog constructor(credentials: String, defaults: DefaultsForStages) : CloudStageCatalog() {
     init {
-        pipeline.registerCatalog(this)
+        defaults.registerCatalog(this)
     }
 
     override var defaults: PipelineDefaults = PipelineDefaults()
@@ -95,7 +98,7 @@ data class DestroyService (
 }
 
 class CloudFoundryDeployStageBuilder(val defaults: PipelineDefaults,
-                                     var artifact: Artifact? = null,
+                                     var artifactId: Artifacts.ArtifactRefId? = null,
                                      var manifest: Manifest? = null) : DeployStageBuilder<CloudFoundryDeployStageBuilder>() {
 
     override fun specificStageConfig() = Deploy(listOf(CloudFoundryCluster(
@@ -107,15 +110,15 @@ class CloudFoundryDeployStageBuilder(val defaults: PipelineDefaults,
             stack,
             detail,
             startApplication,
-            artifact!!,
+            artifactId!!,
             manifest!!
     )))
 
-    fun artifact(artifact: Artifact) = apply { this.artifact = artifact }
+    fun artifact(artifact: ExpectedArtifact) = apply { this.artifactId = ArtifactRefId(artifact.artifactReference.id) }
     fun manifest(manifest: Manifest) = apply { this.manifest = manifest }
 }
 
-data class CloudFoundryCluster @JvmOverloads constructor(
+data class CloudFoundryCluster constructor(
         override val application: String,
         override val account: String,
         override val region: String,
@@ -124,7 +127,7 @@ data class CloudFoundryCluster @JvmOverloads constructor(
         override val stack: String,
         override val detail: String,
         override val startApplication: Boolean?,
-        val artifact: Artifact,
+        val applicationArtifact: ArtifactRefId,
         val manifest: Manifest
 ) : Cluster {
     override var cloudProvider = "cloudfoundry"
@@ -181,20 +184,4 @@ data class ManifestSourceDirect @JvmOverloads constructor(
         val timeout: String? = null
 ) : ManifestSource {
     override var type: String = "direct"
-}
-
-interface Artifact : Typed
-
-data class TriggerArtifact(
-        val account: String,
-        val pattern: String
-) : Artifact {
-    override var type = "trigger"
-}
-
-data class ReferencedArtifact(
-        val account: String,
-        val reference: String
-) : Artifact {
-    override var type = "artifact"
 }

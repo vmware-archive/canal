@@ -18,21 +18,21 @@ package io.pivotal.canal.extensions.nestedstages
 
 import io.pivotal.canal.model.*
 
-fun stages (stageDefOperation: StageDef.() -> Unit): StageGraph {
-    val currentStageGraph = MutableRefStageGraph(StageGraph())
+fun stages (stageDefOperation: StageDef.() -> Unit): Stages {
+    val currentStageGraph = MutableRefStageGraph(Stages())
     val nsg = StageDef(currentStageGraph, emptyList())
     nsg.stageDefOperation()
-    return currentStageGraph.stageGraph
+    return currentStageGraph.stages
 }
 
-private val StageGraph.terminalStages: List<PipelineStage> get() {
+private val Stages.terminalStages: List<PipelineStage> get() {
     val stagesThatAreRequiredByStages = this.stageRequirements.values.flatten().distinct()
     return this.stages.filter {
         !(stagesThatAreRequiredByStages.contains(it.refId))
     }
 }
 
-class MutableRefStageGraph(var stageGraph: StageGraph)
+class MutableRefStageGraph(var stages: Stages)
 
 class StageFlags(
         val completeOtherBranchesThenFail: Boolean? = null,
@@ -43,7 +43,7 @@ class StageFlags(
 
 class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<String>? = null ) {
 
-    val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
+    val currentTerminalIds = specifiedTerminalIds ?: current.stages.terminalStages.map { it.refId }
 
     fun stage(stageConfig: SpecificStageConfig,
               name: String? = null,
@@ -54,7 +54,7 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
               restrictedExecutionWindow: RestrictedExecutionWindow? = null,
               execution: StageExecution = StageExecution()): SingleStage {
         val newStageRequirements = execution.requisiteStageRefIds + currentTerminalIds
-        val newStage = current.stageGraph.newStage(stageConfig,
+        val newStage = current.stages.newStage(stageConfig,
                 BaseStage(
                         name,
                         comments,
@@ -69,16 +69,16 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
                 execution.refId,
                 execution.inject
         )
-        current.stageGraph = current.stageGraph.insertStage(
+        current.stages = current.stages.insertStage(
                 newStage,
                 newStageRequirements)
         return SingleStage(current, newStage.refId)
     }
 
-    private fun StageGraph.newStage(stageConfig: SpecificStageConfig,
-                                    base: BaseStage?,
-                                    refId: String?,
-                                    inject: Inject?
+    private fun Stages.newStage(stageConfig: SpecificStageConfig,
+                                base: BaseStage?,
+                                refId: String?,
+                                inject: Inject?
 
     ): PipelineStage {
         val nextStageCount = stages.size + 1
@@ -86,16 +86,16 @@ class StageDef(val current: MutableRefStageGraph, specifiedTerminalIds : List<St
         return PipelineStage(nextRefId, stageConfig, base, inject)
     }
 
-    private fun StageGraph.insertStage(stage: PipelineStage,
-                                       requisiteStageRefIds: List<String>
-    ): StageGraph {
+    private fun Stages.insertStage(stage: PipelineStage,
+                                   requisiteStageRefIds: List<String>
+    ): Stages {
         val allStages = this.stages + listOf(stage)
         val allStageRequirements = if (requisiteStageRefIds.isEmpty()) {
             this.stageRequirements
         } else {
             this.stageRequirements + mapOf(stage.refId to requisiteStageRefIds)
         }
-        return StageGraph(allStages, allStageRequirements)
+        return Stages(allStages, allStageRequirements)
     }
 }
 
@@ -105,7 +105,7 @@ interface StageDefInvoker {
 
 class ParallelStages(val current: MutableRefStageGraph, specifiedTerminalIds : List<String>? = null) : StageDefInvoker {
 
-    val currentTerminalIds = specifiedTerminalIds ?: current.stageGraph.terminalStages.map { it.refId }
+    val currentTerminalIds = specifiedTerminalIds ?: current.stages.terminalStages.map { it.refId }
 
     override infix fun then(stageDef: StageDef.() -> Unit): ParallelStages {
         val nsg = StageDef(current, currentTerminalIds)

@@ -44,28 +44,28 @@ fun stageGraph(stages: List<SpecificStageBuilder<*, *>>): StageGrapher {
         val refId = stage.execution.refId ?: stage.stageConfig.type + "_1"
         PipelineStage(refId, stage.stageConfig, stage.base, stage.execution.inject)
     }
-    return StageGrapher(StageGraph(pipelineStages, emptyMap()))
+    return StageGrapher(Stages(pipelineStages, emptyMap()))
 }
 
-val StageGraph.initialStages: List<PipelineStage> get() {
+val Stages.initialStages: List<PipelineStage> get() {
     val stagesThatRequireStages = this.stageRequirements.keys.filter { !stageRequirements.get(it)!!.isEmpty() }
     return this.stages.filter {
         !(stagesThatRequireStages.contains(it.refId))
     }
 }
 
-val StageGraph.terminalStages: List<PipelineStage> get() {
+val Stages.terminalStages: List<PipelineStage> get() {
     val stagesThatAreRequiredByStages = this.stageRequirements.values.flatten().distinct()
     return this.stages.filter {
         !(stagesThatAreRequiredByStages.contains(it.refId))
     }
 }
 
-fun StageGraph.concat(stageGraphs: List<StageGraph>): StageGraph {
+fun Stages.concat(stages: List<Stages>): Stages {
     var currentStageCount = this.stages.size
     var newStages: List<PipelineStage> = emptyList()
     var newStageRequirements: Map<String, List<String>> = mapOf()
-    stageGraphs.forEach { stageGraph ->
+    stages.forEach { stageGraph ->
         val initialStages = stageGraph.initialStages
         var nextStages: List<PipelineStage> = emptyList()
         var subStageGraphStageRequirements = stageGraph.stageRequirements
@@ -124,14 +124,14 @@ fun StageGraph.concat(stageGraphs: List<StageGraph>): StageGraph {
     }
     val allStages = this.stages + normalizedNewStages
     val allStageRequirements = this.stageRequirements + normalizedNewStageRequirements
-    return StageGraph(allStages, allStageRequirements)
+    return Stages(allStages, allStageRequirements)
 }
 
-fun StageGraph.union(stageGraphs: List<StageGraph>): StageGraph {
+fun Stages.union(stages: List<Stages>): Stages {
     var currentStageCount = this.stages.size
     var newStages: List<PipelineStage> = emptyList()
     var newStageRequirements: Map<String, List<String>> = mapOf()
-    stageGraphs.forEach {
+    stages.forEach {
         val currentStageGraph = it
         var subStageGraphStageRequirements = currentStageGraph.stageRequirements
         it.stages.forEach {
@@ -156,5 +156,5 @@ fun StageGraph.union(stageGraphs: List<StageGraph>): StageGraph {
     }
     val allStages = this.stages + newStages
     val allStageRequirements = this.stageRequirements + newStageRequirements
-    return StageGraph(allStages, allStageRequirements)
+    return Stages(allStages, allStageRequirements)
 }

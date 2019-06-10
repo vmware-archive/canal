@@ -62,10 +62,10 @@ class StageGraphAdapter {
     }
 
     @ToJson
-    fun toJson(writer: JsonWriter, stageGraph: StageGraph) {
+    fun toJson(writer: JsonWriter, stages: Stages) {
         writer.beginArray()
-        stageGraph.stages.forEach {
-            val stageRequirements = stageGraph.stageRequirements[it.refId].orEmpty().map{ it }
+        stages.stages.forEach {
+            val stageRequirements = stages.stageRequirements[it.refId].orEmpty().map{ it }
             val execution = StageExecution(it.refId, stageRequirements, it.inject)
             writer.beginObject()
             val token = writer.beginFlatten()
@@ -81,7 +81,7 @@ class StageGraphAdapter {
     }
 
     @FromJson
-    fun fromJson(stageMaps: List<Map<String, @JvmSuppressWildcards Any>>): StageGraph {
+    fun fromJson(stageMaps: List<Map<String, @JvmSuppressWildcards Any>>): Stages {
         var stages: List<PipelineStage> = emptyList()
         var stageRequirements: Map<String, List<String>> = mapOf()
         stageMaps.map {
@@ -94,7 +94,7 @@ class StageGraphAdapter {
                 stageRequirements += (refId to execution.requisiteStageRefIds.map { it })
             }
         }
-        return StageGraph(stages, stageRequirements)
+        return Stages(stages, stageRequirements)
     }
 }
 

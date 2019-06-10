@@ -16,11 +16,11 @@
 
 package io.pivotal.canal.extensions.fluentstages;
 
-import io.pivotal.canal.extensions.builder.Pipeline;
-import io.pivotal.canal.extensions.builder.StageGrapher;
+import io.pivotal.canal.extensions.builder.*;
 import io.pivotal.canal.json.StageGraphJson;
 import io.pivotal.canal.model.*;
 import io.pivotal.canal.model.cloudfoundry.*;
+import lombok.Getter;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -31,18 +31,39 @@ import static java.util.Collections.*;
 import static java.util.stream.IntStream.range;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
-import static io.pivotal.canal.model.extensions.StageGraphExtensions.*;
-
 class StageGraphJsonGenerationJavaTest {
+
+    public interface TestArtifacts {
+        Artifacts.ExpectedArtifact getAppJar();
+    }
+
+    public static class IncrementingIdArtifacts extends Artifacts {
+        private int id = 0;
+        protected String generateId() {
+            return Integer.toString(id++);
+        }
+    }
+
+    public static class TestArtifactsImpl extends IncrementingIdArtifacts implements TestArtifacts {
+        @Getter public ExpectedArtifact appJar = artifactReference(
+          artifact.maven(a -> a
+            .artifactAccount("spring-artifactory-maven")
+            .reference("io.pivotal.spinnaker:multifoundationmetrics:.*"))
+        ).defaultArtifact(
+          artifact.maven(a -> a
+            .artifactAccount("spring-artifactory-maven")
+            .reference("io.pivotal.spinnaker:multifoundationmetrics:latest.release"))
+        );
+    }
 
     @Test
     void stageGraphConstruction() {
-        Pipeline pipeline = new Pipeline("test") {
-            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+        StageGraph stageGraph = new StageGraph<TestArtifacts>() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
 
             @Override
-            public StageGrapher stages() {
-                return stageGraphFor(stage.wait(Duration.ofMinutes(1)))
+            protected StageGrapher stages() {
+                return super.stages().then(stage.wait(Duration.ofMinutes(1)))
                   .then(
                     cf.deployService()
                       .name("Deploy Mongo")
@@ -62,7 +83,7 @@ class StageGraphJsonGenerationJavaTest {
                     .account("montclair")
                     .region("dev > dev")
                     .application("app1")
-                    .artifact(new TriggerArtifact("montclair", ".*"))
+                    .artifact(artifacts.getAppJar())
                     .manifest(new ArtifactManifest("montclair", ".*"))
                   )
                   .then(stage.wait("1+1").name("cool off"))
@@ -72,13 +93,14 @@ class StageGraphJsonGenerationJavaTest {
             }
         };
 
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph, new TestArtifactsImpl());
         assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithFanOutAndFanIn());
     }
 
     @Test
     void stagesWithDefaults() {
-        Pipeline pipeline = new Pipeline("test") {
-            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+        StageGraph stageGraph = new StageGraph<TestArtifacts>() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
 
             @Override
             public StageGrapher stages() {
@@ -86,7 +108,7 @@ class StageGraphJsonGenerationJavaTest {
                   .account("montclair")
                   .region("dev > dev")
                   .application("app1").forStages(() ->
-                    stage.wait(Duration.ofMinutes(1)).toGraph()
+                    super.stages().then(stage.wait(Duration.ofMinutes(1)))
                       .then(
                         cf.deployService()
                           .name("Deploy Mongo")
@@ -100,7 +122,7 @@ class StageGraphJsonGenerationJavaTest {
                       )
                       .then(cf.deploy()
                         .name("Deploy to Dev")
-                        .artifact(new TriggerArtifact("montclair", ".*"))
+                        .artifact(artifacts.getAppJar())
                         .manifest(new ArtifactManifest("montclair", ".*"))
                       )
                       .then(stage.wait("1+1").name("cool off"))
@@ -109,13 +131,14 @@ class StageGraphJsonGenerationJavaTest {
             }
         };
 
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph, new TestArtifactsImpl());
         assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithFanOutAndFanIn());
     }
 
     @Test
     void stagesWithNestedDefaults() {
-        Pipeline pipeline = new Pipeline("test") {
-            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+        StageGraph stageGraph = new StageGraph<TestArtifacts>() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
 
             @Override
             public StageGrapher stages() {
@@ -123,7 +146,7 @@ class StageGraphJsonGenerationJavaTest {
                   .account("montclair")
                   .region("dev > dev")
                   .application("app1").forStages(() ->
-                    stage.wait(Duration.ofMinutes(1)).toGraph()
+                    super.stages().then(stage.wait(Duration.ofMinutes(1)))
                       .then(
                         defaults.region("dev1 > dev").forStages(() ->
                           cf.deployService()
@@ -143,7 +166,7 @@ class StageGraphJsonGenerationJavaTest {
                       )
                       .then(cf.deploy()
                         .name("Deploy to Dev")
-                        .artifact(new TriggerArtifact("montclair", ".*"))
+                        .artifact(artifacts.getAppJar())
                         .manifest(new ArtifactManifest("montclair", ".*"))
                       )
                       .then(stage.wait("1+1").name("cool off"))
@@ -152,13 +175,14 @@ class StageGraphJsonGenerationJavaTest {
             }
         };
 
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph, new TestArtifactsImpl());
         assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithNestedDefaults());
     }
 
     @Test
     void stagesWithMultiLevelNestedDefaults() {
-        Pipeline pipeline = new Pipeline("test") {
-            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+        StageGraph stageGraph = new StageGraph<TestArtifacts>() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
 
             @Override
             public StageGrapher stages() {
@@ -166,7 +190,7 @@ class StageGraphJsonGenerationJavaTest {
                   .account("montclair")
                   .region("dev > dev")
                   .application("app1").forStages(() ->
-                      stage.wait(Duration.ofMinutes(1)).toGraph()
+                      super.stages().then(stage.wait(Duration.ofMinutes(1)))
                         .then(
                           defaults.region("dev0 > dev").forStages(() -> new StageGrapher().then(
                             defaults.region("dev1 > dev").forStages(() ->
@@ -182,7 +206,7 @@ class StageGraphJsonGenerationJavaTest {
                               .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
                             )
                               .then(cf.deploy().name("Deploy to Dev")
-                                .artifact(new TriggerArtifact("montclair", ".*"))
+                                .artifact(artifacts.getAppJar())
                                 .manifest(new ArtifactManifest("montclair", ".*"))
                               )
                           )
@@ -193,18 +217,66 @@ class StageGraphJsonGenerationJavaTest {
             }
         };
 
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph, new TestArtifactsImpl());
         assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithMultiLevelNestedDefaults());
     }
 
     @Test
+    void stagesWithTrigger() {
+        StageGraph stageGraph = new StageGraph<TestArtifacts>() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
+
+            @Override
+            public StageGrapher stages() {
+                return defaults
+                  .account("montclair")
+                  .region("dev > dev")
+                  .application("app1").forStages(() ->
+                    super.stages().then(stage.wait(Duration.ofMinutes(1)))
+                      .then(
+                        cf.deployService()
+                          .name("Deploy Mongo")
+                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mongo}")),
+                        cf.deployService()
+                          .name("Deploy Rabbit")
+                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_rabbit}")),
+                        cf.deployService()
+                          .name("Deploy MySQL")
+                          .manifest(new ManifestSourceArtifact("public", "$\\{service_manifest_mysql}"))
+                      )
+                      .then(cf.deploy()
+                        .name("Deploy to Dev")
+                        .artifact(artifacts.getAppJar())
+                        .manifest(new ArtifactManifest("montclair", ".*"))
+                      )
+                      .then(stage.wait("1+1").name("cool off"))
+                      .then(cf.rollback("cluster1").name("Rollback"))
+                  );
+            }
+        };
+
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph, new TestArtifactsImpl()) {
+            @Override
+            public Triggers triggers() {
+                return super.triggers()
+                  .artifactory(t -> t
+                    .artifactorySearchName("spring-artifactory")
+                    .artifact(artifacts.getAppJar())
+                  );
+            }
+        };
+        assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getBasicStagesWithFanOutAndFanInWithTrigger());
+    }
+
+    @Test
     void nestedStageGraph() {
-        Pipeline pipeline = new Pipeline("test") {
-            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+        StageGraph stageGraph = new StageGraph() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
 
             @Override
             public StageGrapher stages() {
                 return defaults.region("dev > dev")
-                  .forStages(() -> stage.wait(Duration.ofMinutes(1)).toGraph()
+                  .forStages(() -> super.stages().then(stage.wait(Duration.ofMinutes(1)))
                     .then(
                       cf.destroyService("service1").toGraph()
                         .then(stage.wait("1").name("deploy service 1")),
@@ -217,17 +289,19 @@ class StageGraphJsonGenerationJavaTest {
             }
         };
 
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph);
         assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getNestedStageGraphs());
     }
 
     @Test
     void stagesDslWithGeneratedFanOutAndFanIn() {
-        Pipeline pipeline = new Pipeline("test") {
-            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", this);
+        StageGraph stageGraph = new StageGraph() {
+            final CloudFoundryStageCatalog cf = new CloudFoundryStageCatalog("creds1", defaults);
 
             @Override
             public StageGrapher stages() {
-                return defaults.region("dev > dev").forStages(() -> stage.checkPreconditions().preconditions(new ExpressionPrecondition(true)).toGraph()
+                return defaults.region("dev > dev").forStages(() ->
+                  super.stages().then(stage.checkPreconditions().preconditions(new ExpressionPrecondition(true)))
                   .then(stage.wait("420"))
                   .then(
                     range(1, 4).mapToObj(i ->
@@ -254,6 +328,7 @@ class StageGraphJsonGenerationJavaTest {
             }
         };
 
+        Pipeline pipeline = new Pipeline<TestArtifacts>("test", stageGraph);
         assertThatJson(pipeline.toJson()).isEqualTo(StageGraphJson.getFanOutToMultipleDeployThenDestroys());
     }
 

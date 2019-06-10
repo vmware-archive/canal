@@ -227,7 +227,7 @@ class NestedStageGraphJsonGenerationTest {
             }
         }
 
-        val stagesJson = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages)
+        val stagesJson = JsonAdapterFactory().createAdapter<Stages>().toJson(stages)
         assertThatJson(stagesJson).isEqualTo(json)
     }
 

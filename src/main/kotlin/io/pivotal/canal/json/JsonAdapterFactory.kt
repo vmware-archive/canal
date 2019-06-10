@@ -20,6 +20,8 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import io.pivotal.canal.extensions.builder.Artifacts
+import io.pivotal.canal.extensions.builder.Triggers
 import io.pivotal.canal.model.*
 import io.pivotal.canal.model.cloudfoundry.*
 
@@ -38,10 +40,14 @@ class JsonAdapterFactory {
 
         builder
                 .add(jsonNumberAdapter)
-                .add(PolymorphicJsonAdapterFactory.of(Trigger::class.java, "type")
-                        .withSubtype(JenkinsTrigger::class.java, "jenkins")
-                        .withSubtype(GitHubTrigger::class.java, "git")
-                        .withSubtype(PubSubTrigger::class.java, "pubsub")
+                .add(PolymorphicJsonAdapterFactory.of(Triggers.Trigger::class.java, "type")
+                        .withSubtype(Triggers.Artifactory::class.java, "artifactory")
+                        .withSubtype(Triggers.Jenkins::class.java, "jenkins")
+                        .withSubtype(Triggers.GitHub::class.java, "git")
+                )
+                .add(PolymorphicJsonAdapterFactory.of(Artifacts.Artifact::class.java, "type")
+                        .withSubtype(Artifacts.MavenFile::class.java, "maven/file")
+                        .withSubtype(Artifacts.JenkinsFile::class.java, "jenkins/file")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Condition::class.java, "type")
                         .withSubtype(ExpressionCondition::class.java, "expression")
@@ -54,10 +60,6 @@ class JsonAdapterFactory {
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Cluster::class.java, "cloudProvider")
                         .withSubtype(CloudFoundryCluster::class.java, "cloudfoundry")
-                )
-                .add(PolymorphicJsonAdapterFactory.of(Artifact::class.java, "type")
-                        .withSubtype(TriggerArtifact::class.java, "trigger")
-                        .withSubtype(ReferencedArtifact::class.java, "artifact")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(Manifest::class.java, "type")
                         .withSubtype(DirectManifest::class.java, "direct")
@@ -92,8 +94,6 @@ class JsonAdapterFactory {
                         .withSubtype(Inject.After::class.java, "after")
                         .withSubtype(Inject.First::class.java, "first")
                         .withSubtype(Inject.Last::class.java, "last")
-                )
-                .add(PolymorphicJsonAdapterFactory.of(ExpectedArtifact::class.java, "type")
                 )
                 .add(PolymorphicJsonAdapterFactory.of(ManifestSource::class.java, "type")
                         .withSubtype(ManifestSourceArtifact::class.java, "artifact")

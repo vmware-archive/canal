@@ -45,18 +45,18 @@ interface StageGraphable {
     fun toGraph(): StageGrapher
 }
 
-class StageGrapher(var currentStageGraph: StageGraph = StageGraph()) : StageGraphable {
+class StageGrapher(var currentStages: Stages = Stages()) : StageGraphable {
 
     fun then(vararg stageGraphables: StageGraphable) : StageGrapher {
         return then(stageGraphables.toList())
     }
 
     fun then(stageGraphables: List<StageGraphable>) : StageGrapher {
-        return StageGrapher(currentStageGraph.concat(stageGraphables.map { it.toGraph().currentStageGraph }))
+        return StageGrapher(currentStages.concat(stageGraphables.map { it.toGraph().currentStages }))
     }
 
-    fun graph() : StageGraph {
-        return currentStageGraph
+    fun graph() : Stages {
+        return currentStages
     }
 
     override fun toGraph(): StageGrapher {

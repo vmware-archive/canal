@@ -188,14 +188,14 @@ class FluentStageGraphJsonGenerationTest {
     @Test
     fun `fluent stages DSL with fan out and fan in`() {
         val cloudProvider = cloudFoundryCloudProvider("creds1")
-        val stages = StageGraph().addStage(
+        val stages = Stages().addStage(
                 CheckPreconditions(ExpressionPrecondition(true)),
                 BaseStage("Check Preconditions")
         ).andThen(Wait(
                 420
         )).parallel(
                 (1..3).map {
-                    StageGraph().addStage(
+                    Stages().addStage(
                             DestroyService(
                                     cloudProvider,
                                     "dev > dev",
@@ -227,7 +227,7 @@ class FluentStageGraphJsonGenerationTest {
                 "Give a thumbs up if you like it."
         ))
 
-        val stagesJson = JsonAdapterFactory().createAdapter<StageGraph>().toJson(stages)
+        val stagesJson = JsonAdapterFactory().createAdapter<Stages>().toJson(stages)
         assertThatJson(stagesJson).isEqualTo(json)
     }
 

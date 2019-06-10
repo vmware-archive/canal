@@ -19,28 +19,28 @@ package io.pivotal.canal.extensions.fluentstages
 import io.pivotal.canal.model.*
 import java.lang.IllegalStateException
 
-val StageGraph.firstStages: List<PipelineStage> get() {
+val Stages.firstStages: List<PipelineStage> get() {
     val stagesThatRequireStages = this.stageRequirements.keys
     return this.stages.filter {
         !(stagesThatRequireStages.contains(it.refId))
     }
 }
 
-val StageGraph.lastStages: List<PipelineStage> get() {
+val Stages.lastStages: List<PipelineStage> get() {
     val stagesThatAreRequiredByStages = this.stageRequirements.values.flatten().distinct()
     return this.stages.filter {
         !(stagesThatAreRequiredByStages.contains(it.refId))
     }
 }
 
-val StageGraph.stageCount: Int get() {
+val Stages.stageCount: Int get() {
     return this.stages.size
 }
 
-private fun StageGraph.insertStage(stageConfig: SpecificStageConfig,
-                                   base: BaseStage? = BaseStage(),
-                                   execution: StageExecution = StageExecution()
-): StageGraph {
+private fun Stages.insertStage(stageConfig: SpecificStageConfig,
+                               base: BaseStage? = BaseStage(),
+                               execution: StageExecution = StageExecution()
+): Stages {
     val nextStageCount = stageCount + 1
     val nextRefId = execution.refId ?: stageConfig.type + nextStageCount.toString()
     val nextStage = listOf(PipelineStage(nextRefId, stageConfig, base, execution.inject))
@@ -50,13 +50,13 @@ private fun StageGraph.insertStage(stageConfig: SpecificStageConfig,
     } else {
         this.stageRequirements + mapOf(nextRefId to execution.requisiteStageRefIds)
     }
-    return StageGraph(allStages, allStageRequirements)
+    return Stages(allStages, allStageRequirements)
 }
 
-fun StageGraph.addStage(stageConfig: SpecificStageConfig,
-                        base: BaseStage? = BaseStage(),
-                        execution: StageExecution = StageExecution()
-): StageGraph {
+fun Stages.addStage(stageConfig: SpecificStageConfig,
+                    base: BaseStage? = BaseStage(),
+                    execution: StageExecution = StageExecution()
+): Stages {
     return insertStage(
             stageConfig,
             base,
@@ -64,10 +64,10 @@ fun StageGraph.addStage(stageConfig: SpecificStageConfig,
     )
 }
 
-fun StageGraph.andThen(stageConfig: SpecificStageConfig,
-                       base: BaseStage? = BaseStage(),
-                       execution: StageExecution = StageExecution()
-): StageGraph {
+fun Stages.andThen(stageConfig: SpecificStageConfig,
+                   base: BaseStage? = BaseStage(),
+                   execution: StageExecution = StageExecution()
+): Stages {
     return insertStage(
             stageConfig,
             base,
@@ -75,24 +75,24 @@ fun StageGraph.andThen(stageConfig: SpecificStageConfig,
     )
 }
 
-fun StageGraph.parallelStages(vararg stageConfigs: SpecificStageConfig): StageGraph {
+fun Stages.parallelStages(vararg stageConfigs: SpecificStageConfig): Stages {
     return parallelStages(stageConfigs.toList())
 }
 
-fun StageGraph.parallelStages(stageConfigs: List<SpecificStageConfig>): StageGraph {
-    val stageGroups: List<StageGraph> = stageConfigs.map { StageGraph().insertStage(it) }
+fun Stages.parallelStages(stageConfigs: List<SpecificStageConfig>): Stages {
+    val stageGroups: List<Stages> = stageConfigs.map { Stages().insertStage(it) }
     return parallel(stageGroups)
 }
 
-fun StageGraph.parallel(vararg stageGraphs: StageGraph): StageGraph {
-    return parallel(stageGraphs.asList())
+fun Stages.parallel(vararg stages: Stages): Stages {
+    return parallel(stages.asList())
 }
 
-fun StageGraph.parallel(stageGraphs: List<StageGraph>): StageGraph {
+fun Stages.parallel(stages: List<Stages>): Stages {
     var currentStageCount = stageCount
     var newStages: List<PipelineStage> = emptyList()
     var newStageRequirements: Map<String, List<String>> = mapOf()
-    stageGraphs.forEach {
+    stages.forEach {
         val initialStages = it.firstStages
         var nextStages: List<PipelineStage> = emptyList()
         val currentStageGraph = it
@@ -125,5 +125,5 @@ fun StageGraph.parallel(stageGraphs: List<StageGraph>): StageGraph {
     }
     val allStages = this.stages + newStages
     val allStageRequirements = this.stageRequirements + newStageRequirements
-    return StageGraph(allStages, allStageRequirements)
+    return Stages(allStages, allStageRequirements)
 }

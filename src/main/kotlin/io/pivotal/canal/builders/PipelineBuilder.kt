@@ -16,7 +16,10 @@
 
 package io.pivotal.canal.builders
 
+import io.pivotal.canal.extensions.builder.Triggers
 import io.pivotal.canal.model.*
+
+import io.pivotal.canal.extensions.builder.Artifacts.ArtifactReference
 
 open class PipelineBuilder constructor(var pipeline: PipelineModel) {
     var description: String = ""
@@ -34,9 +37,9 @@ open class PipelineBuilder constructor(var pipeline: PipelineModel) {
             this.pipeline = this.pipeline.copy(keepWaitingPipelines = value)
         }
 
-    var stages: StageGraph = StageGraph()
+    var stages: Stages = Stages()
         set(value) {
-            this.pipeline = this.pipeline.copy(stageGraph = value)
+            this.pipeline = this.pipeline.copy(stages = value)
         }
 
     var parameters: List<Parameter> = emptyList()
@@ -57,21 +60,21 @@ open class PipelineBuilder constructor(var pipeline: PipelineModel) {
         this.notifications = notifications.toList()
     }
 
-    var triggers: List<Trigger> = emptyList()
+    var triggers: List<Triggers.Trigger> = emptyList()
         set(value) {
             this.pipeline = this.pipeline.copy(triggers = value)
         }
 
-    fun triggers(vararg triggers: Trigger) {
+    fun triggers(vararg triggers: Triggers.Trigger) {
         this.triggers = triggers.toList()
     }
 
-    var expectedArtifacts: List<ExpectedArtifact> = emptyList()
+    var expectedArtifacts: List<ArtifactReference> = emptyList()
         set(value) {
             this.pipeline = this.pipeline.copy(expectedArtifacts = value)
         }
 
-    fun expectedArtifacts(vararg expectedArtifacts: ExpectedArtifact) {
+    fun expectedArtifacts(vararg expectedArtifacts: ArtifactReference) {
         this.expectedArtifacts = expectedArtifacts.toList()
     }
 

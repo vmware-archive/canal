@@ -16,6 +16,7 @@
 package io.pivotal.canal
 
 import io.pivotal.canal.evaluation.ExpressionEvaluator
+import io.pivotal.canal.extensions.builder.Triggers
 import io.pivotal.canal.extensions.nestedstages.stages
 import io.pivotal.canal.extensions.pipeline
 import io.pivotal.canal.json.JsonAdapterFactory
@@ -135,10 +136,11 @@ class CanalExample {
             }
         }
         triggers(
-                GitHubTrigger(
-                        org = "canal-pipelines",
-                        repo = "canal"
-                )
+                Triggers.GitHub.builder()
+                        .org("canal-pipelines")
+                        .repo("canal")
+                        .build()
+
         )
     }
 
@@ -155,7 +157,7 @@ class CanalExample {
 
         val evaluatedPipeline = evaluator.evaluate(pipeline)
 
-        assertThat(evaluatedPipeline.stageGraph.stages[0].stageConfig)
+        assertThat(evaluatedPipeline.stages.stages[0].stageConfig)
                 .isEqualTo(CheckPreconditions(ExpressionPrecondition(true)))
 
         val pipelineJson = JsonAdapterFactory().createAdapter<PipelineModel>().toJson(evaluatedPipeline)

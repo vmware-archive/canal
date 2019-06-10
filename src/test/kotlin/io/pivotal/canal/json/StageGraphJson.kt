@@ -94,7 +94,9 @@ class StageGraphJson {
             "clusters":[{
                 "account": "montclair",
                 "application": "app1",
-                "artifact": {"account": "montclair", "pattern": ".*", "type": "trigger"},
+                "applicationArtifact": {
+                  "artifactId": "0"
+                },
                 "capacity": {"desired": "1", "max": "1", "min": "1"},
                 "cloudProvider": "cloudfoundry",
                 "detail": "",
@@ -129,7 +131,166 @@ class StageGraphJson {
             "cloudProviderType": "cloudfoundry"
         }
     ],
-    "expectedArtifacts": [],
+    "expectedArtifacts": [
+      {
+        "defaultArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:latest.release",
+          "type": "maven/file"
+        },
+        "displayName": "AppJar",
+        "id": "0",
+        "matchArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:.*",
+          "type": "maven/file"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": true
+      }
+    ],
+    "keepWaitingPipelines": false,
+    "limitConcurrent": true
+}
+        """.trimMargin()
+
+
+        @Language("JSON")
+        @JvmStatic
+        val basicStagesWithFanOutAndFanInWithTrigger = """
+{
+    "name": "test",
+    "description":"",
+    "parameterConfig":[],
+    "notifications":[],
+    "triggers":[
+      {
+        "artifactorySearchName": "spring-artifactory",
+        "enabled": true,
+        "expectedArtifactIds": [
+          "0"
+        ],
+        "type": "artifactory"
+      }
+    ],
+    "stages": [
+        {
+            "refId": "wait_1",
+            "requisiteStageRefIds": [],
+            "type": "wait",
+            "waitTime": "60"
+        },
+        {
+            "action": "deployService",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry",
+            "credentials": "creds1",
+            "name": "Deploy Mongo",
+            "refId": "deployService_2",
+            "region": "dev > dev",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mongo}",
+              "type": "artifact"
+            }
+        },
+        {
+            "action": "deployService",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry",
+            "credentials": "creds1",
+            "name": "Deploy Rabbit",
+            "refId": "deployService_3",
+            "region": "dev > dev",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_rabbit}",
+              "type": "artifact"
+            }
+        },
+        {
+            "action": "deployService",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry",
+            "credentials": "creds1",
+            "name": "Deploy MySQL",
+            "refId": "deployService_4",
+            "region": "dev > dev",
+            "requisiteStageRefIds": ["wait_1"],
+            "type": "deployService",
+            "manifest": {
+              "account":"public",
+              "reference":  "$\\{service_manifest_mysql}",
+              "type": "artifact"
+            }
+        },
+        {
+            "refId": "deploy_5",
+            "requisiteStageRefIds": ["deployService_2", "deployService_3", "deployService_4"],
+            "type": "deploy",
+            "name": "Deploy to Dev",
+            "clusters":[{
+                "account": "montclair",
+                "application": "app1",
+                "applicationArtifact": {
+                  "artifactId": "0"
+                },
+                "capacity": {"desired": "1", "max": "1", "min": "1"},
+                "cloudProvider": "cloudfoundry",
+                "detail": "",
+                "manifest": {"account": "montclair", "reference": ".*", "type": "artifact"},
+                "provider": "cloudfoundry",
+                "region": "dev > dev",
+                "stack": "",
+                "strategy": ""
+            }]
+        },
+        {
+            "refId": "wait_6",
+            "requisiteStageRefIds": ["deploy_5"],
+            "type": "wait",
+            "waitTime": "1+1",
+            "name": "cool off"
+        },
+        {
+            "refId": "rollbackCluster_7",
+            "type": "rollbackCluster",
+            "name":"Rollback",
+            "requisiteStageRefIds": ["wait_6"],
+            "cluster": "cluster1",
+            "moniker": {
+                "app": "cluster1",
+                "cluster": "cluster1"
+            },
+            "regions": ["dev > dev"],
+            "targetHealthyRollbackPercentage": 100,
+            "credentials": "creds1",
+            "cloudProvider": "cloudfoundry",
+            "cloudProviderType": "cloudfoundry"
+        }
+    ],
+    "expectedArtifacts": [
+      {
+        "defaultArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:latest.release",
+          "type": "maven/file"
+        },
+        "displayName": "AppJar",
+        "id": "0",
+        "matchArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:.*",
+          "type": "maven/file"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": true
+      }
+    ],
     "keepWaitingPipelines": false,
     "limitConcurrent": true
 }
@@ -208,7 +369,9 @@ class StageGraphJson {
             "clusters":[{
                 "account": "montclair",
                 "application": "app1",
-                "artifact": {"account": "montclair", "pattern": ".*", "type": "trigger"},
+                "applicationArtifact": {
+                  "artifactId": "0"
+                },
                 "capacity": {"desired": "1", "max": "1", "min": "1"},
                 "cloudProvider": "cloudfoundry",
                 "detail": "",
@@ -243,7 +406,24 @@ class StageGraphJson {
             "cloudProviderType": "cloudfoundry"
         }
     ],
-    "expectedArtifacts": [],
+    "expectedArtifacts": [
+      {
+        "defaultArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:latest.release",
+          "type": "maven/file"
+        },
+        "displayName": "AppJar",
+        "id": "0",
+        "matchArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:.*",
+          "type": "maven/file"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": true
+      }
+    ],
     "keepWaitingPipelines": false,
     "limitConcurrent": true
 }
@@ -322,7 +502,9 @@ class StageGraphJson {
             "clusters":[{
                 "account": "montclair",
                 "application": "app1",
-                "artifact": {"account": "montclair", "pattern": ".*", "type": "trigger"},
+                "applicationArtifact": {
+                  "artifactId": "0"
+                },
                 "capacity": {"desired": "1", "max": "1", "min": "1"},
                 "cloudProvider": "cloudfoundry",
                 "detail": "",
@@ -357,7 +539,24 @@ class StageGraphJson {
             "cloudProviderType": "cloudfoundry"
         }
     ],
-    "expectedArtifacts": [],
+    "expectedArtifacts": [
+      {
+        "defaultArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:latest.release",
+          "type": "maven/file"
+        },
+        "displayName": "AppJar",
+        "id": "0",
+        "matchArtifact": {
+          "artifactAccount": "spring-artifactory-maven",
+          "reference": "io.pivotal.spinnaker:multifoundationmetrics:.*",
+          "type": "maven/file"
+        },
+        "useDefaultArtifact": true,
+        "usePriorArtifact": true
+      }
+    ],
     "keepWaitingPipelines": false,
     "limitConcurrent": true
 }

@@ -17,15 +17,18 @@
 package io.pivotal.canal.model
 
 import com.squareup.moshi.Json
+import io.pivotal.canal.extensions.builder.Triggers
+
+import io.pivotal.canal.extensions.builder.Artifacts.ArtifactReference
 
 data class PipelineModel(
         val name: String,
         val description: String = "",
         @Json(name = "parameterConfig") val parameters: List<Parameter> = emptyList(),
         val notifications: List<Notification> = emptyList(),
-        val triggers: List<Trigger> = emptyList(),
-        @Json(name = "stages") val stageGraph: StageGraph = StageGraph(),
-        val expectedArtifacts: List<ExpectedArtifact> = emptyList(),
+        val triggers: List<Triggers.Trigger> = emptyList(),
+        @Json(name = "stages") val stages: Stages = Stages(),
+        val expectedArtifacts: List<ArtifactReference> = emptyList(),
         val keepWaitingPipelines: Boolean = false,
         val limitConcurrent: Boolean = true
 )
@@ -89,7 +92,7 @@ sealed class Inject {
     }
 }
 
-data class StageGraph (
+data class Stages (
         val stages: List<PipelineStage> = emptyList(),
         val stageRequirements: Map<String, List<String>> = emptyMap()
 )

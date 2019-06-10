@@ -71,12 +71,12 @@ class StageGraphDslCompatibilityTest {
             }
         }
 
-        val fluentStages = StageGraph().addStage(CheckPreconditions(
+        val fluentStages = Stages().addStage(CheckPreconditions(
         )).andThen(Wait(
                 420
         )).parallel(
                 (1..3).map {
-                    StageGraph().addStage(
+                    Stages().addStage(
                             DestroyService(
                                     cloudProvider,
                                     "dev > dev",

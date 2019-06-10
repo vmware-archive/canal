@@ -49,6 +49,9 @@ dependencies {
     implementation("net.javacrumbs.json-unit:json-unit-assertj:latest.release")
     implementation("com.netflix.spinnaker.orca:orca-core:latest.release")
 
+    implementation("org.projectlombok:lombok:latest.release")
+    annotationProcessor("org.projectlombok:lombok:latest.release")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:latest.release")
     testImplementation("org.assertj:assertj-core:latest.release")
 
