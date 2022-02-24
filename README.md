@@ -1,3 +1,5 @@
+# This repository is no longer actively maintained by VMware, Inc.
+
 # Canal Spinnaker Pipeline DSL
 
 [![Build Status](https://circleci.com/gh/canal-pipelines/canal.svg?style=shield)](https://circleci.com/gh/canal-pipelines/canal)
