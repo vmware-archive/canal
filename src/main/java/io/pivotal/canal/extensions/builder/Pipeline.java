@@ -25,9 +25,7 @@ public class Pipeline<A> {
     }
 
     public Pipeline(String name, StageGraph<A> stageGraph, A artifacts) {
-        this.name = name;
-        this.stageGraph = stageGraph;
-        this.artifacts = artifacts;
+        this(name, stageGraph, artifacts);
     }
 
     public Triggers triggers() {
